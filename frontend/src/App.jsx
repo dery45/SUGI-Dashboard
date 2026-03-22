@@ -7,6 +7,7 @@ import MainLayout from './components/layout/MainLayout';
 import FarmerDashboard from './pages/FarmerDashboard';
 import GovernmentDashboard from './pages/GovernmentDashboard';
 import Login from './pages/Login';
+import MasterDataPage from './pages/MasterDataPage';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -46,6 +47,7 @@ function AppContent() {
       }>
         <Route path="farmer" element={<FarmerDashboard />} />
         <Route path="government" element={<GovernmentDashboard />} />
+        <Route path="data/:slug" element={<MasterDataPage />} />
       </Route>
       
       {/* Fallback */}

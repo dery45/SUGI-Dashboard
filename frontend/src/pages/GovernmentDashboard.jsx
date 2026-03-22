@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Lightbulb } from 'lucide-react';
 import Card from '../components/common/Card';
 import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
@@ -82,6 +83,18 @@ const GovernmentDashboard = () => {
             valueKey={currentMap.valueKey} 
             unit={currentMap.unit} 
           />
+        </div>
+      </Card>
+
+      {/* Insight Palace */}
+      <Card title="Insight Palace 🧠" className="border-primary/20 bg-primary/[0.02]">
+        <div className="flex gap-4 items-start">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Lightbulb className="w-5 h-5 text-primary" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground leading-relaxed whitespace-pre-line">
+            Sistem mendeteksi adanya anomali pada **Proyeksi Neraca Pangan** bulan depan dimana ketersediaan beras di beberapa wilayah berpotensi defisit. Tren inflasi pada konsumen nasional juga menunjukkan fluktuasi. Direkomendasikan segera mengaktifkan instrumen **Gerakan Pangan Murah** dan mendistribusikan cadangan pangan daerah ke wilayah rentan.
+          </p>
         </div>
       </Card>
 

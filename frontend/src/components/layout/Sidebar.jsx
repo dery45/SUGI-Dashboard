@@ -1,12 +1,22 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Tractor, Building2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Tractor, Building2, Database, ChevronDown, ChevronRight } from 'lucide-react';
+import { dataRegistry } from '../../pages/MasterDataPage';
 
 const Sidebar = ({ isOpen }) => {
+  const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
+  const location = useLocation();
+  const isDataActive = location.pathname.startsWith('/data');
+
   const navItems = [
     { name: 'Farmer Dashboard', path: '/farmer', icon: <Tractor className="w-5 h-5" /> },
     { name: 'Government Dashboard', path: '/government', icon: <Building2 className="w-5 h-5" /> }
   ];
+
+  const dataLinks = Object.keys(dataRegistry).map(slug => ({
+    name: dataRegistry[slug].title,
+    path: `/data/${slug}`
+  }));
 
   return (
     <aside className={`fixed lg:relative inset-y-0 left-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'w-80 p-4 translate-x-0' : 'w-0 p-0 -translate-x-full lg:translate-x-0 overflow-hidden'}`}>
@@ -37,6 +47,36 @@ const Sidebar = ({ isOpen }) => {
                 <div className={`absolute right-6 w-1 h-4 rounded-full bg-white/40 transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0'}`} />
               </NavLink>
             ))}
+
+            <div className="mt-2">
+              <button
+                onClick={() => setIsDataMenuOpen(!isDataMenuOpen)}
+                className={`w-full group flex items-center justify-between px-6 py-4 rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`flex-shrink-0 transition-transform duration-500 group-hover:scale-110 ${isDataActive ? 'scale-110' : ''}`}>
+                    <Database className="w-5 h-5" />
+                  </div>
+                  <span className="text-[13px] font-black tracking-tight text-left">Semua Data Saya</span>
+                </div>
+                {isDataMenuOpen ? <ChevronDown className="w-4 h-4 opacity-50 transition-transform duration-300 transform rotate-180" /> : <ChevronDown className="w-4 h-4 opacity-50 transition-transform duration-300" />}
+              </button>
+
+              <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataMenuOpen ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                <div className="flex flex-col gap-1 pl-4 border-l-2 border-border/40 ml-8 py-2">
+                  {dataLinks.map(link => (
+                    <NavLink
+                      key={link.path}
+                      to={link.path}
+                      className={({ isActive }) => `block px-4 py-3 rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
+                      title={link.name}
+                    >
+                      <span className="line-clamp-2">{link.name}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            </div>
           </nav>
 
           <div className="p-6 mt-auto">

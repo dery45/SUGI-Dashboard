@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Lightbulb } from 'lucide-react';
 import Card from '../components/common/Card';
 import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
@@ -93,6 +94,18 @@ const FarmerDashboard = () => {
             valueKey={currentMap.valueKey} 
             unit={currentMap.unit}
           />
+        </div>
+      </Card>
+
+      {/* Insight Palace */}
+      <Card title="Insight Palace 🧠" className="border-primary/20 bg-primary/[0.02]">
+        <div className="flex gap-4 items-start">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Lightbulb className="w-5 h-5 text-primary" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground leading-relaxed whitespace-pre-line">
+            Berdasarkan tren minggu ini, **Harga GKP** di beberapa provinsi produsen seperti Sumatera Barat dan Aceh menunjukkan fluktuasi positif. Ketersediaan pupuk dan dukungan irigasi sangat memengaruhi selisih biaya panen. Disarankan memantau pergerakan harga konsumen di tingkat nasional dan regional untuk mengambil posisi tawar terbaik dengan para tengkulak maupun penggilingan besar.
+          </p>
         </div>
       </Card>
 
