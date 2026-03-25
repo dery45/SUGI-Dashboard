@@ -6,6 +6,11 @@ import MainLayout from './components/layout/MainLayout';
 
 import FarmerDashboard from './pages/FarmerDashboard';
 import GovernmentDashboard from './pages/GovernmentDashboard';
+import ManagementDashboard from './pages/ManagementDashboard';
+import LifecycleManagementPage from './pages/LifecycleManagementPage';
+import UMManagementPage from './pages/UMManagementPage';
+import FarmerManagementPage from './pages/FarmerManagementPage';
+import SalesDistributionPage from './pages/SalesDistributionPage';
 import Login from './pages/Login';
 import MasterDataPage from './pages/MasterDataPage';
 
@@ -47,6 +52,11 @@ function AppContent() {
       }>
         <Route path="farmer" element={<FarmerDashboard />} />
         <Route path="government" element={<GovernmentDashboard />} />
+        <Route path="management" element={<ManagementDashboard />} />
+        <Route path="management/lifecycle" element={<LifecycleManagementPage />} />
+        <Route path="management/um" element={<UMManagementPage />} />
+        <Route path="management/farmers" element={<FarmerManagementPage />} />
+        <Route path="management/sales" element={<SalesDistributionPage />} />
         <Route path="data/:slug" element={<MasterDataPage />} />
       </Route>
       
