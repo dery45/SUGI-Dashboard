@@ -1,28 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UMAssignmentModal from '../components/management/UMAssignmentModal';
-
-const dummyUMs = [
-  { id: 1, name: 'Budi Harjo', um_id: 'UM-001', processes: ['Panen', 'Perawatan'], farms: 'Blok A, Blok C', score: 85, status: 'Active' },
-  { id: 2, name: 'Siti Aminah', um_id: 'UM-002', processes: ['Penanaman'], farms: 'Blok B', score: 72, status: 'Active' },
-  { id: 3, name: 'Joko Widodo', um_id: 'UM-003', processes: ['Persiapan Lahan'], farms: 'Blok D', score: 91, status: 'Active' },
-  { id: 4, name: 'Rina Susanti', um_id: 'UM-004', processes: [], farms: '-', score: 0, status: 'Inactive' },
-];
+import { useGenericResource } from '../hooks/useGenericResource';
 
 const UMManagementPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [umList, setUmList] = useState(dummyUMs);
+  const { data: umList, loading, fetchData, createData } = useGenericResource('um');
 
-  const handleSaveUM = (formData) => {
-    const newUM = {
-      id: umList.length + 1,
-      name: `User ${formData.user_id}`,
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleSaveUM = async (formData) => {
+    const payload = {
+      user_id: formData.user_id || '661faecfc11c4c1a2b000000', // Mock fallback if unselected
       um_id: formData.um_id,
-      processes: formData.assigned_processes.map(p => p.replace('_', ' ')),
-      farms: '-',
-      score: 0,
-      status: 'Active',
+      assigned_processes: formData.assigned_processes,
+      assigned_farms: [], // Optional
+      start_date: new Date().toISOString()
     };
-    setUmList(prev => [...prev, newUM]);
+    await createData(payload);
+    setIsModalOpen(false);
   };
 
   const getScoreColor = (score) => {
@@ -88,24 +85,26 @@ const UMManagementPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
+              {loading && <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500 italic">Memuat data...</td></tr>}
+              {!loading && umList.length === 0 && <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500 italic">Belum ada UM.</td></tr>}
               {umList.map((um) => (
-                <tr key={um.id} className="hover:bg-gray-50 transition">
+                <tr key={um._id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 font-mono text-xs text-gray-500">{um.um_id}</td>
-                  <td className="px-6 py-4 font-medium text-gray-800">{um.name}</td>
+                  <td className="px-6 py-4 font-medium text-gray-800">{um.user_id?.name || 'User'}</td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
-                      {um.processes.length > 0 
-                        ? um.processes.map((p, i) => (
+                      {um.assigned_processes?.length > 0 
+                        ? um.assigned_processes.map((p, i) => (
                           <span key={i} className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{p}</span>
                         ))
                         : <span className="text-gray-400 text-xs italic">Belum ditugaskan</span>
                       }
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">{um.farms}</td>
+                  <td className="px-6 py-4 text-gray-600">{um.assigned_farms?.length || 0} Blok</td>
                   <td className="px-6 py-4">
-                    <span className={`font-bold text-sm px-2.5 py-1 rounded-lg ${getScoreColor(um.score)}`}>
-                      {um.score}/100
+                    <span className={`font-bold text-sm px-2.5 py-1 rounded-lg ${getScoreColor(um.performance_metrics?.overall_score || 0)}`}>
+                      {um.performance_metrics?.overall_score || 0}/100
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -113,7 +112,7 @@ const UMManagementPage = () => {
                       {um.status === 'Active' ? 'Aktif' : 'Nonaktif'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 flex gap-2">
                     <button className="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-2">Edit</button>
                     <button className="text-red-500 hover:text-red-700 text-xs font-semibold">Hapus</button>
                   </td>

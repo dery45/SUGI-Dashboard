@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
-  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle', required: true },
+  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
+  cycle: { type: String },
   farm_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Farm', required: true },
   organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  executor: { type: String },
   
   activity_type: { 
     type: String, 

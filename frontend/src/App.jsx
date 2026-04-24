@@ -12,8 +12,20 @@ import UMManagementPage from './pages/UMManagementPage';
 import FarmerManagementPage from './pages/FarmerManagementPage';
 import SalesDistributionPage from './pages/SalesDistributionPage';
 import Login from './pages/Login';
-import MasterDataPage from './pages/MasterDataPage';
-
+import KetidakcukupanNasionalPage from './pages/master/KetidakcukupanNasionalPage';
+import KetidakcukupanProvinsiPage from './pages/master/KetidakcukupanProvinsiPage';
+import KonsumsiPerJenisPage from './pages/master/KonsumsiPerJenisPage';
+import PenyaluranDonasiPage from './pages/master/PenyaluranDonasiPage';
+import ProyeksiNeracaPage from './pages/master/ProyeksiNeracaPage';
+import GerakanPanganMurahPage from './pages/master/GerakanPanganMurahPage';
+import HargaKonsumenProvinsiPage from './pages/master/HargaKonsumenProvinsiPage';
+import HargaKonsumenNasionalPage from './pages/master/HargaKonsumenNasionalPage';
+import HargaProdusenNasionalPage from './pages/master/HargaProdusenNasionalPage';
+import HargaProdusenProvinsiPage from './pages/master/HargaProdusenProvinsiPage';
+import VariasiHargaProdusenPage from './pages/master/VariasiHargaProdusenPage';
+import SkorPPHPage from './pages/master/SkorPPHPage';
+import PanganTerselamatkanPage from './pages/master/PanganTerselamatkanPage';
+import CadanganPanganProvinsiPage from './pages/master/CadanganPanganProvinsiPage';
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem('isAuthenticated') === 'true'
@@ -57,7 +69,20 @@ function AppContent() {
         <Route path="management/um" element={<UMManagementPage />} />
         <Route path="management/farmers" element={<FarmerManagementPage />} />
         <Route path="management/sales" element={<SalesDistributionPage />} />
-        <Route path="data/:slug" element={<MasterDataPage />} />
+        <Route path="data/ketidakcukupan-nasional" element={<KetidakcukupanNasionalPage />} />
+        <Route path="data/ketidakcukupan-provinsi" element={<KetidakcukupanProvinsiPage />} />
+        <Route path="data/konsumsi-per-jenis" element={<KonsumsiPerJenisPage />} />
+        <Route path="data/penyaluran-donasi" element={<PenyaluranDonasiPage />} />
+        <Route path="data/proyeksi-neraca" element={<ProyeksiNeracaPage />} />
+        <Route path="data/gerakan-pangan-murah" element={<GerakanPanganMurahPage />} />
+        <Route path="data/harga-konsumen-provinsi" element={<HargaKonsumenProvinsiPage />} />
+        <Route path="data/harga-konsumen-nasional" element={<HargaKonsumenNasionalPage />} />
+        <Route path="data/harga-produsen-nasional" element={<HargaProdusenNasionalPage />} />
+        <Route path="data/harga-produsen-provinsi" element={<HargaProdusenProvinsiPage />} />
+        <Route path="data/variasi-harga-produsen" element={<VariasiHargaProdusenPage />} />
+        <Route path="data/skor-pph" element={<SkorPPHPage />} />
+        <Route path="data/pangan-terselamatkan" element={<PanganTerselamatkanPage />} />
+        <Route path="data/cadangan-pangan-provinsi" element={<CadanganPanganProvinsiPage />} />
       </Route>
       
       {/* Fallback */}

@@ -15,24 +15,24 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
 
   const getProvinceValue = (name) => {
     if (!name) return null;
-    
+
     // Normalize string for better matching
     const cleanName = name.trim().toLowerCase();
-    
+
     const found = provinceData.find(d => {
       const pName = (d.provinsi || d.wilayah || '').trim().toLowerCase();
-      return pName === cleanName || 
-             cleanName.includes(pName) || 
-             pName.includes(cleanName.replace('daerah istimewa', 'di'));
+      return pName === cleanName ||
+        cleanName.includes(pName) ||
+        pName.includes(cleanName.replace('daerah istimewa', 'di'));
     });
-    
+
     return found ? found[valueKey] : null;
   };
 
   const getStyle = (feature) => {
     const name = feature.properties.Propinsi || feature.properties.name;
     const val = getProvinceValue(name);
-    
+
     return {
       fillColor: val !== null && val !== undefined ? '#10b981' : '#94a3b8',
       weight: 1,
@@ -45,10 +45,10 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
   const onEachFeature = (feature, layer) => {
     const name = feature.properties.Propinsi || feature.properties.name;
     const val = getProvinceValue(name);
-    
+
     // Safety format for displaying the value
-    const displayVal = val !== null && val !== undefined 
-      ? (typeof val === 'number' ? val.toLocaleString('id-ID') : val) + ' ' + unit 
+    const displayVal = val !== null && val !== undefined
+      ? (typeof val === 'number' ? val.toLocaleString('id-ID') : val) + ' ' + unit
       : 'Data tidak tersedia';
 
     layer.bindTooltip(`
@@ -76,9 +76,9 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
 
   return (
     <div className="w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-border relative z-0">
-      <MapContainer 
-        center={[-2.5489, 118.0149]} 
-        zoom={5} 
+      <MapContainer
+        center={[-2.5489, 118.0149]}
+        zoom={5}
         style={{ height: '100%', width: '100%', minHeight: '500px' }}
         scrollWheelZoom={false}
         attributionControl={false}
@@ -87,8 +87,8 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         {geoData && (
-          <GeoJSON 
-            data={geoData} 
+          <GeoJSON
+            data={geoData}
             style={getStyle}
             onEachFeature={onEachFeature}
           />

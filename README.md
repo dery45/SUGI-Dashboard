@@ -41,20 +41,41 @@
 
 ```bash
 SUGI-Dashboard-DEMO/
-├── frontend/          # Vite + React source code
+├── backend/                # Node.js + Express API
 │   ├── src/
-│   │   ├── api/       # Central managementApi client
-│   │   ├── components/ # Reusable UI (KPI, Alerts, Charts, Modals)
-│   │   ├── hooks/      # useManagementData custom hook
-│   │   ├── pages/      # Management, Lifecycle, Sales, Farmer dashboards
-│   │   └── data/       # Geography and map configurations
-├── backend/           # Node.js + Express API
+│   │   ├── config/         # Database and environment configurations
+│   │   ├── controllers/    # Request handlers (logic for specific routes)
+│   │   ├── middlewares/    # Custom Express middlewares (RBAC, Auth)
+│   │   ├── models/         # Mongoose schemas (Sale, Expense, UM, Cycle, Activity, etc.)
+│   │   ├── routes/         # Modular API endpoints (lifecycle, sales, um, etc.)
+│   │   ├── scripts/        # Utility and maintenance scripts
+│   │   ├── services/       # Business logic & complex aggregations (kpiService)
+│   │   └── utils/          # Helper functions
+│   ├── .env                # Environment variables (Mongo URI, Port)
+│   ├── server.js           # Main server entry point
+│   └── package.json        # Backend dependencies and scripts
+├── frontend/               # Vite + React source code
+│   ├── public/             # Static assets (GeoJSON maps, public icons)
 │   ├── src/
-│   │   ├── models/    # Mongoose schemas (Sale, Expense, UM, Cycle, Activity)
-│   │   ├── routes/    # Modular API routes for all modules
-│   │   └── services/  # KPIService with aggregation pipelines
-│   └── server.js      # Main server entry point
-└── README.md          # Project documentation
+│   │   ├── api/            # Central managementApi client for backend communication
+│   │   ├── assets/         # Images, fonts, and brand assets
+│   │   ├── components/     # Reusable UI components
+│   │   │   ├── charts/     # Recharts implementations
+│   │   │   ├── common/     # Shared UI elements (Buttons, Inputs)
+│   │   │   ├── layout/     # Page structural components (Sidebar, Navbar)
+│   │   │   ├── management/ # Module-specific components
+│   │   │   └── map/        # Leaflet map implementations
+│   │   ├── contexts/       # React Context API for global state
+│   │   ├── data/           # Reference data, types, and constants
+│   │   ├── hooks/          # Custom React hooks (useManagementData)
+│   │   ├── pages/          # Main dashboard views (Farmer, Gov, Management)
+│   │   ├── styles/         # Global CSS and Tailwind theme extensions
+│   │   ├── utils/          # Frontend helper functions and formatters
+│   │   ├── App.jsx         # Main application component & routing
+│   │   └── main.jsx        # React DOM entry point
+│   ├── vite.config.js      # Vite configuration
+│   └── package.json        # Frontend dependencies and scripts
+└── README.md               # Main project documentation
 ```
 
 ## ⚙️ Getting Started
@@ -67,6 +88,15 @@ SUGI-Dashboard-DEMO/
 ```bash
 cd backend
 npm install
+```
+Create a `.env` file in the `backend/` directory with the following content:
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/pangan_dashboard
+JWT_SECRET=supersecret
+```
+Then start the server:
+```bash
 npm start # Server runs on http://localhost:5000
 ```
 

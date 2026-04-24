@@ -11,9 +11,9 @@ const checkRole = (allowedRoles) => {
     if (!req.user) {
       // Mock user for testing if auth isn't fully set up yet
       req.user = {
-        _id: 'dummy_user_id',
+        _id: '661faecfc11c4c1a2b000888',
         role: 'Company_Admin', // Default to highest role for initial dev
-        organization_id: 'dummy_org_id'
+        organization_id: '661faecfc11c4c1a2b000999'
       };
       
       // In production, uncomment this block instead:

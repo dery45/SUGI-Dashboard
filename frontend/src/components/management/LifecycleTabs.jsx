@@ -1,34 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useGenericResource } from '../../hooks/useGenericResource';
 
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
 const FARMS = [
-  { id: 'farm_1', name: 'Blok A - Sumatra' },
-  { id: 'farm_2', name: 'Blok B - Kalimantan' },
-  { id: 'farm_3', name: 'Blok C - Sulawesi' },
+  { id: '661faecfc11c4c1a2b000111', name: 'Blok A - Sumatra' },
+  { id: '661faecfc11c4c1a2b000222', name: 'Blok B - Kalimantan' },
+  { id: '661faecfc11c4c1a2b000333', name: 'Blok C - Sulawesi' },
 ];
 
-const initialLandRecords = [
-  { id: 1, farm: 'Blok A - Sumatra',    farm_id: 'farm_1', cycle: 'Sawit 2026', opening_date: '2026-03-01', closing_date: null, clearing_cost: 5000000, status: 'Open',   notes: 'Pembersihan selesai' },
-  { id: 2, farm: 'Blok B - Kalimantan', farm_id: 'farm_2', cycle: 'Sawit 2026', opening_date: '2026-02-15', closing_date: '2026-03-15', clearing_cost: 3500000, status: 'Closed', notes: 'Siap penanaman' },
-];
 
-const initialPlantings = [
-  { id: 1, farm: 'Blok A - Sumatra',    cycle: 'Sawit 2026', crop_type: 'Kelapa Sawit', variety: 'DxP Simalungun', planting_date: '2026-03-10', area_ha: 5.2, seedling_count: 745, executor: 'Budi Santoso', status: 'Completed', notes: 'Sesuai jadwal' },
-  { id: 2, farm: 'Blok C - Sulawesi',   cycle: 'Kopi 2026',  crop_type: 'Kopi', variety: 'Arabika Gayo', planting_date: '2026-03-18', area_ha: 2.5, seedling_count: 312, executor: 'Siti Aminah', status: 'In_Progress', notes: '' },
-];
-
-const initialMaintenances = [
-  { id: 1, farm: 'Blok A - Sumatra',    cycle: 'Sawit 2026', activity_type: 'Fertilizing', description: 'Pemupukan NPK 100kg/ha', date: '2026-03-12', labor_hours: 8,  cost: 2500000, executor: 'Joko Purnomo',  status: 'Completed' },
-  { id: 2, farm: 'Blok B - Kalimantan', cycle: 'Sawit 2026', activity_type: 'Spraying',    description: 'Penyemprotan herbisida',  date: '2026-03-20', labor_hours: 6,  cost: 1800000, executor: 'Budi Santoso',  status: 'Completed' },
-  { id: 3, farm: 'Blok A - Sumatra',    cycle: 'Sawit 2026', activity_type: 'Pruning',     description: 'Pemangkasan pelepah',     date: '2026-03-25', labor_hours: 10, cost: 3000000, executor: 'Rina Dewi',     status: 'In_Progress' },
-  { id: 4, farm: 'Blok C - Sulawesi',   cycle: 'Kopi 2026',  activity_type: 'Inspection',  description: 'Pengecekan hama ulat',   date: '2026-03-22', labor_hours: 3,  cost: 500000,  executor: 'Siti Aminah',   status: 'Pending' },
-];
-
-const initialHarvests = [
-  { id: 1, farm: 'Blok B - Kalimantan', cycle: 'Sawit 2026', opening_date: '2026-02-15', expected_end: '2026-04-15', expected_yield_kg: 5000, actual_yield_kg: null, status: 'Open',     days_remaining: 21 },
-  { id: 2, farm: 'Blok A - Sumatra',    cycle: 'Sawit 2025', opening_date: '2025-10-01', expected_end: '2025-12-01', expected_yield_kg: 8200, actual_yield_kg: 7950, status: 'Completed', days_remaining: 0 },
-];
 
 // ─── Status badge helper ─────────────────────────────────────────────────────
 
@@ -89,26 +70,62 @@ const Select = ({ children, ...props }) => (
   </select>
 );
 
-const SaveBtn = ({ saving, label = 'Simpan', color = 'green' }) => (
-  <button type="submit" disabled={saving}
-    className={`px-4 py-2 bg-${color}-600 text-white rounded-lg font-medium hover:bg-${color}-700 text-sm shadow-sm disabled:opacity-50`}>
-    {saving ? 'Menyimpan...' : label}
-  </button>
-);
+const SaveBtn = ({ saving, label = 'Simpan', color = 'green' }) => {
+  const colorMap = {
+    green: 'bg-green-600 hover:bg-green-700',
+    blue: 'bg-blue-600 hover:bg-blue-700',
+    yellow: 'bg-yellow-600 hover:bg-yellow-700',
+    orange: 'bg-orange-600 hover:bg-orange-700',
+    emerald: 'bg-emerald-600 hover:bg-emerald-700',
+    red: 'bg-red-600 hover:bg-red-700',
+  };
+  return (
+    <button type="submit" disabled={saving}
+      className={`px-4 py-2 text-white rounded-lg font-medium text-sm shadow-sm disabled:opacity-50 transition-colors ${colorMap[color] || colorMap.green}`}>
+      {saving ? 'Menyimpan...' : label}
+    </button>
+  );
+};
+
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+          <h2 className="text-lg font-bold text-gray-800">Konfirmasi Hapus Data</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+        </div>
+        <div className="p-6">
+          <p className="text-sm text-gray-600 mb-6">
+            Apakah Anda yakin ingin menghapus data <strong>{itemName || 'ini'}</strong>? Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors">Batal</button>
+            <button type="button" onClick={() => { onConfirm(); onClose(); }} className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 text-sm shadow-sm transition-colors">Hapus Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ─── 1. LAND PREP SECTION ─────────────────────────────────────────────────────
 
 const closingInput = (rec, val, setVal) => (
   <div className="space-y-2">
-    <p className="text-sm text-gray-600">Masukkan tanggal penutupan lahan <strong>{rec.farm}</strong>:</p>
+    <p className="text-sm text-gray-600">Masukkan tanggal penutupan lahan <strong>{rec?.farm_id?.name || rec?.farm}</strong>:</p>
     <Input type="date" value={val} onChange={e => setVal(e.target.value)} required />
   </div>
 );
 
 const LandPrepSection = ({ showToast }) => {
-  const [records, setRecords] = useState(initialLandRecords);
+  const { data: recordsData, loading, fetchData, createData, updateData, deleteData } = useGenericResource('lifecycle/land');
+  const records = Array.isArray(recordsData) ? recordsData : [];
+  useEffect(() => { fetchData(); }, [fetchData]);
   const [modal, setModal] = useState(null); // 'add' | 'edit' | 'close'
   const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [closingDate, setClosingDate] = useState('');
   const [form, setForm] = useState({ farm_id: '', cycle: '', opening_date: '', clearing_cost: '', notes: '' });
 
@@ -118,68 +135,37 @@ const LandPrepSection = ({ showToast }) => {
   const openEdit = (r) => { setEditTarget(r); setForm({ farm_id: r.farm_id, cycle: r.cycle, opening_date: r.opening_date, clearing_cost: r.clearing_cost, notes: r.notes || '' }); setModal('edit'); };
   const openClose = (r) => { setEditTarget(r); setClosingDate(new Date().toISOString().split('T')[0]); setModal('close'); };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    const farm = FARMS.find(f => f.id === form.farm_id);
-    setRecords(p => [...p, { id: Date.now(), farm: farm?.name || form.farm_id, ...form, clearing_cost: +form.clearing_cost, closing_date: null, status: 'Open' }]);
+    await createData({ ...form, land_opening_date: form.opening_date, clearing_cost: +form.clearing_cost, status: 'Open' });
     showToast('Lahan baru berhasil dibuka!');
     setModal(null);
   };
 
-  const handleEdit = (e) => {
+  const handleEdit = async (e) => {
     e.preventDefault();
-    const farm = FARMS.find(f => f.id === form.farm_id);
-    setRecords(p => p.map(r => r.id === editTarget.id ? { ...r, ...form, farm: farm?.name || r.farm, clearing_cost: +form.clearing_cost } : r));
+    await updateData(editTarget._id, { ...form, land_opening_date: form.opening_date, clearing_cost: +form.clearing_cost });
     showToast('Data lahan diperbarui!');
     setModal(null);
   };
 
-  const handleClose = (e) => {
+  const handleClose = async (e) => {
     e.preventDefault();
-    setRecords(p => p.map(r => r.id === editTarget.id ? { ...r, closing_date: closingDate, status: 'Closed' } : r));
+    await updateData(editTarget._id, { land_closing_date: closingDate, status: 'Closed' });
     showToast('Lahan berhasil ditutup!');
     setModal(null);
   };
 
-  const handleDelete = (id, name) => {
-    if (window.confirm(`Hapus record lahan "${name}"?`)) {
-      setRecords(p => p.filter(r => r.id !== id));
+  const handleDeleteClick = (id, name) => setDeleteTarget({ id, name });
+  const confirmDelete = async () => {
+    if (deleteTarget) {
+      await deleteData(deleteTarget.id);
       showToast('Record lahan dihapus.');
+      setDeleteTarget(null);
     }
   };
 
-  const LandForm = ({ onSubmit, label }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <FormField label="Farm / Blok" required>
-          <Select name="farm_id" value={form.farm_id} onChange={fc} required>
-            <option value="">-- Pilih Farm --</option>
-            {FARMS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-          </Select>
-        </FormField>
-        <FormField label="Siklus Tanam" required>
-          <Input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" />
-        </FormField>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <FormField label="Tgl Buka" required>
-          <Input type="date" name="opening_date" value={form.opening_date} onChange={fc} required />
-        </FormField>
-        <FormField label="Biaya Pembersihan (Rp)">
-          <Input type="number" name="clearing_cost" value={form.clearing_cost} onChange={fc} min="0" placeholder="0" />
-        </FormField>
-      </div>
-      <FormField label="Catatan">
-        <textarea name="notes" value={form.notes} onChange={fc} rows={2}
-          className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="Catatan tambahan..." />
-      </FormField>
-      <div className="flex justify-end gap-3 pt-2">
-        <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-        <SaveBtn label={label} />
-      </div>
-    </form>
-  );
+
 
   return (
     <div>
@@ -207,11 +193,11 @@ const LandPrepSection = ({ showToast }) => {
           <tbody className="divide-y divide-gray-100 bg-white">
             {records.length === 0 && <EmptyRow cols={7} label="Belum ada data lahan." />}
             {records.map(r => (
-              <tr key={r.id} className="hover:bg-gray-50 transition">
-                <td className="px-4 py-3 font-medium text-gray-900">{r.farm}</td>
+              <tr key={r._id || Math.random()} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-3 font-medium text-gray-900">{r.farm_id?.name || r.farm || '—'}</td>
                 <td className="px-4 py-3 text-gray-500">{r.cycle}</td>
-                <td className="px-4 py-3">{new Date(r.opening_date).toLocaleDateString('id-ID')}</td>
-                <td className="px-4 py-3">{r.closing_date ? new Date(r.closing_date).toLocaleDateString('id-ID') : <span className="text-gray-300">—</span>}</td>
+                <td className="px-4 py-3">{r.land_opening_date ? new Date(r.land_opening_date).toLocaleDateString('id-ID') : '—'}</td>
+                <td className="px-4 py-3">{r.land_closing_date ? new Date(r.land_closing_date).toLocaleDateString('id-ID') : <span className="text-gray-300">—</span>}</td>
                 <td className="px-4 py-3">{r.clearing_cost ? `Rp ${Number(r.clearing_cost).toLocaleString('id-ID')}` : '—'}</td>
                 <td className="px-4 py-3"><Badge status={r.status} /></td>
                 <td className="px-4 py-3 flex items-center gap-2 flex-wrap">
@@ -219,7 +205,7 @@ const LandPrepSection = ({ showToast }) => {
                   {r.status === 'Open' && (
                     <button onClick={() => openClose(r)} className="text-xs text-orange-600 hover:text-orange-800 font-semibold border border-orange-300 px-2 py-0.5 rounded">Tutup</button>
                   )}
-                  <button onClick={() => handleDelete(r.id, r.farm)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                  <button onClick={() => handleDeleteClick(r._id, r.farm_id?.name || r.farm)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </td>
               </tr>
             ))}
@@ -227,8 +213,74 @@ const LandPrepSection = ({ showToast }) => {
         </table>
       </div>
 
-      {modal === 'add'   && <Modal title="Buka Lahan Baru" onClose={() => setModal(null)}><LandForm onSubmit={handleAdd} label="Buka Lahan" /></Modal>}
-      {modal === 'edit'  && <Modal title="Edit Data Lahan" onClose={() => setModal(null)}><LandForm onSubmit={handleEdit} label="Simpan Perubahan" /></Modal>}
+      {modal === 'add'   && (
+        <Modal title="Buka Lahan Baru" onClose={() => setModal(null)}>
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Farm / Blok" required>
+                <Select name="farm_id" value={form.farm_id} onChange={fc} required>
+                  <option value="">-- Pilih Farm --</option>
+                  {FARMS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </Select>
+              </FormField>
+              <FormField label="Siklus Tanam" required>
+                <Input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Tgl Buka" required>
+                <Input type="date" name="opening_date" value={form.opening_date} onChange={fc} required />
+              </FormField>
+              <FormField label="Biaya Pembersihan (Rp)">
+                <Input type="number" name="clearing_cost" value={form.clearing_cost} onChange={fc} min="0" placeholder="0" />
+              </FormField>
+            </div>
+            <FormField label="Catatan">
+              <textarea name="notes" value={form.notes} onChange={fc} rows={2}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Catatan tambahan..." />
+            </FormField>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
+              <SaveBtn label="Buka Lahan" />
+            </div>
+          </form>
+        </Modal>
+      )}
+      {modal === 'edit'  && (
+        <Modal title="Edit Data Lahan" onClose={() => setModal(null)}>
+          <form onSubmit={handleEdit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Farm / Blok" required>
+                <Select name="farm_id" value={form.farm_id} onChange={fc} required>
+                  <option value="">-- Pilih Farm --</option>
+                  {FARMS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </Select>
+              </FormField>
+              <FormField label="Siklus Tanam" required>
+                <Input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Tgl Buka" required>
+                <Input type="date" name="opening_date" value={form.opening_date} onChange={fc} required />
+              </FormField>
+              <FormField label="Biaya Pembersihan (Rp)">
+                <Input type="number" name="clearing_cost" value={form.clearing_cost} onChange={fc} min="0" placeholder="0" />
+              </FormField>
+            </div>
+            <FormField label="Catatan">
+              <textarea name="notes" value={form.notes} onChange={fc} rows={2}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Catatan tambahan..." />
+            </FormField>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
+              <SaveBtn label="Simpan Perubahan" />
+            </div>
+          </form>
+        </Modal>
+      )}
       {modal === 'close' && (
         <Modal title="Tutup Lahan" onClose={() => setModal(null)}>
           <form onSubmit={handleClose} className="space-y-4">
@@ -240,6 +292,8 @@ const LandPrepSection = ({ showToast }) => {
           </form>
         </Modal>
       )}
+
+      <DeleteConfirmModal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={confirmDelete} itemName={deleteTarget?.name} />
     </div>
   );
 };
@@ -249,9 +303,12 @@ const LandPrepSection = ({ showToast }) => {
 const PLANTING_STATUSES = ['Planned', 'In_Progress', 'Completed', 'Cancelled'];
 
 const PlantingSection = ({ showToast }) => {
-  const [records, setRecords] = useState(initialPlantings);
+  const { data: recordsData, loading, fetchData, createData, updateData, deleteData } = useGenericResource('lifecycle/plantings');
+  const records = Array.isArray(recordsData) ? recordsData : [];
+  useEffect(() => { fetchData(); }, [fetchData]);
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState({
     farm_id: '', cycle: '', crop_type: '', variety: '',
     planting_date: '', area_ha: '', seedling_count: '', executor: '', status: 'Planned', notes: ''
@@ -271,24 +328,25 @@ const PlantingSection = ({ showToast }) => {
     setModal('form');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const farm = FARMS.find(f => f.id === form.farm_id);
-    const entry = { ...form, farm: farm?.name || form.farm || editTarget?.farm, area_ha: +form.area_ha, seedling_count: +form.seedling_count };
+    const entry = { ...form, area_ha: +form.area_ha, seedling_count: +form.seedling_count };
     if (editTarget) {
-      setRecords(p => p.map(r => r.id === editTarget.id ? { ...r, ...entry } : r));
+      await updateData(editTarget._id, entry);
       showToast('Data penanaman diperbarui!');
     } else {
-      setRecords(p => [...p, { id: Date.now(), ...entry }]);
+      await createData(entry);
       showToast('Aktivitas penanaman baru ditambahkan!');
     }
     setModal(null);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Hapus data penanaman ini?')) {
-      setRecords(p => p.filter(r => r.id !== id));
-      showToast('Data penanaman dihapus.');
+  const handleDeleteClick = (id, name) => setDeleteTarget({ id, name });
+  const confirmDelete = async () => {
+    if (deleteTarget) {
+      await deleteData(deleteTarget.id);
+      showToast('Data dihapus.');
+      setDeleteTarget(null);
     }
   };
 
@@ -320,8 +378,8 @@ const PlantingSection = ({ showToast }) => {
           <tbody className="divide-y divide-gray-100 bg-white">
             {records.length === 0 && <EmptyRow cols={9} label="Belum ada data penanaman." />}
             {records.map(r => (
-              <tr key={r.id} className="hover:bg-gray-50 transition">
-                <td className="px-4 py-3 font-medium text-gray-900">{r.farm}</td>
+              <tr key={r._id || Math.random()} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-3 font-medium text-gray-900">{r.farm_id?.name || r.farm || '—'}</td>
                 <td className="px-4 py-3 text-gray-600">{r.crop_type}</td>
                 <td className="px-4 py-3 text-gray-500 italic text-xs">{r.variety || '—'}</td>
                 <td className="px-4 py-3">{new Date(r.planting_date).toLocaleDateString('id-ID')}</td>
@@ -331,7 +389,7 @@ const PlantingSection = ({ showToast }) => {
                 <td className="px-4 py-3"><Badge status={r.status} /></td>
                 <td className="px-4 py-3 flex gap-2">
                   <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
-                  <button onClick={() => handleDelete(r.id)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                  <button onClick={() => handleDeleteClick(r._id, r.farm_id?.name || r.farm)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </td>
               </tr>
             ))}
@@ -357,10 +415,10 @@ const PlantingSection = ({ showToast }) => {
               <FormField label="Jenis Tanaman" required>
                 <Select name="crop_type" value={form.crop_type} onChange={fc} required>
                   <option value="">-- Pilih --</option>
-                  <option value="Kelapa Sawit">Kelapa Sawit</option>
-                  <option value="Kopi">Kopi</option>
-                  <option value="Padi">Padi</option>
-                  <option value="Jagung">Jagung</option>
+                  <option value="Oil_Palm">Kelapa Sawit</option>
+                  <option value="Coffee">Kopi</option>
+                  <option value="Rice">Padi</option>
+                  <option value="Corn">Jagung</option>
                 </Select>
               </FormField>
               <FormField label="Varietas">
@@ -400,6 +458,8 @@ const PlantingSection = ({ showToast }) => {
           </form>
         </Modal>
       )}
+
+      <DeleteConfirmModal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={confirmDelete} itemName={deleteTarget?.name} />
     </div>
   );
 };
@@ -416,9 +476,12 @@ const ACTIVITY_TYPES = [
 ];
 
 const MaintenanceSection = ({ showToast }) => {
-  const [records, setRecords] = useState(initialMaintenances);
+  const { data: recordsData, loading, fetchData, createData, updateData, deleteData } = useGenericResource('lifecycle/activities');
+  const records = Array.isArray(recordsData) ? recordsData : [];
+  useEffect(() => { fetchData(); }, [fetchData]);
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [filter, setFilter] = useState('');
   const [form, setForm] = useState({
     farm_id: '', cycle: '', activity_type: 'Fertilizing',
@@ -439,29 +502,30 @@ const MaintenanceSection = ({ showToast }) => {
     setModal('form');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const farm = FARMS.find(f => f.id === form.farm_id);
-    const entry = { ...form, farm: farm?.name || editTarget?.farm || form.farm, labor_hours: +form.labor_hours, cost: +form.cost };
+    const entry = { ...form, labor_hours: +form.labor_hours, cost: +form.cost };
     if (editTarget) {
-      setRecords(p => p.map(r => r.id === editTarget.id ? { ...r, ...entry } : r));
+      await updateData(editTarget._id, entry);
       showToast('Aktivitas perawatan diperbarui!');
     } else {
-      setRecords(p => [...p, { id: Date.now(), ...entry }]);
+      await createData(entry);
       showToast('Aktivitas perawatan ditambahkan!');
     }
     setModal(null);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Hapus aktivitas perawatan ini?')) {
-      setRecords(p => p.filter(r => r.id !== id));
-      showToast('Aktivitas dihapus.');
+  const handleDeleteClick = (id, name) => setDeleteTarget({ id, name });
+  const confirmDelete = async () => {
+    if (deleteTarget) {
+      await deleteData(deleteTarget.id);
+      showToast('Data dihapus.');
+      setDeleteTarget(null);
     }
   };
 
-  const handleStatusChange = (id, newStatus) => {
-    setRecords(p => p.map(r => r.id === id ? { ...r, status: newStatus } : r));
+  const handleStatusChange = async (id, newStatus) => {
+    await updateData(id, { status: newStatus });
     showToast(`Status diubah menjadi ${newStatus.replace(/_/g, ' ')}`);
   };
 
@@ -526,8 +590,8 @@ const MaintenanceSection = ({ showToast }) => {
           <tbody className="divide-y divide-gray-100 bg-white">
             {filtered.length === 0 && <EmptyRow cols={9} label="Tidak ada aktivitas ditemukan." />}
             {filtered.map(r => (
-              <tr key={r.id} className="hover:bg-gray-50 transition">
-                <td className="px-4 py-3 font-medium text-gray-900">{r.farm}</td>
+              <tr key={r._id || Math.random()} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-3 font-medium text-gray-900">{r.farm_id?.name || r.farm || '—'}</td>
                 <td className="px-4 py-3">
                   <span className="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2 py-0.5 rounded">
                     {ACTIVITY_TYPES.find(a => a.value === r.activity_type)?.label || r.activity_type}
@@ -541,7 +605,7 @@ const MaintenanceSection = ({ showToast }) => {
                 <td className="px-4 py-3">
                   <select
                     value={r.status}
-                    onChange={e => handleStatusChange(r.id, e.target.value)}
+                    onChange={e => handleStatusChange(r._id, e.target.value)}
                     className="text-xs border border-gray-200 rounded px-2 py-1 outline-none"
                   >
                     <option value="Pending">Pending</option>
@@ -552,7 +616,7 @@ const MaintenanceSection = ({ showToast }) => {
                 </td>
                 <td className="px-4 py-3 flex gap-2">
                   <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
-                  <button onClick={() => handleDelete(r.id)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                  <button onClick={() => handleDeleteClick(r._id, ACTIVITY_TYPES.find(a => a.value === r.activity_type)?.label || r.activity_type)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </td>
               </tr>
             ))}
@@ -615,6 +679,8 @@ const MaintenanceSection = ({ showToast }) => {
           </form>
         </Modal>
       )}
+
+      <DeleteConfirmModal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={confirmDelete} itemName={deleteTarget?.name} />
     </div>
   );
 };
@@ -622,9 +688,12 @@ const MaintenanceSection = ({ showToast }) => {
 // ─── 4. HARVESTING SECTION ─────────────────────────────────────────────────────
 
 const HarvestingSection = ({ showToast }) => {
-  const [records, setRecords] = useState(initialHarvests);
+  const { data: recordsData, loading, fetchData, createData, updateData, deleteData } = useGenericResource('lifecycle/harvests');
+  const records = Array.isArray(recordsData) ? recordsData : [];
+  useEffect(() => { fetchData(); }, [fetchData]);
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [yieldInput, setYieldInput] = useState('');
   const [form, setForm] = useState({
     farm_id: '', cycle: '', opening_date: '',
@@ -647,37 +716,32 @@ const HarvestingSection = ({ showToast }) => {
 
   const openClose = (r) => { setEditTarget(r); setYieldInput(''); setModal('close'); };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const farm = FARMS.find(f => f.id === form.farm_id);
-    const now = new Date();
-    const end = new Date(form.expected_end);
-    const days_remaining = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
-    const entry = { ...form, farm: farm?.name || editTarget?.farm, expected_yield_kg: +form.expected_yield_kg, days_remaining, actual_yield_kg: null, status: 'Open' };
+    const entry = { ...form, expected_yield_kg: +form.expected_yield_kg, harvest_opening_date: form.opening_date };
     if (editTarget) {
-      setRecords(p => p.map(r => r.id === editTarget.id ? { ...r, ...entry, status: r.status, actual_yield_kg: r.actual_yield_kg } : r));
+      await updateData(editTarget._id, entry);
       showToast('Data panen diperbarui!');
     } else {
-      setRecords(p => [...p, { id: Date.now(), ...entry }]);
+      await createData({ ...entry, status: 'Open' });
       showToast('Masa panen baru dibuka!');
     }
     setModal(null);
   };
 
-  const handleClose = (e) => {
+  const handleClose = async (e) => {
     e.preventDefault();
-    setRecords(p => p.map(r => r.id === editTarget.id
-      ? { ...r, status: 'Completed', actual_yield_kg: +yieldInput, days_remaining: 0 }
-      : r
-    ));
-    showToast(`Masa panen ditutup. Hasil: ${Number(yieldInput).toLocaleString('id-ID')} kg`);
+    await updateData(editTarget._id, { status: 'Completed', actual_yield_kg: +yieldInput });
+    showToast(`Masa panen ditutup.`);
     setModal(null);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Hapus record panen ini?')) {
-      setRecords(p => p.filter(r => r.id !== id));
-      showToast('Record panen dihapus.');
+  const handleDeleteClick = (id, name) => setDeleteTarget({ id, name });
+  const confirmDelete = async () => {
+    if (deleteTarget) {
+      await deleteData(deleteTarget.id);
+      showToast('Data dihapus.');
+      setDeleteTarget(null);
     }
   };
 
@@ -730,10 +794,10 @@ const HarvestingSection = ({ showToast }) => {
               const isOverdue = r.status === 'Open' && r.days_remaining === 0;
               const isUrgent = r.status === 'Open' && r.days_remaining > 0 && r.days_remaining <= 7;
               return (
-                <tr key={r.id} className={`hover:bg-gray-50 transition ${isOverdue ? 'bg-red-50' : ''}`}>
-                  <td className="px-4 py-3 font-medium text-gray-900">{r.farm}</td>
+                <tr key={r._id || Math.random()} className={`hover:bg-gray-50 transition ${isOverdue ? 'bg-red-50' : ''}`}>
+                  <td className="px-4 py-3 font-medium text-gray-900">{r.farm_id?.name || r.farm || '—'}</td>
                   <td className="px-4 py-3 text-gray-500">{r.cycle}</td>
-                  <td className="px-4 py-3">{new Date(r.opening_date).toLocaleDateString('id-ID')}</td>
+                  <td className="px-4 py-3">{r.harvest_opening_date ? new Date(r.harvest_opening_date).toLocaleDateString('id-ID') : '—'}</td>
                   <td className="px-4 py-3">{new Date(r.expected_end).toLocaleDateString('id-ID')}</td>
                   <td className="px-4 py-3">{r.expected_yield_kg?.toLocaleString('id-ID')}</td>
                   <td className="px-4 py-3 font-semibold text-green-700">{r.actual_yield_kg != null ? r.actual_yield_kg.toLocaleString('id-ID') : <span className="text-gray-300">—</span>}</td>
@@ -750,7 +814,7 @@ const HarvestingSection = ({ showToast }) => {
                     {r.status === 'Open' && (
                       <button onClick={() => openClose(r)} className="text-xs text-orange-600 hover:text-orange-800 font-semibold border border-orange-300 px-2 py-0.5 rounded">Tutup</button>
                     )}
-                    <button onClick={() => handleDelete(r.id)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
+                    <button onClick={() => handleDeleteClick(r._id, r.farm_id?.name || r.farm)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                   </td>
                 </tr>
               );
@@ -796,7 +860,7 @@ const HarvestingSection = ({ showToast }) => {
         <Modal title="Tutup Masa Panen" onClose={() => setModal(null)}>
           <form onSubmit={handleClose} className="space-y-4">
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-              <p className="text-sm text-orange-800 font-semibold">{editTarget?.farm} — {editTarget?.cycle}</p>
+              <p className="text-sm text-orange-800 font-semibold">{editTarget?.farm_id?.name || editTarget?.farm} — {editTarget?.cycle}</p>
               <p className="text-xs text-orange-600 mt-0.5">Target: {editTarget?.expected_yield_kg?.toLocaleString('id-ID')} kg</p>
             </div>
             <FormField label="Hasil Panen Aktual (Kg)" required>
@@ -816,6 +880,8 @@ const HarvestingSection = ({ showToast }) => {
           </form>
         </Modal>
       )}
+
+      <DeleteConfirmModal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={confirmDelete} itemName={deleteTarget?.name} />
     </div>
   );
 };

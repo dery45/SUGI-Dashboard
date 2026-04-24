@@ -72,4 +72,30 @@ router.get('/:id', isManagement, async (req, res) => {
   }
 });
 
+// PUT /api/sales/:id — Edit a sale entry
+router.put('/:id', isManagement, async (req, res) => {
+  try {
+    const sale = await Sale.findOneAndUpdate(
+      { _id: req.params.id, organization_id: req.user.organization_id },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
+    res.json({ success: true, data: sale });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/sales/:id — Delete a sale
+router.delete('/:id', isManagement, async (req, res) => {
+  try {
+    const sale = await Sale.findOneAndDelete({ _id: req.params.id, organization_id: req.user.organization_id });
+    if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

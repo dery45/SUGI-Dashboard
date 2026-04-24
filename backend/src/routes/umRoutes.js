@@ -54,4 +54,30 @@ router.post('/', isCompanyAdmin, async (req, res) => {
   }
 });
 
+// PUT /api/um/:id 
+router.put('/:id', isCompanyAdmin, async (req, res) => {
+  try {
+    const um = await UM.findOneAndUpdate(
+      { _id: req.params.id, organization_id: req.user.organization_id },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    if (!um) return res.status(404).json({ success: false, message: 'UM not found' });
+    res.json({ success: true, data: um });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/um/:id 
+router.delete('/:id', isCompanyAdmin, async (req, res) => {
+  try {
+    const um = await UM.findOneAndDelete({ _id: req.params.id, organization_id: req.user.organization_id });
+    if (!um) return res.status(404).json({ success: false, message: 'UM not found' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

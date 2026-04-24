@@ -20,9 +20,8 @@ const saleSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-compute total_revenue before save
-saleSchema.pre('save', function (next) {
+saleSchema.pre('save', function () {
   this.total_revenue = this.quantity_kg * this.price_per_kg;
-  next();
 });
 
 saleSchema.index({ organization_id: 1, sale_date: -1 });

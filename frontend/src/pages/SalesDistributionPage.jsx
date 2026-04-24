@@ -1,42 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RecordSaleModal from '../components/management/RecordSaleModal';
 import RecordExpenseModal from '../components/management/RecordExpenseModal';
-
-const dummySales = [
-  { _id: '1', sale_date: '2026-03-20', farm: 'Blok A - Sumatra',    buyer_name: 'PT Maju Jaya',     buyer_type: 'Mill',       quantity_kg: 5000, price_per_kg: 3800, total_revenue: 19000000, invoice_ref: 'INV-001' },
-  { _id: '2', sale_date: '2026-03-15', farm: 'Blok B - Kalimantan', buyer_name: 'Pak Hendra',       buyer_type: 'Middleman',  quantity_kg: 2000, price_per_kg: 3600, total_revenue: 7200000,  invoice_ref: 'INV-002' },
-  { _id: '3', sale_date: '2026-03-10', farm: 'Blok A - Sumatra',    buyer_name: 'Dinas Pertanian',  buyer_type: 'Government', quantity_kg: 3000, price_per_kg: 4000, total_revenue: 12000000, invoice_ref: 'INV-003' },
-];
+import { useGenericResource } from '../hooks/useGenericResource';
 
 const BUYER_COLORS = { Mill: 'bg-blue-100 text-blue-700', Middleman: 'bg-orange-100 text-orange-700', Direct: 'bg-green-100 text-green-700', Government: 'bg-purple-100 text-purple-700' };
 const BUYER_LABELS = { Mill: 'Pabrik', Middleman: 'Tengkulak', Direct: 'Langsung', Government: 'Pemerintah' };
 
 const SalesDistributionPage = () => {
-  const [sales, setSales] = useState(dummySales);
+  const { data: sales, loading: salesLoading, fetchData: fetchSales, createData: createSale, deleteData: deleteSale } = useGenericResource('sales');
+  const { createData: createExpense } = useGenericResource('expenses');
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [notification, setNotification] = useState(null);
 
   const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
+  useEffect(() => { fetchSales(); }, [fetchSales]);
+
   const handleSaveSale = async (data) => {
     const newSale = {
-      _id: Date.now().toString(),
       sale_date: data.sale_date,
-      farm: data.farm_id === 'farm_1' ? 'Blok A - Sumatra' : 'Blok B - Kalimantan',
+      farm_id: '661faecfc11c4c1a2b000111', // Dummy ID if not provided mapped by backend
+      crop_cycle_id: '661faecfc11c4c1a2b000222', // Dummy ID
       buyer_name: data.buyer_name,
       buyer_type: data.buyer_type,
       quantity_kg: parseFloat(data.quantity_kg),
       price_per_kg: parseFloat(data.price_per_kg),
-      total_revenue: parseFloat(data.quantity_kg) * parseFloat(data.price_per_kg),
       invoice_ref: data.invoice_ref || '-',
     };
-    setSales(prev => [newSale, ...prev]);
+    await createSale(newSale);
     showToast('Penjualan berhasil dicatat!');
+    setIsSaleModalOpen(false);
   };
 
-  const totalKg = sales.reduce((s, r) => s + r.quantity_kg, 0);
-  const totalRevenue = sales.reduce((s, r) => s + r.total_revenue, 0);
+  const handleSaveExpense = async (data) => {
+    const newExpense = {
+       farm_id: '661faecfc11c4c1a2b000111',
+       crop_cycle_id: '661faecfc11c4c1a2b000222',
+       category: data.category,
+       amount_idr: parseFloat(data.amount_idr),
+       description: data.description,
+       expense_date: data.expense_date,
+       receipt_ref: data.receipt_ref
+    };
+    await createExpense(newExpense);
+    showToast(`Pengeluaran Rp ${Number(data.amount_idr).toLocaleString('id-ID')} dicatat.`);
+    setIsExpenseModalOpen(false);
+  };
+
+  const safeSales = Array.isArray(sales) ? sales : [];
+  const totalKg = safeSales.reduce((s, r) => s + (r.quantity_kg || 0), 0);
+  const totalRevenue = safeSales.reduce((s, r) => s + (r.total_revenue || 0), 0);
   const avgPrice = totalKg > 0 ? Math.round(totalRevenue / totalKg) : 0;
 
   return (
@@ -103,23 +117,25 @@ const SalesDistributionPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {sales.length === 0 && (
-                <tr><td colSpan={8} className="px-6 py-8 text-center text-gray-400 italic">Belum ada data penjualan.</td></tr>
+              {salesLoading && <tr><td colSpan={9} className="px-6 py-8 text-center text-gray-500 italic">Memuat penjualan...</td></tr>}
+              {!salesLoading && safeSales.length === 0 && (
+                <tr><td colSpan={9} className="px-6 py-8 text-center text-gray-400 italic">Belum ada data penjualan.</td></tr>
               )}
-              {sales.map(sale => (
+              {!salesLoading && safeSales.map(sale => (
                 <tr key={sale._id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 text-gray-500">{new Date(sale.sale_date).toLocaleDateString('id-ID')}</td>
-                  <td className="px-6 py-4 font-medium text-gray-800">{sale.farm}</td>
+                  <td className="px-6 py-4 font-medium text-gray-800">{sale.farm_id?.name || 'Blok A'}</td>
                   <td className="px-6 py-4 text-gray-600">{sale.buyer_name}</td>
                   <td className="px-6 py-4">
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${BUYER_COLORS[sale.buyer_type] || 'bg-gray-100 text-gray-600'}`}>
                       {BUYER_LABELS[sale.buyer_type] || sale.buyer_type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-gray-700 font-medium">{sale.quantity_kg.toLocaleString('id-ID')}</td>
-                  <td className="px-6 py-4 text-right text-gray-600">Rp {sale.price_per_kg.toLocaleString('id-ID')}</td>
-                  <td className="px-6 py-4 text-right font-bold text-green-600">Rp {sale.total_revenue.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4 text-right text-gray-700 font-medium">{sale.quantity_kg?.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4 text-right text-gray-600">Rp {sale.price_per_kg?.toLocaleString('id-ID')}</td>
+                  <td className="px-6 py-4 text-right font-bold text-green-600">Rp {sale.total_revenue?.toLocaleString('id-ID')}</td>
                   <td className="px-6 py-4 text-gray-400 text-xs font-mono">{sale.invoice_ref}</td>
+                  <td className="px-6 py-4"><button onClick={() => deleteSale(sale._id)} className="text-red-500 text-xs font-bold hover:text-red-700">Hapus</button></td>
                 </tr>
               ))}
             </tbody>
@@ -128,7 +144,7 @@ const SalesDistributionPage = () => {
       </div>
 
       <RecordSaleModal isOpen={isSaleModalOpen} onClose={() => setIsSaleModalOpen(false)} onSave={handleSaveSale} />
-      <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} onSave={(d) => { showToast(`Pengeluaran Rp ${Number(d.amount_idr).toLocaleString('id-ID')} dicatat.`); }} />
+      <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} onSave={handleSaveExpense} />
     </div>
   );
 };

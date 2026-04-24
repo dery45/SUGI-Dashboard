@@ -2,18 +2,23 @@ const mongoose = require('mongoose');
 
 const harvestPeriodSchema = new mongoose.Schema({
   farm_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Farm', required: true },
-  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle', required: true },
+  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
+  cycle: { type: String },
   organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
   
-  status: { type: String, enum: ['Open', 'Closed'], default: 'Open' },
+  status: { type: String, enum: ['Open', 'Closed', 'Completed'], default: 'Open' },
   
   harvest_opening_date: { type: Date, required: true },
   harvest_closing_date: { type: Date },
+  expected_end: { type: Date },
   
   expected_yield_window_start: { type: Date },
   expected_yield_window_end: { type: Date },
   
+  expected_yield_kg: { type: Number },
+  actual_yield_kg: { type: Number },
   total_yield_kg: { type: Number, default: 0 },
+  notes: { type: String },
   quality_grade: { type: String, enum: ['A', 'B', 'C', 'Reject'] },
   
   um_responsible_id: { type: mongoose.Schema.Types.ObjectId, ref: 'UM' },
@@ -27,11 +32,10 @@ const harvestPeriodSchema = new mongoose.Schema({
 harvestPeriodSchema.index({ crop_cycle_id: 1, status: 1 });
 harvestPeriodSchema.index({ organization_id: 1 });
 
-harvestPeriodSchema.pre('save', function(next) {
+harvestPeriodSchema.pre('save', function() {
   if (!this.isNew) {
     this.version += 1;
   }
-  next();
 });
 
 module.exports = mongoose.model('HarvestPeriod', harvestPeriodSchema);

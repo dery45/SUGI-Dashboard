@@ -75,4 +75,15 @@ router.patch('/:id', isManagement, async (req, res) => {
   }
 });
 
+// DELETE /api/expenses/:id — Delete an expense
+router.delete('/:id', isManagement, async (req, res) => {
+  try {
+    const expense = await Expense.findOneAndDelete({ _id: req.params.id, organization_id: req.user.organization_id });
+    if (!expense) return res.status(404).json({ success: false, message: 'Expense not found' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

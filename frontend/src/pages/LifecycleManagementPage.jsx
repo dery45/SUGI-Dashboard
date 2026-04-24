@@ -4,18 +4,14 @@ import NewCycleModal from '../components/management/NewCycleModal';
 
 const LifecycleManagementPage = () => {
   const [isNewCycleOpen, setIsNewCycleOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('');
   const [notification, setNotification] = useState(null);
 
   const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
   const handleSaveCycle = (data) => {
-    // In production: POST /api/lifecycle/cycles
     console.log('New cycle:', data);
     showToast('Siklus tanam baru berhasil dibuat!');
   };
-
-  const statuses = ['Planned', 'Land_Preparation', 'Planted', 'Maintenance', 'Harvesting', 'Completed'];
 
   return (
     <div className="space-y-6">
@@ -40,31 +36,9 @@ const LifecycleManagementPage = () => {
         </button>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-2">Filter Status:</span>
-          <button
-            onClick={() => setStatusFilter('')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${!statusFilter ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-          >
-            Semua
-          </button>
-          {statuses.map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s === statusFilter ? '' : s)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${statusFilter === s ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
-              {s.replace(/_/g, ' ')}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Lifecycle Tabs Component */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <LifecycleTabs statusFilter={statusFilter} />
+        <LifecycleTabs />
       </div>
 
       <NewCycleModal isOpen={isNewCycleOpen} onClose={() => setIsNewCycleOpen(false)} onSave={handleSaveCycle} />
