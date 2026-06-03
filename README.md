@@ -22,6 +22,34 @@
 - **Farmer & Government Dashboards**: Detailed pricing (GKP) visualization and national food security monitoring.
 - **Premium Glassmorphism UI**: A cutting-edge, minimalist "Emerald & White" aesthetic with butter-smooth transitions (`cubic-bezier` easing) and high-end animations.
 
+## 🖼️ User Interface Preview
+
+### 🔑 1. Authentication & Login Portal
+A secure, role-based login interface providing distinct entry points for Farmers, Unit Managers, Group Admins, and Company Admins.
+
+![Login](image/login.png)
+
+---
+
+### 🌾 2. Farmer Dashboard
+Empowering local agriculturalists with real-time grain pricing (GKP) visualizations and localized farm highlights.
+
+![Farmer Dashboard](image/farmer-dashboard.png)
+
+---
+
+### 🏛️ 3. Government & Security Dashboard
+A macro-level dashboard tracking national food security indexes, regional pricing, and harvest projections.
+
+![Government Dashboard](image/goverment-dashboard.png)
+
+---
+
+### 🔄 4. Agricultural Lifecycle Management
+An end-to-end tracking tool covering land preparation, planting schedules, maintenance logging, and harvest optimization.
+
+![Lifecycle Management](image/lifecycle-management.png)
+
 ## 🛠️ Tech Stack
 
 ### Frontend
