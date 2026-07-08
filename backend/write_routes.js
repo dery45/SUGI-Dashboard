@@ -20,7 +20,7 @@ router.get('/land', isManagement, async (req, res) => {
 
 router.post('/land', isManagement, async (req, res) => {
   try {
-    const record = new LandRecord({...req.body, organization_id: req.user.organization_id, createdBy: req.user._id});
+    const record = new LandRecord({...req.body, createdBy: req.user._id});
     await record.save();
     res.json(record);
   } catch (error) { res.status(400).json({ error: error.message }); }
@@ -43,14 +43,14 @@ router.delete('/land/:id', isManagement, async (req, res) => {
 // === PLANTINGS (CropCycle mapping for simplistic CRUD on frontend) ===
 router.get('/plantings', isManagement, async (req, res) => {
   try {
-    const data = await CropCycle.find({ status: { $in: ['Planned', 'In_Progress', 'Completed', 'Cancelled', 'Land_Preparation', 'Planted', 'Maintenance'] } }).populate('farm_id').sort({ createdAt: -1 });
+    const data = await CropCycle.find({ status: { $in: ['Planned', 'In_Progress', 'Completed', 'Cancelled', 'Land_Preparation', 'Planted', 'Maintenance'] } }).populate('farm_id crop_type_ref').sort({ createdAt: -1 });
     res.json(data);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 router.post('/plantings', isManagement, async (req, res) => {
   try {
-    const record = new CropCycle({...req.body, organization_id: req.user.organization_id, createdBy: req.user._id});
+    const record = new CropCycle({...req.body, createdBy: req.user._id});
     await record.save();
     res.json(record);
   } catch (error) { res.status(400).json({ error: error.message }); }
@@ -73,14 +73,14 @@ router.delete('/plantings/:id', isManagement, async (req, res) => {
 // === ACTIVITIES / MAINTENANCE ===
 router.get('/activities', isManagement, async (req, res) => {
   try {
-    const data = await Activity.find().populate('farm_id crop_cycle_id').sort({ date: -1 });
+    const data = await Activity.find().populate('farm_id crop_cycle_id activity_type_ref').sort({ date: -1 });
     res.json(data);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 router.post('/activities', isManagement, async (req, res) => {
   try {
-    const record = new Activity({...req.body, organization_id: req.user.organization_id, createdBy: req.user._id});
+    const record = new Activity({...req.body, createdBy: req.user._id});
     await record.save();
     res.json(record);
   } catch (error) { res.status(400).json({ error: error.message }); }
@@ -110,7 +110,7 @@ router.get('/harvests', isManagement, async (req, res) => {
 
 router.post('/harvests', isManagement, async (req, res) => {
   try {
-    const record = new HarvestPeriod({...req.body, organization_id: req.user.organization_id, createdBy: req.user._id});
+    const record = new HarvestPeriod({...req.body, createdBy: req.user._id});
     await record.save();
     res.json(record);
   } catch (error) { res.status(400).json({ error: error.message }); }

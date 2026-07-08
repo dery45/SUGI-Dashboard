@@ -1,47 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import LifecycleTabs from '../components/management/LifecycleTabs';
-import NewCycleModal from '../components/management/NewCycleModal';
+import Card from '../components/common/Card';
+
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const LifecycleManagementPage = () => {
-  const [isNewCycleOpen, setIsNewCycleOpen] = useState(false);
-  const [notification, setNotification] = useState(null);
+  const { token, user } = useAuth();
+  const [allFarms, setAllFarms] = useState([]);
+  const [assignments, setAssignments] = useState([]);
 
-  const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  const handleSaveCycle = (data) => {
-    console.log('New cycle:', data);
-    showToast('Siklus tanam baru berhasil dibuat!');
-  };
+  useEffect(() => {
+    Promise.all([
+      fetch(`${BASE_URL}/master-data/farms`, { headers }).then(r => r.json()),
+      fetch(`${BASE_URL}/assignments/farmer-assignments`, { headers }).then(r => r.json()).catch(() => ({ success: false }))
+    ]).then(([fj, aj]) => {
+      if (fj.success) setAllFarms(fj.data);
+      if (aj.success) setAssignments(aj.data);
+    }).catch(() => {});
+  }, [token]);
+
+  const availableFarms = (() => {
+    if (user?.role === 'superadmin' || user?.role === 'government') return allFarms;
+    if (!assignments.length) return allFarms;
+    const assignedFarmMasterIds = [...new Set(assignments.map(a => {
+      if (typeof a.farm === 'object') return a.farm?._id;
+      return a.farm;
+    }).filter(Boolean))];
+    if (!assignedFarmMasterIds.length) return allFarms;
+    return allFarms.filter(f => assignedFarmMasterIds.includes(f._id));
+  })();
+
+  const farmLocked = availableFarms.length === 1;
 
   return (
-    <div className="space-y-6">
-      {/* Toast */}
-      {notification && (
-        <div className="fixed top-4 right-4 z-[100] bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg text-sm font-medium">
-          ✓ {notification}
+    <div className="flex flex-col gap-8 animate-fade-in pb-16">
+      <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
+          <div>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Manajemen Siklus Pertanian</h1>
+            <p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Kelola seluruh tahapan siklus tanam</p>
+          </div>
         </div>
-      )}
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Manajemen Siklus Pertanian</h1>
-          <p className="text-gray-500 text-sm">Kelola seluruh tahapan siklus: Persiapan Lahan, Penanaman, Perawatan, dan Panen</p>
-        </div>
-        <button
-          onClick={() => setIsNewCycleOpen(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 text-sm shadow-sm"
-        >
-          + Buat Siklus Baru
-        </button>
       </div>
-
-      {/* Lifecycle Tabs Component */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <LifecycleTabs />
-      </div>
-
-      <NewCycleModal isOpen={isNewCycleOpen} onClose={() => setIsNewCycleOpen(false)} onSave={handleSaveCycle} />
+      <Card>
+        <LifecycleTabs availableFarms={availableFarms} farmLocked={farmLocked} />
+      </Card>
     </div>
   );
 };

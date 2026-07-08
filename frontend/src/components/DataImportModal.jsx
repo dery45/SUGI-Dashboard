@@ -78,8 +78,17 @@ export default function DataImportModal({ isOpen, onClose, template, onImportSuc
       return;
     }
 
+    // Normalise header keys: trim whitespace
+    const normData = rawData.map(row => {
+      const norm = {};
+      for (const [k, v] of Object.entries(row)) {
+        norm[k.trim()] = v;
+      }
+      return norm;
+    });
+
     // Validate headers
-    const actualHeaders = Object.keys(rawData[0]);
+    const actualHeaders = Object.keys(normData[0]);
     const missingHeaders = template.columns
       .filter((col) => col.required)
       .filter((col) => !actualHeaders.includes(col.header));
@@ -94,7 +103,7 @@ export default function DataImportModal({ isOpen, onClose, template, onImportSuc
     }
 
     // Validate each row
-    rawData.forEach((row, index) => {
+    normData.forEach((row, index) => {
       const rowNum = index + 1; // Actual row number in spreadsheet (excluding header)
       const formattedRow = {};
       let hasError = false;

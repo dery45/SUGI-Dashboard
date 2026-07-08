@@ -1,0 +1,19 @@
+{
+  "name": "SUGI Dashboard - Food Security Intelligence",
+  "short_name": "SUGIDash",
+  "description": "Food Security Intelligence System untuk analisis dan manajemen ketahanan pangan nasional",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "any",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "48x48", "type": "image/svg+xml" },
+    { "src": "/icons.svg", "sizes": "192x192", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard Manajemen", "url": "/management", "icons": [{ "src": "/favicon.svg", "sizes": "48x48" }] },
+    { "name": "Siklus Pertanian", "url": "/management/lifecycle", "icons": [{ "src": "/favicon.svg", "sizes": "48x48" }] },
+    { "name": "Penjualan", "url": "/management/sales", "icons": [{ "src": "/favicon.svg", "sizes": "48x48" }] }
+  ]
+}

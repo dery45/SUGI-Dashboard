@@ -1,15 +1,19 @@
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, ChevronsUpDown, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, ChevronsUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit2, Trash2 } from 'lucide-react';
 
-const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPerPage = 8, onEdit, onDelete }) => {
+const PAGE_SIZES = [5, 10, 20, 50];
+
+const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPerPage: defaultItemsPerPage = 8, onEdit, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(
+    PAGE_SIZES.includes(defaultItemsPerPage) ? defaultItemsPerPage : PAGE_SIZES[1]
+  );
 
   const processedData = useMemo(() => {
     let result = [...data];
 
-    // Search logic
     if (searchTerm) {
       result = result.filter((item) =>
         Object.values(item).some(
@@ -18,13 +22,13 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
       );
     }
 
-    // Sort logic
     if (sortConfig.key) {
+      const sortFn = typeof sortConfig.key === 'function' ? sortConfig.key : (row) => row[sortConfig.key];
       result.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
-        if (aValue === null) return 1;
-        if (bValue === null) return -1;
+        const aValue = sortFn(a);
+        const bValue = sortFn(b);
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -34,11 +38,10 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
     return result;
   }, [data, searchTerm, sortConfig]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(processedData.length / itemsPerPage);
+  const totalPages = Math.ceil(processedData.length / pageSize);
   const currentItems = processedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   const requestSort = (key) => {
@@ -51,10 +54,28 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <ChevronsUpDown className="w-3 h-3 opacity-30" />;
-    return sortConfig.direction === 'asc' ? 
-      <ChevronUp className="w-4 h-4 text-primary" /> : 
+    return sortConfig.direction === 'asc' ?
+      <ChevronUp className="w-4 h-4 text-primary" /> :
       <ChevronDown className="w-4 h-4 text-primary" />;
   };
+
+  const visiblePages = useMemo(() => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  }, [totalPages, currentPage]);
 
   return (
     <div className="flex flex-col gap-4 w-full animate-fade-in">
@@ -92,8 +113,8 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
             <thead>
               <tr className="border-b border-border/20 bg-background/20 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">
                 {columns.map((col, index) => (
-                  <th 
-                    key={index} 
+                  <th
+                    key={index}
                     className={`px-6 py-4 cursor-pointer hover:bg-primary/5 transition-colors group/th ${col.sortable !== false ? '' : 'cursor-default'}`}
                     onClick={() => col.sortable !== false && requestSort(col.accessor)}
                   >
@@ -113,13 +134,16 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
             <tbody className="divide-y divide-border/10">
               {currentItems.map((row, rowIndex) => (
                 <tr key={rowIndex} className="group hover:bg-primary/[0.01] transition-colors">
-                  {columns.map((col, colIndex) => (
-                    <td key={colIndex} className="px-6 py-3.5">
-                      <span className={`text-[13px] ${colIndex === 0 ? 'font-bold text-foreground' : 'font-medium text-muted-foreground/80'}`}>
-                        {row[col.accessor] === null ? '-' : (col.format ? col.format(row[col.accessor]) : row[col.accessor])}
-                      </span>
-                    </td>
-                  ))}
+                  {columns.map((col, colIndex) => {
+                    const cellValue = typeof col.accessor === 'function' ? col.accessor(row) : row[col.accessor];
+                    return (
+                      <td key={colIndex} className="px-6 py-3.5">
+                        <span className={`text-[13px] ${colIndex === 0 ? 'font-bold text-foreground' : 'font-medium text-muted-foreground/80'}`}>
+                          {cellValue === null ? '-' : (col.format ? col.format(cellValue) : cellValue)}
+                        </span>
+                      </td>
+                    );
+                  })}
                   {(onEdit || onDelete) && (
                     <td className="px-6 py-3.5 text-right w-24">
                       <div className="flex justify-end gap-2">
@@ -149,24 +173,44 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
           </table>
         </div>
 
-        {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-background/20 border-t border-border/10 gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-muted uppercase tracking-wider opacity-60">
-                Menampilkan
-              </span>
-              <div className="px-2 py-0.5 bg-primary/10 rounded-md">
-                <span className="text-[11px] font-black text-primary">
-                  {Math.min((currentPage - 1) * itemsPerPage + 1, processedData.length)} - {Math.min(currentPage * itemsPerPage, processedData.length)}
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-muted uppercase tracking-wider opacity-60">
+                  Tampilkan
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-surface/60 border border-border/50 rounded-lg px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                >
+                  {PAGE_SIZES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <span className="text-[11px] font-bold text-muted uppercase tracking-wider opacity-60">
+                  per halaman
                 </span>
               </div>
+              <span className="text-[11px] font-bold text-muted opacity-60 hidden sm:inline">|</span>
               <span className="text-[11px] font-bold text-muted uppercase tracking-wider opacity-60">
-                dari {processedData.length} entri
+                {processedData.length} entri total
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl border border-border/40 hover:border-primary hover:text-primary disabled:opacity-20 transition-all duration-300 hover:bg-primary/5 shadow-sm disabled:cursor-not-allowed group"
+                title="Halaman Pertama"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
@@ -175,42 +219,25 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
               >
                 <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               </button>
-              
-              <div className="flex items-center gap-1 mx-1">
-                {(() => {
-                  const pages = [];
-                  const maxVisible = 5;
-                  
-                  if (totalPages <= maxVisible) {
-                    for (let i = 1; i <= totalPages; i++) pages.push(i);
-                  } else {
-                    if (currentPage <= 3) {
-                      pages.push(1, 2, 3, 4, '...', totalPages);
-                    } else if (currentPage >= totalPages - 2) {
-                      pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                    } else {
-                      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-                    }
-                  }
 
-                  return pages.map((p, i) => (
-                    p === '...' ? (
-                      <span key={`dots-${i}`} className="w-8 h-8 flex items-center justify-center text-muted opacity-40 font-black">...</span>
-                    ) : (
-                      <button
-                        key={p}
-                        onClick={() => setCurrentPage(p)}
-                        className={`w-8 h-8 rounded-xl text-[10px] font-black transition-all duration-300 border ${
-                          currentPage === p 
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105' 
-                            : 'text-muted border-transparent hover:bg-primary/5 hover:text-primary hover:border-primary/20'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    )
-                  ));
-                })()}
+              <div className="flex items-center gap-1 mx-1">
+                {visiblePages.map((p, i) =>
+                  p === '...' ? (
+                    <span key={`dots-${i}`} className="w-8 h-8 flex items-center justify-center text-muted opacity-40 font-black text-xs">...</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      className={`w-8 h-8 rounded-xl text-[10px] font-black transition-all duration-300 border ${
+                        currentPage === p
+                          ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                          : 'text-muted border-transparent hover:bg-primary/5 hover:text-primary hover:border-primary/20'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
               </div>
 
               <button
@@ -220,6 +247,14 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                 title="Halaman Selanjutnya"
               >
                 <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl border border-border/40 hover:border-primary hover:text-primary disabled:opacity-20 transition-all duration-300 hover:bg-primary/5 shadow-sm disabled:cursor-not-allowed group"
+                title="Halaman Terakhir"
+              >
+                <ChevronsRight className="w-4 h-4" />
               </button>
             </div>
           </div>

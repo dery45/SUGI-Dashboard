@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const saleSchema = new mongoose.Schema({
-  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle', required: true },
-  farm_id:       { type: mongoose.Schema.Types.ObjectId, ref: 'Farm', required: true },
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
+  farm_id:       { type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster', required: true },
+  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
 
   buyer_name: { type: String, required: true },
   buyer_type: { type: String, enum: ['Mill', 'Middleman', 'Direct', 'Government'], required: true },

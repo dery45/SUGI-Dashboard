@@ -107,17 +107,6 @@ export const importTemplates = {
       { header: 'Harga', field: 'harga', type: 'number', required: true }
     ]
   },
-  VariasiHargaProdusen: {
-    modelName: 'VariasiHargaProdusen',
-    columns: [
-      { header: 'Kode Wilayah', field: 'kode_wilayah', type: 'string', required: true, isKey: true },
-      { header: 'Provinsi', field: 'provinsi', type: 'string', required: true },
-      { header: 'Komoditas', field: 'komoditas', type: 'string', required: true, isKey: true },
-      { header: 'Tahun', field: 'tahun', type: 'string', required: true, isKey: true },
-      { header: 'Bulan', field: 'bulan', type: 'string', required: true, isKey: true },
-      { header: 'Koefisien Variasi', field: 'koefisien_variasi', type: 'number', required: true }
-    ]
-  },
   SkorPPH: {
     modelName: 'SkorPPH',
     columns: [

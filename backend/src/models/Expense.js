@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 
 const expenseSchema = new mongoose.Schema({
   crop_cycle_id:  { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
-  farm_id:        { type: mongoose.Schema.Types.ObjectId, ref: 'Farm', required: true },
-  organization_id:{ type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  farm_id:        { type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster', required: true },
+  organization_id:{ type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
 
   category: {
     type: String,
-    enum: ['Fertilizer', 'Labor', 'Transport', 'Equipment', 'Pesticide', 'Land_Rent', 'Other'],
+    enum: ['Bibit', 'Pupuk', 'Pestisida', 'Tenaga Kerja', 'Transportasi', 'Peralatan', 'Sewa Lahan', 'Lainnya'],
     required: true
   },
 

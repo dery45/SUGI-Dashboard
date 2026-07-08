@@ -12,7 +12,6 @@ const modelUniqueKeys = {
   HargaKonsumenNasional: ['tahun', 'bulan', 'komoditas'],
   HargaProdusenNasional: ['tahun', 'bulan', 'komoditas'],
   HargaProdusenProvinsi: ['tahun', 'bulan', 'kode_provinsi', 'komoditas'],
-  VariasiHargaProdusen: ['tahun', 'bulan', 'kode_wilayah', 'komoditas'],
   SkorPPH: ['tahun'],
   PanganTerselamatkan: ['tahun', 'bulan'],
   CadanganPanganProvinsi: ['tahun', 'bulan', 'kode_wilayah']

@@ -2,16 +2,17 @@ const mongoose = require('mongoose');
 
 const farmSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
-  owner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Can be an individual farmer
+  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+  owner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   location: {
     type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number], required: true } // [longitude, latitude]
+    coordinates: { type: [Number], default: [0, 0] }
   },
   area_hectares: { type: Number, required: true },
   region: { type: String },
   soil_type: { type: String },
   status: { type: String, enum: ['Active', 'Inactive', 'Under_Maintenance'], default: 'Active' },
+  master_farm: { type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 

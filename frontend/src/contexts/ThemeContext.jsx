@@ -1,38 +1,36 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const ThemeContext = createContext();
-
-export const useTheme = () => useContext(ThemeContext);
+const ThemeContext = createContext(null);
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('sugi-theme');
+    return saved || 'dark';
+  });
 
   useEffect(() => {
-    // Check system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const storedTheme = localStorage.getItem('app-theme');
-    
-    if (storedTheme) {
-      setTheme(storedTheme);
-    } else if (prefersDark) {
-      setTheme('dark');
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      root.classList.add('dark');
     }
-  }, []);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('app-theme', theme);
+    localStorage.setItem('sugi-theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
+};
+
+export const useTheme = () => {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+  return ctx;
 };

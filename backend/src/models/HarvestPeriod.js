@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 const harvestPeriodSchema = new mongoose.Schema({
   farm_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Farm', required: true },
+  farm_master: { type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster' },
+  block: { type: mongoose.Schema.Types.ObjectId, ref: 'Block' },
   crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
   cycle: { type: String },
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
   
   status: { type: String, enum: ['Open', 'Closed', 'Completed'], default: 'Open' },
   

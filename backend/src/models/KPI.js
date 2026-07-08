@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // While KPIs are typically derived via Aggregation, 
 // caching daily snapshots can be incredibly performant for dashboards.
 const kpiSnapshotSchema = new mongoose.Schema({
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
   date: { type: Date, required: true },
   
   // Aggregate Metrics

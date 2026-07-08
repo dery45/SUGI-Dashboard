@@ -1,21 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const Sale = require('../models/Sale');
+const { authenticate } = require('../middlewares/authMiddleware');
 const { isManagement } = require('../middlewares/rbacMiddleware');
+
+router.use(authenticate);
+const { required, isObjectId, isNumber, minValue, validate, errorResponse } = require('../utils/validate');
 
 // POST /api/sales — Record a new sale
 router.post('/', isManagement, async (req, res) => {
   try {
     const { crop_cycle_id, farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg, transport_notes, invoice_ref, sale_date } = req.body;
 
-    if (!crop_cycle_id || !farm_id || !buyer_name || !buyer_type || !quantity_kg || !price_per_kg) {
-      return res.status(400).json({ success: false, message: 'Field wajib: crop_cycle_id, farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg' });
+    const errs = validate({ farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg }, {
+      farm_id:     [[required, 'Farm'], [isObjectId, 'Farm']],
+      buyer_name:  [[required, 'Nama Pembeli']],
+      buyer_type:  [[required, 'Tipe Pembeli']],
+      quantity_kg: [[required, 'Jumlah (Kg)'], [isNumber, 'Jumlah (Kg)'], [minValue, 0, 'Jumlah (Kg)']],
+      price_per_kg:[[required, 'Harga/Kg'], [isNumber, 'Harga/Kg'], [minValue, 0, 'Harga/Kg']],
+    });
+    if (errs) return errorResponse(res, errs);
+    if (crop_cycle_id && !isObjectId(crop_cycle_id, null)) {
+      const objErr = { crop_cycle_id: 'Siklus tanam tidak valid' };
+      return errorResponse(res, objErr);
+    }
+    if (!['Mill', 'Middleman', 'Direct', 'Government'].includes(buyer_type)) {
+      return errorResponse(res, { buyer_type: 'Tipe pembeli tidak valid' });
     }
 
     const sale = new Sale({
-      crop_cycle_id,
+      crop_cycle_id: crop_cycle_id || undefined,
       farm_id,
-      organization_id: req.user.organization_id,
       buyer_name,
       buyer_type,
       quantity_kg,
@@ -37,7 +52,7 @@ router.post('/', isManagement, async (req, res) => {
 router.get('/', isManagement, async (req, res) => {
   try {
     const { cycle_id, farm_id, buyer_type, page = 1, limit = 20 } = req.query;
-    const query = { organization_id: req.user.organization_id };
+    const query = {};
 
     if (cycle_id) query.crop_cycle_id = cycle_id;
     if (farm_id) query.farm_id = farm_id;
@@ -76,7 +91,7 @@ router.get('/:id', isManagement, async (req, res) => {
 router.put('/:id', isManagement, async (req, res) => {
   try {
     const sale = await Sale.findOneAndUpdate(
-      { _id: req.params.id, organization_id: req.user.organization_id },
+      { _id: req.params.id },
       { $set: req.body },
       { new: true, runValidators: true }
     );
@@ -90,7 +105,7 @@ router.put('/:id', isManagement, async (req, res) => {
 // DELETE /api/sales/:id — Delete a sale
 router.delete('/:id', isManagement, async (req, res) => {
   try {
-    const sale = await Sale.findOneAndDelete({ _id: req.params.id, organization_id: req.user.organization_id });
+    const sale = await Sale.findOneAndDelete({ _id: req.params.id });
     if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
     res.json({ success: true });
   } catch (error) {
