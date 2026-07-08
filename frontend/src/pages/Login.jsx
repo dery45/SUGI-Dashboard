@@ -1,20 +1,41 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Card from '../components/common/Card';
+import { Input } from '../components/common/FormField';
 
-const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+const Login = () => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const validate = () => {
+    const e = {};
+    if (!email.trim()) e.email = 'Email wajib diisi';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Format email tidak valid';
+    if (!password) e.password = 'Password wajib diisi';
+    setFieldErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'password') {
-      onLogin();
-      navigate('/farmer');
-    } else {
-      setError('Invalid username or password');
+    if (!validate()) return;
+    setLoading(true);
+    setError('');
+    try {
+      const userData = await login(email, password);
+      if (userData.role === 'government') navigate('/government');
+      else if (userData.role === 'farmer' || userData.role === 'farmer_owner') navigate('/farmer');
+      else navigate('/management');
+    } catch (err) {
+      setError(err.message || 'Email atau password salah');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -27,34 +48,32 @@ const Login = ({ onLogin }) => {
         </div>
         <Card>
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="w-full bg-background border border-border text-foreground px-4 py-2 rounded focus:outline-none focus:border-primary transition-colors"
-                placeholder="Enter admin"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-background border border-border text-foreground px-4 py-2 rounded focus:outline-none focus:border-primary transition-colors"
-                placeholder="Enter password"
-                required
-              />
-            </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: '' })); }}
+              error={fieldErrors.email}
+              placeholder="Masukkan email"
+              autoFocus
+            />
+            <Input
+              label="Password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setFieldErrors(prev => ({ ...prev, password: '' })); }}
+              error={fieldErrors.password}
+              placeholder="Masukkan password"
+            />
+            {error && <p className="text-destructive text-sm font-semibold bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>}
             <button
               type="submit"
-              className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded transition-colors mt-2"
+              disabled={loading}
+              className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-4 rounded-xl transition-all disabled:opacity-50 mt-2 text-sm uppercase tracking-wider"
             >
-              Sign In
+              {loading ? 'Memproses...' : 'Sign In'}
             </button>
           </form>
         </Card>

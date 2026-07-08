@@ -1,21 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
+const { authenticate } = require('../middlewares/authMiddleware');
 const { isManagement } = require('../middlewares/rbacMiddleware');
+
+router.use(authenticate);
+const { required, isObjectId, isNumber, minValue, validate, errorResponse } = require('../utils/validate');
+
+const EXPENSE_CATEGORIES = ['Bibit', 'Pupuk', 'Pestisida', 'Tenaga Kerja', 'Transportasi', 'Peralatan', 'Sewa Lahan', 'Lainnya'];
 
 // POST /api/expenses — Log an expense
 router.post('/', isManagement, async (req, res) => {
   try {
     const { farm_id, crop_cycle_id, category, amount_idr, description, expense_date, um_responsible_id, receipt_ref } = req.body;
 
-    if (!farm_id || !category || !amount_idr) {
-      return res.status(400).json({ success: false, message: 'Field wajib: farm_id, category, amount_idr' });
+    const errs = validate({ farm_id, category, amount_idr }, {
+      farm_id:   [[required, 'Farm'], [isObjectId, 'Farm']],
+      category:  [[required, 'Kategori']],
+      amount_idr:[[required, 'Jumlah (Rp)'], [isNumber, 'Jumlah (Rp)'], [minValue, 0, 'Jumlah (Rp)']],
+    });
+    if (errs) return errorResponse(res, errs);
+    if (!EXPENSE_CATEGORIES.includes(category)) {
+      return errorResponse(res, { category: 'Kategori tidak valid. Pilihan: ' + EXPENSE_CATEGORIES.join(', ') });
+    }
+    if (crop_cycle_id && !isObjectId(crop_cycle_id, null)) {
+      return errorResponse(res, { crop_cycle_id: 'Siklus tanam tidak valid' });
     }
 
     const expense = new Expense({
       farm_id,
-      crop_cycle_id,
-      organization_id: req.user.organization_id,
+      crop_cycle_id: crop_cycle_id || undefined,
       category,
       amount_idr,
       description,
@@ -36,7 +50,7 @@ router.post('/', isManagement, async (req, res) => {
 router.get('/', isManagement, async (req, res) => {
   try {
     const { farm_id, category, page = 1, limit = 20 } = req.query;
-    const query = { organization_id: req.user.organization_id };
+    const query = {};
 
     if (farm_id) query.farm_id = farm_id;
     if (category) query.category = category;
@@ -64,7 +78,7 @@ router.get('/', isManagement, async (req, res) => {
 router.patch('/:id', isManagement, async (req, res) => {
   try {
     const expense = await Expense.findOneAndUpdate(
-      { _id: req.params.id, organization_id: req.user.organization_id },
+      { _id: req.params.id },
       { $set: req.body },
       { new: true, runValidators: true }
     );
@@ -78,7 +92,7 @@ router.patch('/:id', isManagement, async (req, res) => {
 // DELETE /api/expenses/:id — Delete an expense
 router.delete('/:id', isManagement, async (req, res) => {
   try {
-    const expense = await Expense.findOneAndDelete({ _id: req.params.id, organization_id: req.user.organization_id });
+    const expense = await Expense.findOneAndDelete({ _id: req.params.id });
     if (!expense) return res.status(404).json({ success: false, message: 'Expense not found' });
     res.json({ success: true });
   } catch (error) {

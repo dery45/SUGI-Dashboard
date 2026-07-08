@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const umSchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   um_id: { type: String, required: true, unique: true }, // Custom ID string
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
   assigned_processes: [{
     type: String,
     enum: ['Land_Preparation', 'Planting', 'Maintenance', 'Harvesting', 'Distribution']
@@ -21,6 +21,5 @@ const umSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 umSchema.index({ organization_id: 1, status: 1 });
-umSchema.index({ user_id: 1 });
 
 module.exports = mongoose.model('UM', umSchema);

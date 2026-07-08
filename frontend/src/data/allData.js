@@ -99,14 +99,6 @@ export const dataset10 = [
   { kode_provinsi: 17, nama_provinsi: 'Bengkulu', komoditas: 'GKP Tk. Petani', tahun: 2023, bulan: 'Januari', harga: '-' },
 ];
 
-export const dataset11 = [
-  { kode_wilayah: 11, provinsi: 'Aceh', komoditas: 'GKP Tingkat Petani', tahun: 2022, bulan: 'Januari', koefisien_variasi: '7,09%' },
-  { kode_wilayah: 51, provinsi: 'Bali', komoditas: 'GKP Tingkat Petani', tahun: 2022, bulan: 'Januari', koefisien_variasi: '7,15%' },
-  { kode_wilayah: 36, provinsi: 'Banten', komoditas: 'GKP Tingkat Petani', tahun: 2022, bulan: 'Januari', koefisien_variasi: '3,88%' },
-  { kode_wilayah: 17, provinsi: 'Bengkulu', komoditas: 'GKP Tingkat Petani', tahun: 2022, bulan: 'Januari', koefisien_variasi: '-' },
-  { kode_wilayah: 34, provinsi: 'D.I Yogyakarta', komoditas: 'GKP Tingkat Petani', tahun: 2022, bulan: 'Januari', koefisien_variasi: '3,20%' },
-];
-
 export const dataset12 = [
   { no: 1, tahun: 2018, pph_ketersediaan: 90.81, keterangan: 'Angka tetap' },
   { no: 2, tahun: 2019, pph_ketersediaan: 93.4, keterangan: 'Angka tetap' },

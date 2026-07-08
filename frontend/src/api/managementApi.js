@@ -25,11 +25,23 @@ async function apiFetch(path, token, options = {}) {
 
 // ─── KPI & Analytics ──────────────────────────────────────────────────────────
 
-export const fetchKPIs = (token) =>
-  apiFetch('/management/kpi', token);
+export const fetchKPIs = (token, params = {}) => {
+  const q = new URLSearchParams();
+  if (params.farm_id) q.append('farm_id', params.farm_id);
+  if (params.start_date) q.append('start_date', params.start_date);
+  if (params.end_date) q.append('end_date', params.end_date);
+  const qs = q.toString();
+  return apiFetch(`/management/kpi${qs ? '?' + qs : ''}`, token);
+};
 
-export const fetchYieldTrend = (token, year) =>
-  apiFetch(`/management/yield-trend?year=${year || new Date().getFullYear()}`, token);
+export const fetchYieldTrend = (token, { year, farm_id, start_date, end_date } = {}) => {
+  const q = new URLSearchParams();
+  q.append('year', year || new Date().getFullYear());
+  if (farm_id) q.append('farm_id', farm_id);
+  if (start_date) q.append('start_date', start_date);
+  if (end_date) q.append('end_date', end_date);
+  return apiFetch(`/management/yield-trend?${q}`, token);
+};
 
 export const fetchUMPerformance = (token) =>
   apiFetch('/management/um-performance', token);

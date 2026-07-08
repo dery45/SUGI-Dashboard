@@ -2,12 +2,15 @@ const express = require('express');
 const router = express.Router();
 const UM = require('../models/UM');
 const KPIService = require('../services/kpiService');
+const { authenticate } = require('../middlewares/authMiddleware');
 const { isCompanyAdmin, isManagement } = require('../middlewares/rbacMiddleware');
+
+router.use(authenticate);
 
 // GET /api/um
 router.get('/', isManagement, async (req, res) => {
   try {
-    const ums = await UM.find({ organization_id: req.user.organization_id })
+    const ums = await UM.find({})
       .populate('user_id', 'name email phone')
       .populate('assigned_farms', 'name location');
       
@@ -37,7 +40,6 @@ router.post('/', isCompanyAdmin, async (req, res) => {
     const newUM = new UM({
       user_id,
       um_id,
-      organization_id: req.user.organization_id,
       assigned_processes,
       assigned_farms,
       start_date,
@@ -58,7 +60,7 @@ router.post('/', isCompanyAdmin, async (req, res) => {
 router.put('/:id', isCompanyAdmin, async (req, res) => {
   try {
     const um = await UM.findOneAndUpdate(
-      { _id: req.params.id, organization_id: req.user.organization_id },
+      { _id: req.params.id },
       { $set: req.body },
       { new: true, runValidators: true }
     );
@@ -72,7 +74,7 @@ router.put('/:id', isCompanyAdmin, async (req, res) => {
 // DELETE /api/um/:id 
 router.delete('/:id', isCompanyAdmin, async (req, res) => {
   try {
-    const um = await UM.findOneAndDelete({ _id: req.params.id, organization_id: req.user.organization_id });
+    const um = await UM.findOneAndDelete({ _id: req.params.id });
     if (!um) return res.status(404).json({ success: false, message: 'UM not found' });
     res.json({ success: true });
   } catch (error) {

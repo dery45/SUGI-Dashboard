@@ -1,129 +1,293 @@
-import React, { useState, useEffect } from 'react';
-import UMAssignmentModal from '../components/management/UMAssignmentModal';
-import { useGenericResource } from '../hooks/useGenericResource';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import Card from '../components/common/Card';
+import DataTable from '../components/common/DataTable';
+import { Select } from '../components/common/FormField';
+import { required, validateForm } from '../utils/validation';
+
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+const STAGE_OPTIONS = [
+  { value: 'Land_Preparation', label: 'Persiapan Lahan' },
+  { value: 'Planting', label: 'Penanaman' },
+  { value: 'Maintenance', label: 'Perawatan' },
+  { value: 'Harvesting', label: 'Panen' }
+];
+
+const stageLabels = { Land_Preparation: 'Persiapan Lahan', Planting: 'Penanaman', Maintenance: 'Perawatan', Harvesting: 'Panen' };
 
 const UMManagementPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: umList, loading, fetchData, createData } = useGenericResource('um');
+  const { token } = useAuth();
+  const [assignments, setAssignments] = useState([]);
+  const [farmers, setFarmers] = useState([]);
+  const [blocks, setBlocks] = useState([]);
+  const [farms, setFarms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({ farmer: '', blocks: [], access_stages: [] });
+  const [errors, setErrors] = useState({});
+  const [filterFarm, setFilterFarm] = useState('');
+  const [notification, setNotification] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  const handleSaveUM = async (formData) => {
-    const payload = {
-      user_id: formData.user_id || '661faecfc11c4c1a2b000000', // Mock fallback if unselected
-      um_id: formData.um_id,
-      assigned_processes: formData.assigned_processes,
-      assigned_farms: [], // Optional
-      start_date: new Date().toISOString()
-    };
-    await createData(payload);
-    setIsModalOpen(false);
+  const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [aRes, fRes, bRes, farmRes] = await Promise.all([
+        fetch(`${BASE_URL}/assignments/farmer-assignments`, { headers }),
+        fetch(`${BASE_URL}/farmers?role=farmer&limit=100`, { headers }),
+        fetch(`${BASE_URL}/master-data/blocks`, { headers }),
+        fetch(`${BASE_URL}/master-data/farms`, { headers })
+      ]);
+      const aJson = await aRes.json();
+      const fJson = await fRes.json();
+      const bJson = await bRes.json();
+      const farmJson = await farmRes.json();
+      if (aJson.success) setAssignments(aJson.data);
+      if (fJson.success) setFarmers(fJson.data);
+      if (bJson.success) setBlocks(bJson.data);
+      if (farmJson.success) setFarms(farmJson.data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, [token]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const validate = () => {
+    const { errors: e, hasErrors } = validateForm(form, {
+      farmer: [[required, 'Petani']]
+    });
+    if (!form.blocks || form.blocks.length === 0) e.blocks = 'Minimal satu block harus dipilih';
+    setErrors(e);
+    return !hasErrors && Object.keys(e).length === 0;
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600 bg-green-50';
-    if (score >= 50) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+  const handleCreateAssignment = async () => {
+    if (!validate()) return;
+    try {
+      if (editItem) {
+        const res = await fetch(`${BASE_URL}/assignments/farmer-assignments/${editItem._id}`, {
+          method: 'PUT', headers, body: JSON.stringify({ access_stages: form.access_stages })
+        });
+        const json = await res.json();
+        if (!json.success) {
+          if (json.errors) setErrors(json.errors);
+          else { showToast(json.message || 'Gagal memperbarui penugasan'); }
+          return;
+        }
+        setShowModal(false);
+        setEditItem(null);
+        setForm({ farmer: '', blocks: [], access_stages: [] });
+        setErrors({});
+        showToast('Penugasan berhasil diperbarui!');
+      } else {
+        const res = await fetch(`${BASE_URL}/assignments/farmer-assignments`, {
+          method: 'POST', headers, body: JSON.stringify({ farmer: form.farmer, blocks: form.blocks, access_stages: form.access_stages })
+        });
+        const json = await res.json();
+        if (!json.success) {
+          if (json.errors) setErrors(json.errors);
+          else { showToast(json.message || 'Gagal menyimpan penugasan'); }
+          return;
+        }
+        setShowModal(false);
+        setForm({ farmer: '', blocks: [], access_stages: [] });
+        setErrors({});
+        showToast('Penugasan berhasil disimpan!');
+      }
+      fetchData();
+    } catch (e) { showToast(e.message); }
   };
+
+  const handleEdit = (item) => {
+    setEditItem(item);
+    setForm({
+      farmer: typeof item.farmer === 'object' ? item.farmer._id : item.farmer,
+      blocks: [typeof item.block === 'object' ? item.block._id : item.block],
+      access_stages: item.access_stages || []
+    });
+    setErrors({});
+    setShowModal(true);
+  };
+
+  const handleRemoveAssignment = async (id) => {
+    if (!confirm('Hapus penugasan ini?')) return;
+    try {
+      const res = await fetch(`${BASE_URL}/assignments/farmer-assignments/${id}`, { method: 'DELETE', headers });
+      const json = await res.json();
+      if (!json.success) { showToast(json.message); return; }
+      showToast('Penugasan dihapus');
+      fetchData();
+    } catch (e) { showToast(e.message); }
+  };
+
+  const toggleBlock = (blockId) => {
+    setForm(prev => ({
+      ...prev,
+      blocks: prev.blocks.includes(blockId)
+        ? prev.blocks.filter(b => b !== blockId)
+        : [...prev.blocks, blockId]
+    }));
+  };
+
+  const toggleStage = (stage) => {
+    setForm(prev => ({
+      ...prev,
+      access_stages: prev.access_stages.includes(stage)
+        ? prev.access_stages.filter(s => s !== stage)
+        : [...prev.access_stages, stage]
+    }));
+  };
+
+  const getBlockFarmName = (item) => {
+    if (!item.block) return '-';
+    if (typeof item.block === 'object') {
+      const bName = item.block.name || item.block.code || '-';
+      const fName = item.farm?.name || '';
+      return fName ? `${bName} (${fName})` : bName;
+    }
+    const b = blocks.find(x => x._id === item.block);
+    if (!b) return '-';
+    const farmId = typeof b.farm === 'object' ? b.farm?._id : b.farm;
+    const f = farms.find(x => x._id === farmId);
+    return `${b.name || b.code}${f ? ` (${f.name})` : ''}`;
+  };
+
+  const getFarmerName = (farmerRef) => {
+    if (!farmerRef) return '-';
+    if (typeof farmerRef === 'object') return farmerRef.name || '-';
+    const f = farmers.find(x => x._id === farmerRef);
+    return f ? f.name : '-';
+  };
+
+  const renderStages = (item) => {
+    const stages = item.access_stages || item.access_stages_labels || [];
+    if (stages.length === 0) return <span className="text-muted text-xs italic">Tidak ada</span>;
+    return stages.map(s => stageLabels[s] || s).join(', ');
+  };
+
+  const filteredAssignments = filterFarm
+    ? assignments.filter(a => {
+        const farmId = typeof a.farm === 'object' ? a.farm?._id : a.farm;
+        return farmId === filterFarm;
+      })
+    : assignments;
+
+  const columns = [
+    { header: 'Petani', accessor: (r) => getFarmerName(r.farmer) },
+    { header: 'Block', accessor: getBlockFarmName },
+    { header: 'Akses Siklus', accessor: renderStages },
+    { header: 'Ditugaskan', accessor: (r) => new Date(r.createdAt || r.assigned_at).toLocaleDateString('id-ID') }
+  ];
+
+  const blocksByFarm = {};
+  blocks.filter(b => b.status !== 'Inactive').forEach(b => {
+    const farmId = typeof b.farm === 'object' ? b.farm?._id : b.farm;
+    const f = farms.find(x => x._id === farmId);
+    const key = f ? f.name : 'Unknown';
+    if (!blocksByFarm[key]) blocksByFarm[key] = [];
+    blocksByFarm[key].push(b);
+  });
+
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Unit Manajemen (UM)</h1>
-          <p className="text-gray-500 text-sm">Tugaskan, kelola, dan pantau kinerja Unit Manajemen</p>
+    <div className="flex flex-col gap-8 animate-fade-in pb-16">
+      {notification && <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold">{notification}</div>}
+
+      <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
+            <div><h1 className="text-2xl font-black text-foreground tracking-tight">Unit Manajemen (UM)</h1><p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Penugasan petani ke blok + akses siklus</p></div>
+          </div>
+          <button onClick={() => { setEditItem(null); setForm({ farmer: '', blocks: [], access_stages: [] }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider">+ Tambah Penugasan</button>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition text-sm shadow-sm"
-        >
-          + Tambah Penugasan UM
-        </button>
       </div>
 
-      {/* UM Summary Cards */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-          <p className="text-xs font-semibold text-blue-600 uppercase">Total UM</p>
-          <p className="text-2xl font-bold text-blue-800">{umList.length}</p>
-        </div>
-        <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-          <p className="text-xs font-semibold text-green-600 uppercase">Aktif</p>
-          <p className="text-2xl font-bold text-green-800">{umList.filter(u => u.status === 'Active').length}</p>
-        </div>
-        <div className="bg-red-50 p-4 rounded-xl border border-red-100">
-          <p className="text-xs font-semibold text-red-600 uppercase">Belum Ditugaskan</p>
-          <p className="text-2xl font-bold text-red-800">{umList.filter(u => u.processes.length === 0).length}</p>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-          <p className="text-xs font-semibold text-purple-600 uppercase">Rata-rata Skor</p>
-          <p className="text-2xl font-bold text-purple-800">
-            {umList.length > 0 ? Math.round(umList.reduce((s, u) => s + u.score, 0) / umList.length) : 0}
-          </p>
-        </div>
-      </section>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card><div className="p-2"><p className="text-[10px] font-bold text-muted uppercase tracking-wider">Total Penugasan</p><p className="text-2xl font-black text-foreground mt-1">{assignments.length}</p></div></Card>
+        <Card><div className="p-2"><p className="text-[10px] font-bold text-muted uppercase tracking-wider">Petani Ditugaskan</p><p className="text-2xl font-black text-foreground mt-1">{new Set(assignments.map(a => a.farmer?._id || a.farmer).filter(Boolean)).size}</p></div></Card>
+        <Card><div className="p-2"><p className="text-[10px] font-bold text-muted uppercase tracking-wider">Blok Terisi</p><p className="text-2xl font-black text-foreground mt-1">{new Set(assignments.map(a => a.block?._id || a.block).filter(Boolean)).size}</p></div></Card>
+        <Card><div className="p-2"><p className="text-[10px] font-bold text-muted uppercase tracking-wider">Petani Tersedia</p><p className="text-2xl font-black text-foreground mt-1">{farmers.length}</p></div></Card>
+      </div>
 
-      {/* UM Leaderboard Table */}
-      <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800">📋 Daftar & Leaderboard UM</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
-              <tr>
-                <th className="px-6 py-3 text-left">UM ID</th>
-                <th className="px-6 py-3 text-left">Nama</th>
-                <th className="px-6 py-3 text-left">Proses Ditugaskan</th>
-                <th className="px-6 py-3 text-left">Lahan</th>
-                <th className="px-6 py-3 text-left">Skor Kinerja</th>
-                <th className="px-6 py-3 text-left">Status</th>
-                <th className="px-6 py-3 text-left">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading && <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500 italic">Memuat data...</td></tr>}
-              {!loading && umList.length === 0 && <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500 italic">Belum ada UM.</td></tr>}
-              {umList.map((um) => (
-                <tr key={um._id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{um.um_id}</td>
-                  <td className="px-6 py-4 font-medium text-gray-800">{um.user_id?.name || 'User'}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {um.assigned_processes?.length > 0 
-                        ? um.assigned_processes.map((p, i) => (
-                          <span key={i} className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{p}</span>
-                        ))
-                        : <span className="text-gray-400 text-xs italic">Belum ditugaskan</span>
-                      }
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">{um.assigned_farms?.length || 0} Blok</td>
-                  <td className="px-6 py-4">
-                    <span className={`font-bold text-sm px-2.5 py-1 rounded-lg ${getScoreColor(um.performance_metrics?.overall_score || 0)}`}>
-                      {um.performance_metrics?.overall_score || 0}/100
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${um.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {um.status === 'Active' ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 flex gap-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-2">Edit</button>
-                    <button className="text-red-500 hover:text-red-700 text-xs font-semibold">Hapus</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <div className="flex items-center gap-3 flex-wrap">
+        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Filter Farm:</label>
+        <select value={filterFarm} onChange={e => setFilterFarm(e.target.value)} className="px-3 py-2 bg-surface border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+          <option value="">Semua Farm</option>
+          {farms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}
+        </select>
+      </div>
 
-      <UMAssignmentModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveUM} />
+      <Card title="Daftar Penugasan Petani">
+        <DataTable columns={columns} data={filteredAssignments} onEdit={handleEdit} onDelete={handleRemoveAssignment} itemsPerPage={10} />
+      </Card>
+
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowModal(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full sm:max-w-2xl bg-surface border border-border/40 rounded-t-[2rem] rounded-b-none sm:rounded-[2rem] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-slide-up" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-black text-foreground mb-6">{editItem ? 'Edit Penugasan' : 'Penugasan Baru'}</h2>
+            <div className="flex flex-col gap-5">
+              {!editItem && (
+                <>
+                  <Select label="Petani" name="farmer" required value={form.farmer} onChange={e => setForm({ ...form, farmer: e.target.value })} error={errors.farmer}>
+                    <option value="">Pilih Petani</option>
+                    {farmers.map(f => <option key={f._id} value={f._id}>{f.name} ({f.email})</option>)}
+                  </Select>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Block / Lahan <span className="text-destructive">*</span></label>
+                    {Object.entries(blocksByFarm).map(([farmName, farmBlocks]) => (
+                      <div key={farmName}>
+                        <p className="text-[11px] font-bold text-primary mb-1.5">{farmName}</p>
+                        <div className="grid grid-cols-2 gap-1.5 pl-2">
+                          {farmBlocks.map(b => (
+                            <label key={b._id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium cursor-pointer transition-all ${form.blocks.includes(b._id) ? 'bg-primary/10 border-primary text-primary' : 'border-border/40 hover:border-primary/30'}`}>
+                              <input type="checkbox" checked={form.blocks.includes(b._id)} onChange={() => toggleBlock(b._id)} className="accent-primary" />
+                              {b.name || b.code} ({b.area_ha} Ha)
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {errors.blocks && <p className="text-destructive text-xs font-semibold">{errors.blocks}</p>}
+                  </div>
+                </>
+              )}
+              {editItem && (
+                <div className="p-4 bg-background/30 rounded-2xl border border-border/30">
+                  <p className="text-sm font-bold text-foreground">Mengedit penugasan untuk:</p>
+                  <p className="text-xs text-muted mt-1">Petani: <span className="font-semibold text-foreground">{getFarmerName(editItem.farmer)}</span></p>
+                  <p className="text-xs text-muted">Block: <span className="font-semibold text-foreground">{getBlockFarmName(editItem)}</span></p>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Akses Siklus Pertanian <span className="text-muted/50 font-normal normal-case">(Opsional)</span></label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {STAGE_OPTIONS.map(s => (
+                    <label key={s.value} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${form.access_stages.includes(s.value) ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600' : 'border-border/40 hover:border-emerald-500/30'}`}>
+                      <input type="checkbox" checked={form.access_stages.includes(s.value)} onChange={() => toggleStage(s.value)} className="accent-emerald-500" />
+                      {s.label}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted italic mt-0.5">Kosongkan semua jika ingin memberi akses penuh ke semua tahapan</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl border border-border/40 text-sm font-bold hover:bg-surface/50 transition-all">Batal</button>
+              <button onClick={handleCreateAssignment} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all">Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

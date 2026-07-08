@@ -1,28 +1,42 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Tractor, Building2, Database, ChevronDown, BarChart3, Leaf, Users, UserCheck, DollarSign } from 'lucide-react';
+import { Tractor, Building2, Database, ChevronDown, BarChart3, Leaf, Users, UserCheck, DollarSign, Layers, Grid3X3, Sprout, Activity, Settings } from 'lucide-react';
 import { dataRegistry } from '../../pages/MasterDataPage';
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, user, onToggle }) => {
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
   const [isMgmtMenuOpen, setIsMgmtMenuOpen] = useState(false);
+  const [isMasterMenuOpen, setIsMasterMenuOpen] = useState(false);
   const location = useLocation();
   const isDataActive = location.pathname.startsWith('/data');
   const isMgmtActive = location.pathname.startsWith('/management');
+  const isMasterActive = location.pathname.startsWith('/master');
 
   const navItems = [
-    { name: 'Farmer Dashboard', path: '/farmer', icon: <Tractor className="w-5 h-5" /> },
-    { name: 'Government Dashboard', path: '/government', icon: <Building2 className="w-5 h-5" /> },
+    ...(user?.role === 'farmer' || user?.role === 'farmer_owner' ? [{ name: 'Farmer Dashboard', path: '/farmer', icon: <Tractor className="w-5 h-5" /> }] : []),
+    ...(user?.role === 'government' || user?.role === 'superadmin' ? [{ name: 'Government Dashboard', path: '/government', icon: <Building2 className="w-5 h-5" /> }] : []),
   ];
+
+  if (!user || user.role === 'superadmin' || user.role === 'farmer_owner') {
+    if (!navItems.find(n => n.path === '/farmer')) {
+      navItems.push({ name: 'Farmer Dashboard', path: '/farmer', icon: <Tractor className="w-5 h-5" /> });
+    }
+  }
 
   const mgmtSubLinks = [
-    { name: 'Analitik & KPI',           path: '/management',           icon: <BarChart3    className="w-4 h-4" />, end: true },
-    { name: 'Siklus Pertanian',          path: '/management/lifecycle', icon: <Leaf         className="w-4 h-4" /> },
-    { name: 'Unit Manajemen (UM)',        path: '/management/um',        icon: <Users        className="w-4 h-4" /> },
-    { name: 'Petani & Pengguna',         path: '/management/farmers',   icon: <UserCheck    className="w-4 h-4" /> },
-    { name: 'Penjualan & Distribusi',    path: '/management/sales',     icon: <DollarSign   className="w-4 h-4" /> },
+    ...(user?.role !== 'farmer' ? [{ name: 'Analitik & KPI', path: '/management', icon: <BarChart3 className="w-4 h-4" />, end: true }] : []),
+    ...(user?.role !== 'farmer' ? [{ name: 'Siklus Pertanian', path: '/management/lifecycle', icon: <Leaf className="w-4 h-4" /> }] : []),
+    ...(user?.role !== 'farmer' ? [{ name: 'Unit Manajemen (UM)', path: '/management/um', icon: <Users className="w-4 h-4" /> }] : []),
+    ...(user?.role !== 'farmer' ? [{ name: 'Petani & Pengguna', path: '/management/farmers', icon: <UserCheck className="w-4 h-4" /> }] : []),
+    ...(user?.role !== 'farmer' ? [{ name: 'Penjualan & Distribusi', path: '/management/sales', icon: <DollarSign className="w-4 h-4" /> }] : []),
   ];
 
+  const masterDataLinks = [
+    { name: 'Farm', path: '/master/farms', icon: <Layers className="w-4 h-4" /> },
+    { name: 'Block', path: '/master/blocks', icon: <Grid3X3 className="w-4 h-4" /> },
+    { name: 'Jenis Tanaman', path: '/master/crop-types', icon: <Sprout className="w-4 h-4" /> },
+    { name: 'Jenis Aktivitas', path: '/master/activity-types', icon: <Activity className="w-4 h-4" /> },
+  ];
 
   const dataLinks = Object.keys(dataRegistry).map(slug => ({
     name: dataRegistry[slug].title,
@@ -30,7 +44,9 @@ const Sidebar = ({ isOpen }) => {
   }));
 
   return (
-    <aside className={`fixed lg:relative inset-y-0 left-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'w-80 p-4 translate-x-0' : 'w-0 p-0 -translate-x-full lg:translate-x-0 overflow-hidden'}`}>
+    <>
+      <div onClick={onToggle} className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-all duration-500 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+      <aside className={`fixed inset-y-0 left-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'w-80 p-4 translate-x-0 lg:relative' : 'w-0 p-0 -translate-x-full lg:w-80 lg:p-4 lg:fixed overflow-hidden'}`}>
       <div className={`h-full bg-surface/80 backdrop-blur-3xl border border-white/20 dark:border-white/5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] rounded-[2.5rem] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${!isOpen ? 'opacity-0 scale-95 blur-md' : 'opacity-100 scale-100 blur-0'}`}>
         <div className="w-72 flex flex-col h-full flex-shrink-0">
           <div className="h-20 flex items-center px-8 border-b border-border/30 flex-shrink-0">
@@ -49,7 +65,7 @@ const Sidebar = ({ isOpen }) => {
               <NavLink
                 key={item.name}
                 to={item.path}
-                className={({ isActive }) => `group flex items-center gap-4 px-6 py-4 rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] relative ${isActive ? 'bg-primary text-white shadow-2xl shadow-primary/30 translate-x-1.5' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
+                className={({ isActive }) => `group flex items-center gap-4 px-6 py-4 min-h-[52px] rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] relative ${isActive ? 'bg-primary text-white shadow-2xl shadow-primary/30 translate-x-1.5' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
               >
                 <div className="flex-shrink-0 transition-transform duration-500 group-hover:scale-110">
                   {item.icon}
@@ -59,11 +75,42 @@ const Sidebar = ({ isOpen }) => {
               </NavLink>
             ))}
 
-            {/* Management Sub-Menu */}
+            {user?.role !== 'farmer' && user?.role !== 'government' && (
+              <div className="mt-2">
+                <button
+                  onClick={() => setIsMasterMenuOpen(!isMasterMenuOpen)}
+                  className={`w-full group flex items-center justify-between px-6 py-4 min-h-[52px] rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isMasterActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`flex-shrink-0 transition-transform duration-500 group-hover:scale-110 ${isMasterActive ? 'scale-110' : ''}`}>
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <span className="text-[13px] font-black tracking-tight text-left">Master Data</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 opacity-50 transition-transform duration-300 ${isMasterMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isMasterMenuOpen ? 'max-h-[500px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                  <div className="flex flex-col gap-1 pl-4 border-l-2 border-border/40 ml-8 py-2">
+                    {masterDataLinks.map(link => (
+              <NavLink
+                  key={link.path}
+                  to={link.path}
+                  className={({ isActive }) => `flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
+                >
+                  {link.icon}
+                  <span>{link.name}</span>
+                </NavLink>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="mt-2">
               <button
-                onClick={() => setIsMgmtMenuOpen(!isMgmtMenuOpen)}
-                className={`w-full group flex items-center justify-between px-6 py-4 rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isMgmtActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
+                  onClick={() => setIsMgmtMenuOpen(!isMgmtMenuOpen)}
+                  className={`w-full group flex items-center justify-between px-6 py-4 min-h-[52px] rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isMgmtActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
               >
                 <div className="flex items-center gap-4">
                   <div className={`flex-shrink-0 transition-transform duration-500 group-hover:scale-110 ${isMgmtActive ? 'scale-110' : ''}`}>
@@ -91,52 +138,68 @@ const Sidebar = ({ isOpen }) => {
               </div>
             </div>
 
-            {/* Data Sub-Menu */}
-            <div className="mt-2">
-              <button
-                onClick={() => setIsDataMenuOpen(!isDataMenuOpen)}
-                className={`w-full group flex items-center justify-between px-6 py-4 rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`flex-shrink-0 transition-transform duration-500 group-hover:scale-110 ${isDataActive ? 'scale-110' : ''}`}>
-                    <Database className="w-5 h-5" />
+            {(user?.role === 'superadmin' || user?.role === 'government') && (
+              <div className="mt-2">
+                <button
+                  onClick={() => setIsDataMenuOpen(!isDataMenuOpen)}
+                  className={`w-full group flex items-center justify-between px-6 py-4 min-h-[52px] rounded-[1.5rem] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`flex-shrink-0 transition-transform duration-500 group-hover:scale-110 ${isDataActive ? 'scale-110' : ''}`}>
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <span className="text-[13px] font-black tracking-tight text-left">Semua Data Saya</span>
                   </div>
-                  <span className="text-[13px] font-black tracking-tight text-left">Semua Data Saya</span>
-                </div>
-                <ChevronDown className={`w-4 h-4 opacity-50 transition-transform duration-300 ${isDataMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
+                  <ChevronDown className={`w-4 h-4 opacity-50 transition-transform duration-300 ${isDataMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-              <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataMenuOpen ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                <div className="flex flex-col gap-1 pl-4 border-l-2 border-border/40 ml-8 py-2">
-                  {dataLinks.map(link => (
-                    <NavLink
-                      key={link.path}
-                      to={link.path}
-                      className={({ isActive }) => `block px-4 py-3 rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
-                      title={link.name}
-                    >
-                      <span className="line-clamp-2">{link.name}</span>
-                    </NavLink>
-                  ))}
+                <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataMenuOpen ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                  <div className="flex flex-col gap-1 pl-4 border-l-2 border-border/40 ml-8 py-2">
+                    {dataLinks.map(link => (
+                      <NavLink
+                        key={link.path}
+                        to={link.path}
+                        className={({ isActive }) => `block px-4 py-3 rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
+                        title={link.name}
+                      >
+                        <span className="line-clamp-2">{link.name}</span>
+                      </NavLink>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </nav>
 
-          <div className="p-6 mt-auto">
-            <div className="p-5 rounded-[2rem] bg-primary/5 border border-primary/10 flex flex-col gap-3 group/status cursor-default">
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] opacity-60">System Status</p>
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-primary relative">
-                  <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-75" />
+          {user && (
+            <div className="p-6 mt-auto">
+              <NavLink to="/settings" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-xl text-xs font-bold transition-all duration-300 mb-3 ${isActive ? 'bg-primary/10 text-primary' : 'text-muted hover:text-primary hover:bg-primary/5'}`}>
+                <Settings className="w-4 h-4" />
+                <span>Pengaturan</span>
+              </NavLink>
+              <div className="p-5 rounded-[2rem] bg-primary/5 border border-primary/10 flex flex-col gap-2 group/status cursor-default">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-primary/20 rounded-xl flex items-center justify-center text-primary font-bold text-sm uppercase">
+                    {user.name?.[0] || 'U'}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-bold text-foreground">{user.name}</span>
+                    <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">{user.role}</span>
+                  </div>
                 </div>
-                <span className="text-[11px] font-black text-foreground group-hover/status:text-primary transition-colors">Operational</span>
+                <div className="flex items-center gap-2.5 mt-1">
+                  <div className="w-2 h-2 rounded-full bg-primary relative">
+                    <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-75" />
+                  </div>
+                  <span className="text-[10px] font-black text-muted/60 uppercase tracking-wider">Online</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </aside>
+    </>
   );
 };
 

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useManagementData } from '../hooks/useManagementData';
+import { useAuth } from '../contexts/AuthContext';
 import KPISection from '../components/management/KPISection';
 import AlertsPanel from '../components/management/AlertsPanel';
 import ComparativeChart from '../components/management/ComparativeChart';
+
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const STATUS_COLORS = {
   Planned: 'bg-gray-100 text-gray-700',
@@ -15,61 +18,69 @@ const STATUS_COLORS = {
 };
 
 const ManagementDashboard = () => {
-  const [filters, setFilters] = useState({ year: new Date().getFullYear() });
-  const [alerts, setAlerts] = useState(null); // local state for dismissal
+  const { token } = useAuth();
+  const [farms, setFarms] = useState([]);
+  const [filters, setFilters] = useState({ year: new Date().getFullYear(), farm_id: '', start_date: '', end_date: '' });
+  const [alerts, setAlerts] = useState(null);
   const { kpiData, yieldTrend, loading, error, refetch } = useManagementData(filters);
 
-  // Use kpiData.alerts as the source, but allow local dismissal
+  useEffect(() => {
+    fetch(`${BASE_URL}/master-data/farms/all`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(j => { if (j.success) setFarms(j.data); }).catch(() => {});
+  }, [token]);
+
   const activeAlerts = alerts ?? kpiData?.alerts ?? [];
 
   const handleMarkDone = (index) => {
     setAlerts(prev => (prev ?? kpiData?.alerts ?? []).filter((_, i) => i !== index));
   };
 
+  const updateFilter = (key, value) => {
+    setFilters(f => ({ ...f, [key]: value }));
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Manajemen</h1>
-          <p className="text-gray-500 text-sm">Ringkasan analitik & KPI seluruh unit organisasi</p>
-        </div>
+      <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          {/* Year filter */}
-          <select
-            value={filters.year}
-            onChange={(e) => setFilters(f => ({ ...f, year: parseInt(e.target.value) }))}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            aria-label="Filter tahun"
-          >
-            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+          <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
+          <div>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Dashboard Manajemen</h1>
+            <p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Ringkasan analitik & KPI</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
+          <select value={filters.farm_id} onChange={e => updateFilter('farm_id', e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="">Semua Farm</option>
+            {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
           </select>
 
-          <button
-            onClick={refetch}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition"
-            aria-label="Refresh data"
-          >
-            🔄 Refresh
-          </button>
+          <input type="date" value={filters.start_date} onChange={e => updateFilter('start_date', e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Dari Tgl" />
 
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition text-sm shadow-sm">
-            ⬇ Unduh Laporan
-          </button>
+          <input type="date" value={filters.end_date} onChange={e => updateFilter('end_date', e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Sampai Tgl" />
+
+          <select value={filters.year} onChange={e => updateFilter('year', parseInt(e.target.value))}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+
+          <button onClick={refetch} className="col-span-2 sm:col-auto px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition">Refresh</button>
         </div>
       </div>
+      </div>
 
-      {/* Error state */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          ⚠️ Gagal memuat data: {error}. Menampilkan data demonstrasi.
+          Gagal memuat data: {error}. Menampilkan data demonstrasi.
         </div>
       )}
 
-      {/* KPI Grid */}
       <KPISection data={kpiData} loading={loading} />
 
-      {/* Revenue Summary strip */}
       {!loading && kpiData?.totalRevenue && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-5 rounded-xl shadow-md">
@@ -87,20 +98,13 @@ const ManagementDashboard = () => {
         </div>
       )}
 
-      {/* Alerts */}
-      <AlertsPanel
-        alerts={activeAlerts}
-        onMarkDone={handleMarkDone}
-        onAssignUM={(alert) => console.log('Assign UM to alert:', alert)}
-      />
+      <AlertsPanel alerts={activeAlerts} onMarkDone={handleMarkDone} onAssignUM={(alert) => console.log('Assign UM to alert:', alert)} />
 
-      {/* Comparative Chart (Recharts) */}
       <ComparativeChart data={yieldTrend} />
 
-      {/* Cycle Status Breakdown */}
       {!loading && (
         <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">🔄 Status Siklus Tanam</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Status Siklus Tanam</h2>
           <div className="flex flex-wrap gap-3">
             {(kpiData?.cycleStatusBreakdown ?? []).map((item, i) => (
               <div key={i} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${STATUS_COLORS[item.status] || 'bg-gray-100 text-gray-700'}`}>
