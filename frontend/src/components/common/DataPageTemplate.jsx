@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as xlsx from 'xlsx';
-import { Download, Upload, Plus, RefreshCw, X } from 'lucide-react';
+import { Download, Upload, Plus, RefreshCw, X, Sparkles } from 'lucide-react';
 import DataTable from './DataTable';
 import Card from './Card';
+import { fetchInsights } from '../../api/insightApi';
 
 const fieldType = (accessor) => {
   const s = accessor.toLowerCase();
@@ -12,7 +13,19 @@ const fieldType = (accessor) => {
   return 'text';
 };
 
-const DataPageTemplate = ({ title, subtitle, columns, data, loading, error, insightText, onRefresh, onImport, onAdd, onDelete, notification }) => {
+const DataPageTemplate = ({ title, subtitle, columns, data, loading, error, insightText, insightSource, onRefresh, onImport, onAdd, onDelete, notification }) => {
+  const [insight, setInsight] = useState(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+
+  useEffect(() => {
+    if (insightSource) {
+      setInsightLoading(true);
+      fetchInsights(insightSource)
+        .then(list => { if (list?.length) setInsight(list[0]); })
+        .catch(() => {})
+        .finally(() => setInsightLoading(false));
+    }
+  }, [insightSource]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState({});
 
@@ -120,14 +133,36 @@ const DataPageTemplate = ({ title, subtitle, columns, data, loading, error, insi
         )}
       </div>
 
-      <Card title="Insight Palace" className="border-primary/20 bg-primary/[0.02]">
+      <Card title="Insight Palace by SUGI Core AI" className="border-primary/20 bg-primary/[0.02]">
         <div className="flex gap-4 items-start">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <p className="text-sm font-medium text-muted-foreground leading-relaxed whitespace-pre-line">
-            {insightText || "Sistem AI sedang menganalisis data ini untuk memberikan insight mendalam mengenai tren ketahanan pangan, proyeksi harga, dan anomali pasar."}
-          </p>
+          <div className="flex-1 min-w-0">
+            {insightLoading ? (
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
+                <span className="text-sm text-muted-foreground/60">Menganalisis data...</span>
+              </div>
+            ) : insight ? (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                  {insight.insight}
+                </p>
+                <div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-muted/40 uppercase tracking-wider">
+                  <span>v{insight.insightVersion}</span>
+                  <span>•</span>
+                  <span>{insight.totalDocuments.toLocaleString('id-ID')} data points</span>
+                  <span>•</span>
+                  <span>Diperbarui {new Date(insight.lastDataUpdate || insight.generatedAt).toLocaleDateString('id-ID')}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-medium text-muted-foreground/60 leading-relaxed">
+                {insightText || "Belum ada insight yang tersedia untuk sumber data ini."}
+              </p>
+            )}
+          </div>
         </div>
       </Card>
 

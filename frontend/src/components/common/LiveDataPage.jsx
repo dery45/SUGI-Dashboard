@@ -4,7 +4,24 @@ import DataTable from './DataTable';
 import MasterDataModal from './MasterDataModal';
 import DataImportModal from '../DataImportModal';
 import { useMasterData } from '../../hooks/useMasterData';
-import { PlusCircle, Lightbulb, RefreshCw, Upload, CheckCircle } from 'lucide-react';
+import { PlusCircle, Lightbulb, RefreshCw, Upload, CheckCircle, Sparkles } from 'lucide-react';
+import { fetchInsights } from '../../api/insightApi';
+
+const COLLECTION_MAP = {
+  'ketidakcukupan-nasional': 'ketidakcukupannasionals',
+  'ketidakcukupan-provinsi': 'ketidakcukupanprovinsis',
+  'konsumsi-per-jenis': 'konsumsiperjeniss',
+  'penyaluran-donasi': 'penyalurandonasis',
+  'proyeksi-neraca': 'proyeksineracas',
+  'gerakan-pangan-murah': 'gerakanpanganmurahs',
+  'harga-konsumen-provinsi': 'hargakonsumenprovinsis',
+  'harga-konsumen-nasional': 'hargakonsumennasionals',
+  'harga-produsen-nasional': 'hargaprodusennasionals',
+  'harga-produsen-provinsi': 'hargaprodusenprovinsis',
+  'skor-pph': 'skorpphs',
+  'pangan-terselamatkan': 'panganterselamatkans',
+  'cadangan-pangan-provinsi': 'cadanganpanganprovinsis',
+};
 
 const LiveDataPage = ({ title, columns, endpointContext, importTemplate }) => {
   const { data, loading, error, fetchData, createData, updateData, deleteData } = useMasterData(endpointContext);
@@ -12,10 +29,25 @@ const LiveDataPage = ({ title, columns, endpointContext, importTemplate }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importSuccessMessage, setImportSuccessMessage] = useState(null);
+  const [insight, setInsight] = useState(null);
+  const [insightLoading, setInsightLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    setInsightLoading(true);
+    const source = COLLECTION_MAP[endpointContext];
+    if (source) {
+      fetchInsights(source)
+        .then(list => { if (list?.length) setInsight(list[0]); })
+        .catch(() => {})
+        .finally(() => setInsightLoading(false));
+    } else {
+      setInsightLoading(false);
+    }
+  }, [endpointContext]);
 
   // Auto-dismiss success message after 5s
   useEffect(() => {
@@ -115,15 +147,36 @@ const LiveDataPage = ({ title, columns, endpointContext, importTemplate }) => {
         )}
       </div>
 
-      <Card title="Insight Palace 🧠" className="border-primary/20 bg-primary/[0.02]">
+      <Card title="Insight Palace by SUGI Core AI" className="border-primary/20 bg-primary/[0.02]">
         <div className="flex gap-4 items-start">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Lightbulb className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <p className="text-sm font-medium text-muted-foreground leading-relaxed whitespace-pre-line">
-            Sistem API Terkoneksi: Data real-time ditarik dari database backend terpusat. Perubahan data yang dilakukan akan langsung disinkronisasi.
-            {importTemplate && '\n\nImport CSV/Excel: Gunakan tombol "Import CSV/Excel" untuk mengunggah data dalam jumlah besar sekaligus. Pastikan format file sesuai dengan template yang ditentukan.'}
-          </p>
+          <div className="flex-1 min-w-0">
+            {insightLoading ? (
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
+                <span className="text-sm text-muted-foreground/60">Menganalisis data...</span>
+              </div>
+            ) : insight ? (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                  {insight.insight}
+                </p>
+                <div className="flex items-center gap-3 mt-3 text-[10px] font-bold text-muted/40 uppercase tracking-wider">
+                  <span>v{insight.insightVersion}</span>
+                  <span>•</span>
+                  <span>{insight.totalDocuments.toLocaleString('id-ID')} data points</span>
+                  <span>•</span>
+                  <span>Diperbarui {new Date(insight.lastDataUpdate || insight.generatedAt).toLocaleDateString('id-ID')}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-medium text-muted-foreground/60 leading-relaxed">
+                Belum ada insight yang tersedia untuk sumber data ini.
+              </p>
+            )}
+          </div>
         </div>
       </Card>
 

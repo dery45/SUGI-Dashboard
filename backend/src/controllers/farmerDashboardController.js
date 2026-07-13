@@ -41,9 +41,8 @@ exports.getFarmerDashboard = async (req, res) => {
       computeKpis(f), computePriceAnalytics(f), computeMarketAnalytics(f),
       computeMapData(f), computeTables(f, p),
     ]);
-    const insights = computeInsights(kpis, priceAnalytics, marketAnalytics);
 
-    res.json({ success: true, data: { kpis, ...priceAnalytics, ...marketAnalytics, ...mapData, ...tables, insights } });
+    res.json({ success: true, data: { kpis, ...priceAnalytics, ...marketAnalytics, ...mapData, ...tables } });
   } catch (error) {
     console.error('Farmer dashboard error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -301,60 +300,4 @@ async function computeTables(filters, pagination) {
   };
 }
 
-/* ─── Insights ──────────────────────────────────────────────── */
 
-function computeInsights(kpis, priceAnalytics, marketAnalytics) {
-  const insights = [];
-  const p = priceAnalytics;
-  const m = marketAnalytics;
-
-  if (p.chartPphScore?.length) {
-    const latest = p.chartPphScore[p.chartPphScore.length - 1];
-    const first = p.chartPphScore[0];
-    const change = latest && first ? ((safeNum(latest.pph_ketersediaan) - safeNum(first.pph_ketersediaan)) / safeNum(first.pph_ketersediaan)) * 100 : 0;
-    insights.push({ type: change >= 0 ? 'positive' : 'warning', title: 'Skor PPH Nasional', message: `Skor PPH ${latest.tahun} sebesar ${latest.pph_ketersediaan}. ${change >= 0 ? `Meningkat ${change.toFixed(1)}% — kualitas konsumsi pangan membaik.` : `Menurun ${Math.abs(change).toFixed(1)}% — perhatikan diversifikasi pangan.`}` });
-  }
-
-  if (p.chartCommodityRanking?.length) {
-    const best = p.chartCommodityRanking[0];
-    insights.push({ type: 'positive', title: 'Komoditas Terbaik', message: `${best.komoditas} adalah komoditas dengan harga produsen tertinggi (Rp ${best.harga.toLocaleString()}/Kg).` });
-  }
-
-  if (kpis.margin?.current > 0) {
-    insights.push({ type: 'positive', title: 'Margin Positif', message: `Rata-rata margin produsen-konsumen Rp ${Math.round(kpis.margin.current).toLocaleString()}/Kg — peluang pasar menguntungkan.` });
-  } else {
-    insights.push({ type: 'warning', title: 'Margin Tipis', message: 'Margin produsen-konsumen sangat tipis. Pertimbangkan efisiensi biaya produksi.' });
-  }
-
-  if (kpis.foodBalance?.current > 0) {
-    insights.push({ type: 'info', title: 'Surplus Pangan', message: `Neraca pangan surplus ${Math.round(kpis.foodBalance.current).toLocaleString()} ton. Pasokan mencukupi.` });
-  } else {
-    insights.push({ type: 'danger', title: 'Defisit Pangan', message: 'Neraca pangan defisit. Perhatikan ketersediaan pasokan.' });
-  }
-
-  if (m.chartCppd?.length) {
-    const top = m.chartCppd[0];
-    insights.push({ type: 'info', title: 'Cadangan Pangan Daerah', message: `${top.wilayah} memiliki cadangan pangan tertinggi (${top.ton.toFixed(2)} ton) — pasokan melimpah, pertimbangkan diversifikasi pasar.` });
-  }
-
-  if (m.chartCommodityBalance?.length) {
-    const topSurplus = m.chartCommodityBalance.filter(c => c.surplus > 0);
-    if (topSurplus.length) {
-      insights.push({ type: 'positive', title: 'Surplus per Komoditas', message: `${topSurplus[0].komoditas} memiliki surplus terbesar (${Math.round(topSurplus[0].surplus).toLocaleString()} ton).` });
-    }
-  }
-
-  if (p.chartMarginTrend?.length) {
-    const sorted = [...p.chartMarginTrend].sort((a, b) => b.margin - a.margin);
-    if (sorted[0]) {
-      insights.push({ type: 'info', title: 'Peluang Bulanan', message: `Bulan ${sorted[0].bulan} menunjukkan margin tertinggi untuk ${sorted[0].komoditas} (Rp ${Math.round(sorted[0].margin).toLocaleString()}/Kg).` });
-    }
-  }
-
-  if (p.chartProvPriceDist?.length) {
-    const best = p.chartProvPriceDist[0];
-    insights.push({ type: 'info', title: 'Provinsi Terbaik', message: `${best.provinsi} menawarkan harga produsen tertinggi untuk ${best.komoditas} (Rp ${best.harga.toLocaleString()}/Kg).` });
-  }
-
-  return insights;
-}

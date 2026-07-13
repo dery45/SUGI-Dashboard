@@ -19,6 +19,8 @@ import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
 import DataTable from '../components/common/DataTable';
 import { fetchFarmerDashboard } from '../api/farmerDashboardApi';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getToken = () => localStorage.getItem('token');
 
 function safeNum(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function fmtNum(v) { const n = safeNum(v); return n.toLocaleString('id-ID'); }
@@ -41,6 +43,25 @@ const INSIGHT_ICONS = { warning: AlertTriangle, positive: TrendingUp, info: Info
 const INSIGHT_COLORS = { warning: 'text-amber-400', positive: 'text-emerald-400', info: 'text-blue-400', danger: 'text-rose-400' };
 const INSIGHT_BG = { warning: 'from-amber-500/10', positive: 'from-emerald-500/10', info: 'from-blue-500/10', danger: 'from-rose-500/10' };
 
+const INSIGHT_TITLES = {
+  pph_score: 'Skor PPH Nasional',
+  regional_reserve: 'Cadangan Pangan Daerah',
+  best_commodity: 'Komoditas Terbaik',
+  margin_status: 'Margin Produsen–Konsumen',
+  food_balance: 'Surplus / Defisit Pangan',
+  commodity_surplus: 'Peringkat Surplus Komoditas',
+  monthly_opportunity: 'Peluang Pasar Bulanan',
+  best_province: 'Provinsi Terbaik',
+  plant_advice: 'Rekomendasi Tanam',
+  sell_advice: 'Rekomendasi Jual',
+};
+
+const INSIGHT_ORDER = [
+  'pph_score', 'regional_reserve', 'best_commodity', 'margin_status',
+  'food_balance', 'commodity_surplus', 'monthly_opportunity',
+  'best_province', 'plant_advice', 'sell_advice',
+];
+
 const MAP_MODES = [
   { key: 'producer', label: 'Harga Produsen', unit: 'Rp', valueKey: 'harga', dataKey: 'mapProducer', color: '#10b981' },
   { key: 'consumer', label: 'Harga Konsumen', unit: 'Rp', valueKey: 'harga', dataKey: 'mapConsumer', color: '#f59e0b' },
@@ -61,6 +82,7 @@ const FarmerDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [insights, setInsights] = useState([]);
   const [selectedMap, setSelectedMap] = useState('producer');
   const [selectedChart, setSelectedChart] = useState(null);
   const abortRef = useRef(null);
@@ -99,12 +121,28 @@ const FarmerDashboard = () => {
     finally { if (!ctrl.signal.aborted) setLoading(false); }
   }, [filters]);
 
+  const fetchInsights = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/insights/farmer`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (!res.ok) return;
+      const j = await res.json();
+      if (j.success) {
+        const sorted = [...j.data].sort((a, b) => {
+          const oa = INSIGHT_ORDER.indexOf(a.insightKey);
+          const ob = INSIGHT_ORDER.indexOf(b.insightKey);
+          return (oa === -1 ? 99 : oa) - (ob === -1 ? 99 : ob);
+        });
+        setInsights(sorted);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { fetchInsights(); }, [fetchInsights]);
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const d = data || {};
   const k = d.kpis || {};
-  const insights = d.insights || [];
 
   const currentMap = MAP_MODES.find(m => m.key === selectedMap);
   const mapData = d[currentMap?.dataKey] || [];
@@ -251,7 +289,7 @@ const FarmerDashboard = () => {
                   <div key={i} className={`bg-gradient-to-br ${bg} to-transparent backdrop-blur-sm p-4 rounded-2xl border border-border/30`}>
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className={`w-4 h-4 ${color}`} />
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${color}`}>{ins.title}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${color}`}>{INSIGHT_TITLES[ins.insightKey] || ins.title}</span>
                     </div>
                     <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed">{ins.message}</p>
                   </div>
