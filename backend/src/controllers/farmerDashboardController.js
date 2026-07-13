@@ -20,6 +20,16 @@ const BULAN_MAP = {
 };
 function normBulan(b) { return BULAN_MAP[b] || b; }
 
+function normMarginKomoditas(k) {
+  if (!k) return '';
+  return k
+    .replace(/ \(Rp\/Kg\)$/, '').replace(/ \(Rp\/Ekor Hidup\)$/, '')
+    .replace(/ \(Rp\/kg Berat Hidup\)$/, '').replace(/ Tk\. ?[A-Za-z]+$/, '')
+    .replace(/ Tk\.?Petani[^)]*/, '').replace(/ Tingkat [A-Za-z]+/, '')
+    .replace(/ Pipilan Kering/, '').trim();
+}
+
+
 function buildMatch(filters, extra) {
   const m = {};
   if (filters.year && filters.year !== 'all') m.tahun = filters.year;
@@ -101,76 +111,97 @@ async function computeKpis(filters) {
 async function computePriceAnalytics(filters) {
   const pf = buildMatch(filters);
   delete pf.komoditas;
+  const yearMatch = filters.year !== 'all' ? { tahun: filters.year } : {};
 
-  const producerTrend = await HargaProdusenNasional.aggregate([
-    { $match: filters.year !== 'all' ? { tahun: filters.year } : {} },
-    { $group: { _id: { komoditas: '$komoditas', bulan: '$bulan' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { komoditas: 1, bulan: 1 } },
+  const BULAN_ORDER = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  const [producerTrend, consumerTrend, commodityRanking, pphTrend, provPriceDist] = await Promise.all([
+    HargaProdusenNasional.aggregate([
+      { $match: yearMatch },
+      { $group: { _id: { komoditas: '$komoditas', bulan: '$bulan' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { komoditas: 1, bulan: 1 } },
+    ]),
+    HargaKonsumenNasional.aggregate([
+      { $match: yearMatch },
+      { $group: { _id: { komoditas: '$komoditas', bulan: '$bulan' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { komoditas: 1, bulan: 1 } },
+    ]),
+    HargaProdusenNasional.aggregate([
+      { $match: pf },
+      { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { harga: -1 } },
+    ]),
+    SkorPPH.find().sort({ tahun: 1 }).select('tahun pph_ketersediaan keterangan').lean().limit(50),
+    HargaProdusenProvinsi.aggregate([
+      { $match: pf },
+      { $group: { _id: '$nama_provinsi', harga: { $avg: '$harga' } } },
+      { $replaceWith: { provinsi: '$_id', harga: { $round: ['$harga', 0] } } },
+      { $sort: { provinsi: 1 } },
+    ]),
   ]);
 
-  const consumerTrend = await HargaKonsumenNasional.aggregate([
-    { $match: filters.year !== 'all' ? { tahun: filters.year } : {} },
-    { $group: { _id: { komoditas: '$komoditas', bulan: '$bulan' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { komoditas: 1, bulan: 1 } },
-  ]);
-
-  const commodityRanking = await HargaProdusenNasional.aggregate([
-    { $match: pf },
-    { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { harga: -1 } },
-  ]);
-
-  const pphTrend = await SkorPPH.find()
-    .sort({ tahun: 1 })
-    .select('tahun pph_ketersediaan keterangan')
-    .lean()
-    .limit(50);
-
+  // Separate margin query — uses original grouping by {bulan, komoditas}
   const marginTrend = await Promise.all([
     HargaProdusenNasional.aggregate([
-      { $match: filters.year !== 'all' ? { tahun: filters.year } : {} },
+      { $match: yearMatch },
       { $group: { _id: { bulan: '$bulan', komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { harga: '$harga' }] } },
       { $sort: { bulan: 1 } },
     ]),
     HargaKonsumenNasional.aggregate([
-      { $match: filters.year !== 'all' ? { tahun: filters.year } : {} },
+      { $match: yearMatch },
       { $group: { _id: { bulan: '$bulan', komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { harga: '$harga' }] } },
       { $sort: { bulan: 1 } },
     ]),
   ]);
 
-  const marginByMonth = marginTrend[0].map(p => {
+  // Build per-commodity margin with normalized komoditas matching
+  const marginRows = [];
+  for (const p of marginTrend[0]) {
     const pBulan = normBulan(p.bulan);
+    const normP = normMarginKomoditas(p.komoditas);
     const c = marginTrend[1].find(x =>
-      normBulan(x.bulan) === pBulan && x.komoditas === p.komoditas
+      normBulan(x.bulan) === pBulan && (
+        x.komoditas === p.komoditas ||
+        x.komoditas === normP ||
+        x.komoditas.startsWith(normP) ||
+        x.komoditas.includes(normP)
+      )
     );
-    return {
+    marginRows.push({
       bulan: pBulan,
-      komoditas: p.komoditas,
       produsen: Math.round(p.harga),
       konsumen: c ? Math.round(c.harga) : 0,
       margin: c ? Math.round(c.harga - p.harga) : 0,
-    };
-  });
+    });
+  }
 
-  const provPriceDist = await HargaProdusenProvinsi.aggregate([
-    { $match: pf },
-    { $group: { _id: { provinsi: '$nama_provinsi', komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { provinsi: 1 } },
-  ]);
+  // Aggregate by month
+  const byMonth = {};
+  for (const r of marginRows) {
+    if (!byMonth[r.bulan]) byMonth[r.bulan] = { bulan: r.bulan, produsen: 0, konsumen: 0, margin: 0, count: 0 };
+    byMonth[r.bulan].produsen += r.produsen;
+    byMonth[r.bulan].konsumen += r.konsumen;
+    byMonth[r.bulan].margin += r.margin;
+    byMonth[r.bulan].count += 1;
+  }
+  const marginByMonthArr = Object.values(byMonth).map(d => ({
+    bulan: d.bulan,
+    produsen: Math.round(d.produsen / d.count),
+    konsumen: Math.round(d.konsumen / d.count),
+    margin: Math.round(d.margin / d.count),
+  })).sort((a, b) => BULAN_ORDER.indexOf(a.bulan) - BULAN_ORDER.indexOf(b.bulan));
 
   return {
     chartProducerTrend: producerTrend,
     chartConsumerTrend: consumerTrend,
     chartCommodityRanking: commodityRanking,
     chartPphScore: pphTrend,
-    chartMarginTrend: marginByMonth,
+    chartMarginTrend: marginByMonthArr,
     chartProvPriceDist: provPriceDist,
   };
 }
@@ -180,38 +211,35 @@ async function computePriceAnalytics(filters) {
 async function computeMarketAnalytics(filters) {
   const pf = buildMatch(filters);
 
-  const supplyDemand = await ProyeksiNeraca.aggregate([
-    { $match: { ...pf, tingkat: 'Nasional' } },
-    { $group: { _id: { bulan: '$bulan', komoditas: '$komoditas' }, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } },
-    { $addFields: { surplus: { $subtract: ['$ketersediaan', '$kebutuhan'] } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { ketersediaan: '$ketersediaan', kebutuhan: '$kebutuhan', surplus: '$surplus' }] } },
-    { $sort: { komoditas: 1, bulan: 1 } },
-  ]);
-
-  const cbMatch = { ...buildMatch(filters), tingkat: 'Nasional' };
-  delete cbMatch.komoditas;
-  const commodityBalance = await ProyeksiNeraca.aggregate([
-    { $match: cbMatch },
-    { $group: { _id: { komoditas: '$komoditas' }, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } },
-    { $addFields: { surplus: { $subtract: ['$ketersediaan', '$kebutuhan'] } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { ketersediaan: '$ketersediaan', kebutuhan: '$kebutuhan', surplus: '$surplus' }] } },
-    { $sort: { surplus: -1 } },
-  ]);
-
-  const opportunityRanking = await HargaProdusenProvinsi.aggregate([
-    { $match: pf },
-    { $group: { _id: { provinsi: '$nama_provinsi', komoditas: '$komoditas' }, harga: { $avg: '$harga' }, count: { $sum: 1 } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { harga: -1 } },
-    { $limit: 20 },
-  ]);
-
-  const cppdRanking = await CadanganPanganProvinsi.aggregate([
-    { $match: pf },
-    { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { ton: { $round: ['$ton', 2] } }] } },
-    { $sort: { ton: -1 } },
-    { $limit: 20 },
+  const [supplyDemand, commodityBalance, opportunityRanking, cppdRanking] = await Promise.all([
+    ProyeksiNeraca.aggregate([
+      { $match: { ...pf, tingkat: 'Nasional' } },
+      { $group: { _id: '$bulan', ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } },
+      { $addFields: { surplus: { $subtract: ['$ketersediaan', '$kebutuhan'] } } },
+      { $replaceWith: { bulan: '$_id', ketersediaan: '$ketersediaan', kebutuhan: '$kebutuhan', surplus: '$surplus' } },
+      { $sort: { bulan: 1 } },
+    ]),
+    ProyeksiNeraca.aggregate([
+      { $match: { ...pf, tingkat: 'Nasional' } },
+      { $group: { _id: { komoditas: '$komoditas' }, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } },
+      { $addFields: { surplus: { $subtract: ['$ketersediaan', '$kebutuhan'] } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { ketersediaan: '$ketersediaan', kebutuhan: '$kebutuhan', surplus: '$surplus' }] } },
+      { $sort: { surplus: -1 } },
+    ]),
+    HargaProdusenProvinsi.aggregate([
+      { $match: pf },
+      { $group: { _id: '$nama_provinsi', harga: { $avg: '$harga' } } },
+      { $replaceWith: { provinsi: '$_id', harga: { $round: ['$harga', 0] } } },
+      { $sort: { harga: -1 } },
+      { $limit: 20 },
+    ]),
+    CadanganPanganProvinsi.aggregate([
+      { $match: pf },
+      { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { ton: { $round: ['$ton', 2] } }] } },
+      { $sort: { ton: -1 } },
+      { $limit: 20 },
+    ]),
   ]);
 
   return {
@@ -244,8 +272,8 @@ async function computeMapData(filters) {
     ]),
     HargaProdusenProvinsi.aggregate([
       { $match: pf },
-      { $group: { _id: { provinsi: '$nama_provinsi', komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
-      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $group: { _id: '$nama_provinsi', harga: { $avg: '$harga' } } },
+      { $replaceWith: { provinsi: '$_id', harga: { $round: ['$harga', 0] } } },
       { $sort: { harga: -1 } },
       { $limit: 38 },
     ]),
@@ -261,7 +289,7 @@ async function computeMapData(filters) {
   return { mapProducer: producer, mapConsumer: consumer, mapMargin: marginMap, mapBalance: [{ surplus: b.ketersediaan - b.kebutuhan }], mapOpportunity: opportunity };
 }
 
-/* ─── Tables ────────────────────────────────────────────────── */
+/* ─── Tables ════════════════════════════════════════════ */
 
 async function computeTables(filters, pagination) {
   const { page, limit } = pagination;
@@ -269,22 +297,13 @@ async function computeTables(filters, pagination) {
   const pf = buildMatch(filters);
   delete pf.komoditas;
 
-  const [priceRaw, priceTotal] = await Promise.all([
+  const [priceRaw, priceTotal, consRaw, consTotal, neracaRaw, neracaTotal, balanceRaw, balanceTotal] = await Promise.all([
     HargaProdusenNasional.find(pf).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),
     HargaProdusenNasional.countDocuments(pf),
-  ]);
-
-  const [consRaw, consTotal] = await Promise.all([
     HargaKonsumenNasional.find(pf).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),
     HargaKonsumenNasional.countDocuments(pf),
-  ]);
-
-  const [neracaRaw, neracaTotal] = await Promise.all([
     ProyeksiNeraca.find({ ...pf, tingkat: 'Nasional' }).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean(),
     ProyeksiNeraca.countDocuments({ ...pf, tingkat: 'Nasional' }),
-  ]);
-
-  const [balanceRaw, balanceTotal] = await Promise.all([
     ProyeksiNeraca.find({ ...pf, tingkat: 'Nasional' }).sort({ neraca: -1 }).skip(skip).limit(limit).lean(),
     ProyeksiNeraca.countDocuments({ ...pf, tingkat: 'Nasional' }),
   ]);
@@ -299,5 +318,3 @@ async function computeTables(filters, pagination) {
     tableCommodity: { data: [], total: 0, page, limit, totalPages: 0 },
   };
 }
-
-

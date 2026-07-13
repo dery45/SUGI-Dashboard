@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const cache = require('../utils/cache');
 
 const MODELS = [
   'KetidakcukupanNasional', 'KetidakcukupanProvinsi', 'KonsumsiPerJenis',
@@ -25,12 +26,17 @@ const MONTH_ORDER = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
+const CACHE_TTL = 300000;
+
 function safeModel(name) {
   try { return require(`../models/${name}`); } catch { return null; }
 }
 
 exports.getFilterOptions = async (req, res) => {
   try {
+    const cached = cache.get('filterOptions');
+    if (cached) return res.json(cached);
+
     const [years, commodities, provinces, months] = await Promise.all([
       getDistinctYears(),
       getDistinctCommodities(),
@@ -38,7 +44,9 @@ exports.getFilterOptions = async (req, res) => {
       Promise.resolve(MONTH_ORDER)
     ]);
 
-    res.json({ years, months, commodities, provinces });
+    const result = { years, months, commodities, provinces };
+    cache.set('filterOptions', result, CACHE_TTL);
+    res.json(result);
   } catch (err) {
     console.error('Filter options error:', err);
     res.status(500).json({ error: err.message });

@@ -227,7 +227,7 @@ const FarmerDashboard = () => {
               <select value={filters.year} onChange={e => setFilter('year', e.target.value)}
                 className="bg-background/60 border border-border/50 text-foreground rounded-lg px-3 py-2 text-xs font-bold outline-none cursor-pointer min-w-[90px]" aria-label="Filter tahun">
                 <option value="all">Semua Tahun</option>
-                {[2025, 2024, 2023, 2022, 2021].map(y => <option key={y} value={String(y)}>{y}</option>)}
+                {options.years.map(y => <option key={y} value={String(y)}>{y}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-2">

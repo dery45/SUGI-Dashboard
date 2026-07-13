@@ -23,6 +23,7 @@ exports.getFarmerInsights = async (req, res) => {
   try {
     const insights = await FarmerInsight.find()
       .sort({ generatedAt: -1 })
+      .limit(20)
       .lean();
 
     res.json({ success: true, data: insights });
