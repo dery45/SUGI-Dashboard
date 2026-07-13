@@ -4,20 +4,36 @@ import { useAuth } from '../contexts/AuthContext';
 import DataPageTemplate from '../components/common/DataPageTemplate';
 import * as allCols from '../data/dataColumns';
 
+const INSIGHT_SOURCE_MAP = {
+  'ketidakcukupan-nasional': 'ketidakcukupannasionals',
+  'ketidakcukupan-provinsi': 'ketidakcukupanprovinsis',
+  'konsumsi-per-jenis': 'konsumsiperjeniss',
+  'penyaluran-donasi': 'penyalurandonasis',
+  'proyeksi-neraca': 'proyeksineracas',
+  'gerakan-pangan-murah': 'gerakanpanganmurahs',
+  'harga-konsumen-provinsi': 'hargakonsumenprovinsis',
+  'harga-konsumen-nasional': 'hargakonsumennasionals',
+  'harga-produsen-nasional': 'hargaprodusennasionals',
+  'harga-produsen-provinsi': 'hargaprodusenprovinsis',
+  'skor-pph': 'skorpphs',
+  'pangan-terselamatkan': 'panganterselamatkans',
+  'cadangan-pangan-provinsi': 'cadanganpanganprovinsis',
+};
+
 const slugs = [
-  { slug: 'ketidakcukupan-nasional', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Nasional', insight: 'Tren PoU nasional menunjukkan penurunan dari 16.97% (2011) menjadi 8.23% (2017). Namun fluktuasi di tahun 2013-2014 mengindikasikan perlunya intervensi pangan berkelanjutan.' },
-  { slug: 'ketidakcukupan-provinsi', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Provinsi', insight: 'Provinsi dengan PoU tertinggi perlu menjadi prioritas intervensi. Ketimpangan antar provinsi masih signifikan.' },
-  { slug: 'konsumsi-per-jenis', title: 'Rata-rata Konsumsi per Jenis Pangan Penduduk Indonesia Nasional', insight: 'Beras masih mendominasi pola konsumsi nasional (97.1 kg/kap/tahun). Diversifikasi pangan lokal perlu didorong untuk mengurangi ketergantungan.' },
-  { slug: 'penyaluran-donasi', title: 'Jumlah Pangan yang Disalurkan ke Penerima Manfaat', insight: 'Terdapat lonjakan donasi pangan di bulan-bulan tertentu yang perlu diantisipasi dengan pengelolaan logistik yang lebih baik.' },
-  { slug: 'proyeksi-neraca', title: 'Proyeksi Neraca Pangan Nasional', insight: 'Ketersediaan beras nasional masih surplus, namun distribusi antar wilayah perlu diperhatikan untuk menghindari disparitas harga.' },
-  { slug: 'gerakan-pangan-murah', title: 'Jumlah Pelaksanaan Gerakan Pangan Murah', insight: 'Program GPM perlu diperluas ke wilayah-wilayah dengan harga pangan di atas rata-rata nasional untuk menjaga stabilitas daya beli.' },
-  { slug: 'harga-konsumen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Provinsi', insight: 'Variasi harga antar provinsi menunjukkan disparitas yang perlu diintervensi melalui kebijakan distribusi dan transportasi.' },
-  { slug: 'harga-konsumen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Nasional', insight: 'Tren harga konsumen nasional dipengaruhi oleh musim panen dan kebijakan impor. Pola musiman terlihat jelas pada komoditas beras.' },
-  { slug: 'harga-produsen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Nasional', insight: 'Fluktuasi harga produsen mencerminkan dinamika rantai pasok. Stabilitas harga di tingkat petani perlu dijaga.' },
-  { slug: 'harga-produsen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Provinsi', insight: 'Kesenjangan harga produsen antar daerah menunjukkan perlunya perbaikan infrastruktur dan akses pasar.' },
-  { slug: 'skor-pph', title: 'Skor Pola Pangan Harapan Ketersediaan Nasional', insight: 'Skor PPH nasional mencerminkan keragaman konsumsi pangan. Peningkatan skor menunjukkan perbaikan kualitas gizi masyarakat.' },
-  { slug: 'pangan-terselamatkan', title: 'Jumlah Total Pangan yang Terselamatkan', insight: 'Program penyelamatan pangan (food rescue) berkontribusi pada pengurangan food waste dan peningkatan akses pangan.' },
-  { slug: 'cadangan-pangan-provinsi', title: 'Jumlah Cadangan Pangan Pemerintah Daerah Provinsi', insight: 'Cadangan pangan daerah (CPPD) perlu dikelola secara optimal untuk menghadapi masa paceklik dan keadaan darurat.' },
+  { slug: 'ketidakcukupan-nasional', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Nasional' },
+  { slug: 'ketidakcukupan-provinsi', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Provinsi' },
+  { slug: 'konsumsi-per-jenis', title: 'Rata-rata Konsumsi per Jenis Pangan Penduduk Indonesia Nasional' },
+  { slug: 'penyaluran-donasi', title: 'Jumlah Pangan yang Disalurkan ke Penerima Manfaat' },
+  { slug: 'proyeksi-neraca', title: 'Proyeksi Neraca Pangan Nasional' },
+  { slug: 'gerakan-pangan-murah', title: 'Jumlah Pelaksanaan Gerakan Pangan Murah' },
+  { slug: 'harga-konsumen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Provinsi' },
+  { slug: 'harga-konsumen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Nasional' },
+  { slug: 'harga-produsen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Nasional' },
+  { slug: 'harga-produsen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Provinsi' },
+  { slug: 'skor-pph', title: 'Skor Pola Pangan Harapan Ketersediaan Nasional' },
+  { slug: 'pangan-terselamatkan', title: 'Jumlah Total Pangan yang Terselamatkan' },
+  { slug: 'cadangan-pangan-provinsi', title: 'Jumlah Cadangan Pangan Pemerintah Daerah Provinsi' },
 ];
 
 const columnMap = {
@@ -138,7 +154,7 @@ const MasterDataPage = () => {
       data={data}
       loading={loading}
       error={error}
-      insightText={config.insight}
+      insightSource={INSIGHT_SOURCE_MAP[slug]}
       onRefresh={fetchData}
       onImport={handleImport}
       onAdd={handleAdd}

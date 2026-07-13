@@ -19,6 +19,8 @@ import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
 import PieChart from '../components/charts/PieChart';
 import { fetchGovtDashboard } from '../api/govtDashboardApi';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getToken = () => localStorage.getItem('token');
 
 function safeNum(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function fmtNum(v) { const n = safeNum(v); return n.toLocaleString('id-ID'); }
@@ -78,6 +80,7 @@ const GovernmentDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [policyInsight, setPolicyInsight] = useState(null);
   const [selectedMap, setSelectedMap] = useState('pou');
   const [selectedChart, setSelectedChart] = useState(null);
   const abortRef = useRef(null);
@@ -101,6 +104,18 @@ const GovernmentDashboard = () => {
   }, [filters]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/insights?source=policy_recommendation`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (j.success && j.data?.length) setPolicyInsight(j.data[0]);
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const currentMap = MAP_MODES.find(m => m.key === selectedMap);
@@ -240,11 +255,7 @@ const GovernmentDashboard = () => {
             </div>
             <div className="space-y-3">
               <h3 className="text-sm font-black text-foreground tracking-tight">Rekomendasi Kebijakan</h3>
-              <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed">
-                {k.neraca?.current > 0
-                  ? `Neraca pangan nasional surplus ${fmtNum(k.neraca.current)} ton. Skor PPH ${k.pph?.current != null ? safeNum(k.pph.current).toFixed(2) : '-'} dari target 100. Disarankan memperkuat distribusi ke daerah dengan PoU tinggi.`
-                  : `Neraca pangan nasional defisit. Perhatikan ketersediaan beras di bulan-bulan mendatang.`}
-              </p>
+              <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed">{policyInsight?.insight || 'Memuat rekomendasi...'}</p>
             </div>
           </div>
         </div>

@@ -1,32 +1,86 @@
 # SUGIDash 🌾🏛️
 
-**SUGIDash** (Sugi Dashboard) is a premium, high-performance **End-to-End Agricultural Management & Intelligence System**. It provides real-time data visualization for agricultural pricing, national food security trends, and complete farm lifecycle management across Indonesia.
+**SUGIDash** is a premium, high-performance **End-to-End Agricultural Management & Food Security Intelligence System**. It provides real-time data visualization for agricultural pricing, national food security trends, complete farm lifecycle management, and AI-powered market intelligence across Indonesia.
 
 ## 🚀 Key Features
 
-- **Authentication & RBAC**: JWT-based login with bcrypt password hashing. Four roles: `superadmin`, `government`, `farmer_owner`, `farmer`. Role-based route guards and sidebar visibility.
-- **Master Data Management**: Full CRUD for Farms, Blocks (land parcels), Crop Types, and Activity Types — used across all downstream modules.
-- **Management Dashboard (Company/Leader)**:
-  - **KPI Analytics**: Real-time business metrics like Total Yield (Tons), ROI (%), Cost per Kg, and Average Price.
-  - **Yield Trends**: Comparative month-by-month analysis of yields for Company, Groups, and Independent actors using **Recharts**.
-  - **Alert & Notification System**: Automated tracking of closing harvest windows and unassigned tasks.
-- **Agricultural Lifecycle Management**:
-  - **Land Preparation**: Full CRUD for land opening/closing with cost tracking.
-  - **Planting Log**: Track crop variety, density (seeds/ha), and area coverage.
-  - **Maintenance tracking**: Detailed log for fertilization, spraying, and pruning with labor hour and cost aggregation.
-  - **Harvest Management**: Open/Close harvest windows with expected vs. actual yield comparison and overdue alerts.
-- **Unit Management (UM)**: Farmer-to-Block assignment system — assign farmers to specific land blocks with auto-detected farm.
-- **Farmer & User Management**:
-  - Role-based Access Control (RBAC) with 4 roles.
-  - Organization-specific user filtering, search, and deactivation.
-- **Sales & Distribution**:
-  - Record sales to Mills, Middlemen, or Direct markets with expense tracking.
-  - Auto-computed revenue and invoice reference tracking.
-- **Farmer & Government Dashboards**: Live data from 14 food security datasets with clickable chart cards and detail modals.
-- **Chart Detail Modal**: Click any chart card to view a full-size 500px chart with ESC/backdrop/close-button dismissal.
-- **DataTable** with page size selector (5/10/20/50), first/last navigation, total entry count, and smart page numbering.
-- **Premium Glassmorphism UI**: A cutting-edge, minimalist "Emerald & White" aesthetic with butter-smooth transitions (`cubic-bezier` easing) and high-end animations.
-- **Real API Fallback**: Dashboards gracefully fall back to mock data when the API is unreachable.
+### Authentication & Role-Based Access
+- JWT-based authentication with bcrypt password hashing
+- Four roles: `superadmin`, `government`, `farmer_owner`, `farmer`
+- Role-based route guarding and sidebar visibility
+
+### Farmer Dashboard (Market Intelligence)
+- **10 AI-Powered Insights**: Skor PPH Nasional, Cadangan Pangan Daerah, Komoditas Terbaik, Margin Produsen–Konsumen, Surplus/Defisit Pangan, Peringkat Surplus Komoditas, Peluang Pasar Bulanan, Provinsi Terbaik, Rekomendasi Tanam, Rekomendasi Jual
+- **Commodity Price Analytics**: Producer & consumer price trends, commodity rankings, margin analysis
+- **Interactive Indonesia Map**: Province-level price, margin, and opportunity heatmaps
+- **Food Supply-Demand Tracking**: National and per-commodity balance sheets
+- **Regional Food Reserve Monitoring**: Province-level CPPD data
+- **Drill-down Modals**: Click any chart for full-size detail view
+
+### Government Dashboard (National Food Security)
+- **Policy Recommendation Engine**: AI-generated strategic policy recommendations
+- **KPI Cards**: National food balance, PPH score, GPM activities, regional reserves
+- **PoU (Prevalence of Undernourishment) Tracking**: National and province-level trends
+- **Interactive Maps**: PoU, consumer/producer prices, food reserves, GPM distribution
+- **Projection & Intervention**: Rice balance projections, donation tracking, food rescue monitoring
+- **Provincial Rankings**: CPPD, PoU, and GPM performance rankings
+
+### Management Dashboard (Company/Leader)
+- **KPI Analytics**: Total Yield (Tons), ROI (%), Cost per Kg, Average Price
+- **Yield Trends**: Comparative month-by-month analysis across Company, Groups, and Independent actors
+- **Alert System**: Automated tracking of closing harvest windows and unassigned tasks
+
+### Agricultural Lifecycle Management
+- **Land Preparation**: Full CRUD for land opening/closing with cost tracking
+- **Planting Log**: Crop variety, density (seeds/ha), area coverage
+- **Maintenance Tracking**: Fertilization, spraying, pruning with labor hour and cost aggregation
+- **Harvest Management**: Open/Close harvest windows with expected vs. actual yield comparison and overdue alerts
+
+### Farmer & User Management
+- Role-based Access Control (RBAC) with 4 roles
+- Organization-specific user filtering, search, and deactivation
+- Farmer-to-Block assignment system (Unit Management)
+
+### Sales & Distribution
+- Record sales to Mills, Middlemen, or Direct markets
+- Expense tracking with auto-computed revenue and invoice reference tracking
+
+### Master Data Management (15 Datasets)
+Full CRUD pages for all national food security datasets:
+
+| Dataset | Model |
+|---------|-------|
+| Ketidakcukupan Konsumsi Pangan (Nasional) | `ketidakcukupan-nasional` |
+| Ketidakcukupan Konsumsi Pangan (Provinsi) | `ketidakcukupan-provinsi` |
+| Konsumsi Pangan per Jenis | `konsumsi-per-jenis` |
+| Penyaluran Donasi Pangan | `penyaluran-donasi` |
+| Proyeksi Neraca Pangan | `proyeksi-neraca` |
+| Gerakan Pangan Murah | `gerakan-pangan-murah` |
+| Harga Konsumen (Provinsi) | `harga-konsumen-provinsi` |
+| Harga Konsumen (Nasional) | `harga-konsumen-nasional` |
+| Harga Produsen (Nasional) | `harga-produsen-nasional` |
+| Harga Produsen (Provinsi) | `harga-produsen-provinsi` |
+| Skor Pola Pangan Harapan (PPH) | `skor-pph` |
+| Pangan Terselamatkan (Food Rescue) | `pangan-terselamatkan` |
+| Cadangan Pangan Provinsi | `cadangan-pangan-provinsi` |
+
+### Insight Generation System
+- **Farmer Insights**: 10 generated market intelligence items stored in `farmerinsights` collection
+- **Government Insights**: Policy recommendations stored in `governmentinsights` collection
+- **Versioned**: Each insight tracks version history and generation timestamp
+- **Rich Metadata**: Numerical values, commodity names, province names attached to each insight
+
+### UI/UX Features
+- **Premium Glassmorphism UI**: Emerald & White aesthetic with smooth cubic-bezier transitions
+- **Dark/Light Theme**: Full theme toggle with system preference detection
+- **Responsive Design**: Mobile-first with bottom navigation for small screens
+- **Interactive Charts**: Recharts-based (Line, Bar, Pie) with click-to-expand detail modals
+- **Indonesia Map**: Province-level interactive choropleth with drill-down
+- **Data Export**: CSV/Excel export for all chart and table data
+- **Advanced DataTable**: Page size selector (5/10/20/50), first/last navigation, total entry count, smart page numbering
+- **Error Boundary**: Graceful per-component error handling with retry
+- **Loading Skeletons**: Animated placeholder during data fetch
+- **Empty States**: Contextual messages when no data is available for current filters
 
 ## 🖼️ User Interface Preview
 
@@ -38,7 +92,7 @@ A secure, role-based login interface providing distinct entry points for Farmers
 ---
 
 ### 🌾 2. Farmer Dashboard
-Empowering local agriculturalists with real-time grain pricing (GKP) visualizations and localized farm highlights.
+Empowering local agriculturalists with real-time market intelligence, commodity analytics, and interactive maps.
 
 ![Farmer Dashboard](image/farmer-dashboard.png)
 
@@ -59,67 +113,66 @@ An end-to-end tracking tool covering land preparation, planting schedules, maint
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 19** (Vite-based)
-- **Tailwind CSS 4.0** (with custom glassmorphism utilities)
-- **Recharts** (Advanced business & yield analytics)
+- **React 19** (Vite 8, JSX-based)
+- **Tailwind CSS 4** (with custom glassmorphism utilities)
+- **Recharts 3** (Advanced business & yield analytics — Line, Bar, Pie charts)
 - **Lucide React** (Modern iconography)
-- **Leaflet & React-Leaflet** (Geographical data maps)
+- **Leaflet & React-Leaflet** (Interactive Indonesia province map)
 - **React Router 7** (Protected dashboard paths)
+- **SheetJS (xlsx)** (Client-side CSV/Excel export)
 
 ### Backend
-- **Node.js** (Express)
-- **MongoDB / Mongoose** (Complex aggregation pipelines for real-time KPI computation)
-- **JWT** (JSON Web Tokens for stateless authentication)
-- **bcryptjs** (Password hashing)
+- **Node.js / Express 5** (REST API)
+- **MongoDB / Mongoose 9** (Complex aggregation pipelines for real-time KPI computation)
+- **JWT / bcryptjs** (Stateless authentication with password hashing)
 - **RBAC Middleware** (Role-based security across all routes)
 
 ## 📁 Project Structure
 
 ```bash
 SUGI-Dashboard-DEMO/
-├── backend/                # Node.js + Express API
+├── backend/                      # Node.js + Express API
 │   ├── src/
-│   │   ├── config/         # Database and environment configurations
-│   │   ├── controllers/    # Request handlers (logic for specific routes)
-│   │   ├── middlewares/    # Custom Express middlewares (RBAC, Auth)
-│   │   ├── models/         # Mongoose schemas (Sale, Expense, UM, Cycle, Activity, etc.)
-│   │   ├── routes/         # Modular API endpoints (lifecycle, sales, um, etc.)
-│   │   ├── scripts/        # Utility and maintenance scripts
-│   │   ├── services/       # Business logic & complex aggregations (kpiService)
-│   │   └── utils/          # Helper functions
-│   ├── .env                # Environment variables (Mongo URI, Port, JWT Secret)
-│   ├── server.js           # Main server entry point
-│   └── package.json        # Backend dependencies and scripts
-├── frontend/               # Vite + React source code
-│   ├── public/             # Static assets (GeoJSON maps, public icons)
+│   │   ├── config/               # Database and environment configurations
+│   │   ├── controllers/          # 26 request handlers (auth, dashboards, CRUD, insights)
+│   │   ├── middlewares/          # Custom Express middlewares (RBAC, Auth)
+│   │   ├── models/               # 35+ Mongoose schemas (master data, lifecycle, insights)
+│   │   ├── routes/               # 31 modular API endpoint files
+│   │   ├── scripts/              # Seed, reset, and maintenance scripts
+│   │   ├── services/             # Business logic & complex aggregations (kpiService)
+│   │   └── utils/                # Helper functions
+│   ├── .env                      # Environment variables
+│   ├── server.js                 # Main entry point (Express + MongoDB + static serving)
+│   └── package.json
+├── frontend/                     # Vite + React 19
+│   ├── public/                   # Static assets (GeoJSON maps, icons)
 │   ├── src/
-│   │   ├── api/            # Central managementApi client for backend communication
-│   │   ├── assets/         # Images, fonts, and brand assets
-│   │   ├── components/     # Reusable UI components
-│   │   │   ├── charts/     # Recharts implementations
-│   │   │   ├── common/     # Shared UI elements (Buttons, Inputs, DataTable, ChartDetailModal)
-│   │   │   ├── layout/     # Page structural components (Sidebar, TopBar, MainLayout)
-│   │   │   ├── management/ # Module-specific components
-│   │   │   └── map/        # Leaflet map implementations
-│   │   ├── contexts/       # React Context API for global state (AuthContext, ThemeContext, FilterContext)
-│   │   ├── data/           # Reference data, types, and constants
-│   │   ├── hooks/          # Custom React hooks (useManagementData, useGenericResource)
-│   │   ├── pages/          # Main dashboard views (Farmer, Gov, Management, Lifecycle, UM, etc.)
-│   │   │   └── master/     # Master data CRUD pages (Farm, Block, CropType, ActivityType)
-│   │   ├── styles/         # Global CSS and Tailwind theme extensions
-│   │   ├── utils/          # Frontend helper functions and formatters
-│   │   ├── App.jsx         # Main application component & routing
-│   │   └── main.jsx        # React DOM entry point
-│   ├── vite.config.js      # Vite configuration
-│   └── package.json        # Frontend dependencies and scripts
-└── README.md               # Main project documentation
+│   │   ├── api/                  # 6 API client modules (dashboard, filter, insight, management)
+│   │   ├── assets/               # Images, fonts, brand assets
+│   │   ├── components/
+│   │   │   ├── charts/           # Recharts wrappers (BarChart, LineChart, PieChart)
+│   │   │   ├── common/           # Shared UI (Card, DataTable, Modal, ErrorBoundary, etc.)
+│   │   │   ├── dashboard/        # 15 dashboard-specific components (KpiCard, ChartCard, etc.)
+│   │   │   ├── layout/           # Sidebar, TopBar, MainLayout, BottomNav
+│   │   │   ├── management/       # 12 management module components
+│   │   │   └── map/              # IndonesiaMap (Leaflet)
+│   │   ├── contexts/             # 4 React Contexts (Auth, Theme, Filter, DashboardFilter)
+│   │   ├── hooks/                # 3 custom hooks (useMasterData, useManagementData, useGenericResource)
+│   │   ├── pages/                # 26 page views (dashboards, management, 15 master data CRUD)
+│   │   │   └── master/           # 17 master data CRUD pages
+│   │   ├── styles/               # Global CSS and Tailwind theme extensions
+│   │   ├── App.jsx               # Root component with routing
+│   │   └── main.jsx              # React DOM entry point
+│   ├── vite.config.js
+│   └── package.json
+└── README.md
 ```
 
 ## ⚙️ Getting Started
 
 ### 1. Prerequisites
 - Node.js (v18+)
-- MongoDB (Running locally or via Atlas)
+- MongoDB (running locally or via Atlas)
 
 ### 2. Setup Backend
 ```bash
@@ -127,7 +180,7 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend/` directory with the following content:
+Create a `.env` file in the `backend/` directory:
 ```env
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/sugi-dashboard-demo
@@ -144,18 +197,17 @@ Reset database and re-seed:
 npm run reset
 ```
 
-Then start the server:
+Start the server:
 ```bash
-npm start   # Server runs on http://localhost:5000
-# or
-npm run dev # With nodemon hot-reload
+npm start     # Production — http://localhost:5000
+npm run dev   # Development with nodemon hot-reload
 ```
 
 ### 3. Setup Frontend
 ```bash
 cd frontend
 npm install
-npm run dev # App runs on http://localhost:5173
+npm run dev   # Dev server — http://localhost:5173
 ```
 
 ### 4. Credentials
@@ -166,28 +218,51 @@ npm run dev # App runs on http://localhost:5173
 | Government | `government@sugi.id` | `government123` |
 | Farmer Owner | `owner@sugi.id` | `owner123` |
 
-### 5. API Endpoints
+### 5. Key API Endpoints
 
 **Authentication:**
-- `POST /api/auth/login` — Login with email & password, returns JWT token
-- `GET /api/auth/me` — Get current user profile
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login with email & password, returns JWT |
+| GET | `/api/auth/me` | Get current user profile |
 
-**Master Data:**
-- `GET/POST /api/master-data/farms` — List / Create farms
-- `GET/PUT/DELETE /api/master-data/farms/:id` — Get / Update / Delete farm
-- `GET/POST /api/master-data/blocks` — List / Create blocks
-- `GET/POST /api/master-data/crop-types` — List / Create crop types
-- `GET/POST /api/master-data/activity-types` — List / Create activity types
+**Dashboards:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/dashboard/farmer/v2` | Farmer dashboard (prices, trends, maps, tables) |
+| GET | `/api/dashboard/govt` | Government dashboard (KPIs, charts, rankings) |
+| GET | `/api/insights/farmer` | Market Intelligence insights (10 items) |
+| GET | `/api/insights?source=policy_recommendation` | Policy recommendation |
+| GET | `/api/dashboard/management` | Management KPIs and analytics |
 
-**Assignments:**
-- `GET/POST /api/assignments/farmer-assignments` — List / Create farmer-to-block assignments
-- `DELETE /api/assignments/farmer-assignments/:id` — Remove assignment
-- `GET/POST /api/assignments/task-assignments` — List / Create task-to-farmer assignments
+**Master Data CRUD (each follows same pattern):**
+| Method | Endpoint Example | Description |
+|--------|-----------------|-------------|
+| GET | `/api/master/harga-produsen-nasional` | List records |
+| POST | `/api/master/harga-produsen-nasional` | Create record |
+| PUT | `/api/master/harga-produsen-nasional/:id` | Update record |
+| DELETE | `/api/master/harga-produsen-nasional/:id` | Delete record |
 
-**Farmers:** `GET/POST/PUT/DELETE /api/farmers`
-**Sales:** `GET/POST/DELETE /api/sales`
-**Expenses:** `GET/POST /api/expenses`
-**Dashboards:** `GET /api/dashboard/farmer`, `GET /api/dashboard/government`
+**30+ RESTful endpoints** for lifecycle, sales, expenses, assignments, farmers, settings, filters, and bulk import.
+
+### 6. Frontend Routes
+
+| Path | Page | Roles |
+|------|------|-------|
+| `/login` | Login | Public |
+| `/farmer` | Farmer Dashboard | All authenticated |
+| `/government` | Government Dashboard | superadmin, government |
+| `/management` | Management Dashboard | superadmin, farmer_owner |
+| `/management/lifecycle` | Lifecycle Management | superadmin, farmer_owner |
+| `/management/um` | Unit Management | superadmin, farmer_owner |
+| `/management/farmers` | Farmer Management | superadmin, farmer_owner |
+| `/management/sales` | Sales & Distribution | superadmin, farmer_owner |
+| `/settings` | Settings | All authenticated |
+| `/master/farms` | Farm Master Data | superadmin, farmer_owner |
+| `/master/blocks` | Block Master Data | superadmin, farmer_owner |
+| `/master/crop-types` | Crop Type Master | superadmin, farmer_owner |
+| `/master/activity-types` | Activity Type Master | superadmin, farmer_owner |
+| `/data/*` | 15 Food Security Datasets | superadmin, government |
 
 ---
 

@@ -30,6 +30,7 @@ const cadanganPanganProvinsiRoutes = require('./cadanganPanganProvinsiRoutes');
 const bulkImportRoutes = require('./bulkImportRoutes');
 const settingsRoutes = require('./settingsRoutes');
 const filterRoutes = require('./filterRoutes');
+const insightRoutes = require('./insightRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/master-data', masterDataRoutes);
@@ -47,6 +48,7 @@ router.use('/farmers', farmerManagementRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/filters', filterRoutes);
+router.use('/insights', insightRoutes);
 
 router.use('/master/ketidakcukupan-nasional', ketidakcukupanNasionalRoutes);
 router.use('/master/ketidakcukupan-provinsi', ketidakcukupanProvinsiRoutes);

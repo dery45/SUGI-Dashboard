@@ -1,18 +1,8 @@
-import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useFilter } from '../../contexts/FilterContext';
-import { Sun, Moon, LogOut, Menu, X, Calendar } from 'lucide-react';
+import { Sun, Moon, LogOut, Menu, X } from 'lucide-react';
 
 const TopBar = ({ onLogout, toggleSidebar, isSidebarOpen }) => {
   const { theme, toggleTheme } = useTheme();
-  const { dateRange, setDateRange } = useFilter();
-  const location = useLocation();
-
-  const showDateRange = ['/farmer', '/government', '/management'].includes(location.pathname) || location.pathname.startsWith('/data');
-
-  const handleDateChange = (e) => {
-    setDateRange(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
 
   return (
     <header className="h-16 sm:h-20 lg:h-24 flex items-center px-3 sm:px-4 lg:px-8 transition-all duration-300 sticky top-0 z-40 bg-transparent safe-area-top">
@@ -25,32 +15,6 @@ const TopBar = ({ onLogout, toggleSidebar, isSidebarOpen }) => {
           >
             {isSidebarOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
-          
-          {showDateRange && (
-            <div className="hidden lg:flex items-center bg-background/50 border border-border/40 rounded-xl p-1 shadow-inner">
-              <div className="flex items-center px-3 py-1.5 gap-2 border-r border-border/40">
-                <Calendar className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-bold text-muted uppercase tracking-wider">Range</span>
-              </div>
-              <div className="flex items-center gap-1 px-3">
-                <input 
-                  type="date" 
-                  name="startDate"
-                  value={dateRange.startDate} 
-                  onChange={handleDateChange}
-                  className="bg-transparent text-foreground text-xs font-bold focus:outline-none cursor-pointer min-h-[36px]"
-                />
-                <span className="text-muted text-[10px] font-black mx-1">—</span>
-                <input 
-                  type="date" 
-                  name="endDate"
-                  value={dateRange.endDate} 
-                  onChange={handleDateChange}
-                  className="bg-transparent text-foreground text-xs font-bold focus:outline-none cursor-pointer min-h-[36px]"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-2">
