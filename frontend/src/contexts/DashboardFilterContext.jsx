@@ -50,14 +50,14 @@ export const DashboardFilterProvider = ({ children }) => {
         setOptions({ years, months: MONTHS, commodities, provinces });
         setFilters(prev => ({
           ...prev,
-          year: prev.year || years[0] || '2024'
+          year: prev.year || 'all'
         }));
       })
       .catch(() => {
         if (cancelled) return;
         const fallbackYears = ['2024', '2023', '2022', '2021'];
         setOptions({ years: fallbackYears, months: MONTHS, commodities: [], provinces: [] });
-        setFilters(prev => ({ ...prev, year: prev.year || '2024' }));
+        setFilters(prev => ({ ...prev, year: prev.year || 'all' }));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -72,7 +72,7 @@ export const DashboardFilterProvider = ({ children }) => {
   }, []);
 
   const resetFilters = useCallback(() => {
-    setFilters({ year: options.years[0] || '2024', month: 'all', commodity: 'all', province: 'all' });
+    setFilters({ year: 'all', month: 'all', commodity: 'all', province: 'all' });
   }, [options.years]);
 
   return (

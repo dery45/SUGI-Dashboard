@@ -63,6 +63,12 @@ Full CRUD pages for all national food security datasets:
 | Skor Pola Pangan Harapan (PPH) | `skor-pph` |
 | Pangan Terselamatkan (Food Rescue) | `pangan-terselamatkan` |
 | Cadangan Pangan Provinsi | `cadangan-pangan-provinsi` |
+| Variasi Harga Produsen | `variasi-harga-produsen` |
+
+### Bulk Data Import
+- **Upsert-based import** via `POST /api/bulk-import/:modelName` for all 14 food security datasets
+- Auto-detects unique keys per model for safe re-import
+- Accepts JSON arrays directly in request body
 
 ### Insight Generation System
 - **Farmer Insights**: 10 generated market intelligence items stored in `farmerinsights` collection
@@ -77,6 +83,8 @@ Full CRUD pages for all national food security datasets:
 - **Interactive Charts**: Recharts-based (Line, Bar, Pie) with click-to-expand detail modals
 - **Indonesia Map**: Province-level interactive choropleth with drill-down
 - **Data Export**: CSV/Excel export for all chart and table data
+- **In-Memory Caching**: 5-minute TTL cache for filter options (saves 24 `distinct()` queries per page load)
+- **Response Compression**: Gzip/brotli compression on all API responses
 - **Advanced DataTable**: Page size selector (5/10/20/50), first/last navigation, total entry count, smart page numbering
 - **Error Boundary**: Graceful per-component error handling with retry
 - **Loading Skeletons**: Animated placeholder during data fetch
@@ -126,45 +134,54 @@ An end-to-end tracking tool covering land preparation, planting schedules, maint
 - **MongoDB / Mongoose 9** (Complex aggregation pipelines for real-time KPI computation)
 - **JWT / bcryptjs** (Stateless authentication with password hashing)
 - **RBAC Middleware** (Role-based security across all routes)
+- **compression** (Gzip/brotli response compression)
+- **Custom In-Memory Cache** (TTL-based filter options caching)
+
+### Notables
+- Komoditas name normalization for margin calculation (`normMarginKomoditas` strips `(Rp/Kg)`, `Tk. Petani`, `Tingkat...` suffixes for cross-collection matching)
+- Dynamic year filter defaults to `'all'` (shows all available years on first load)
+- Year dropdown populated dynamically from API (sorted descending, most recent first)
 
 ## 📁 Project Structure
 
 ```bash
 SUGI-Dashboard-DEMO/
-├── backend/                      # Node.js + Express API
+├── backend/                          # Node.js + Express REST API
 │   ├── src/
-│   │   ├── config/               # Database and environment configurations
-│   │   ├── controllers/          # 26 request handlers (auth, dashboards, CRUD, insights)
-│   │   ├── middlewares/          # Custom Express middlewares (RBAC, Auth)
-│   │   ├── models/               # 35+ Mongoose schemas (master data, lifecycle, insights)
-│   │   ├── routes/               # 31 modular API endpoint files
-│   │   ├── scripts/              # Seed, reset, and maintenance scripts
-│   │   ├── services/             # Business logic & complex aggregations (kpiService)
-│   │   └── utils/                # Helper functions
-│   ├── .env                      # Environment variables
-│   ├── server.js                 # Main entry point (Express + MongoDB + static serving)
+│   │   ├── controllers/              # 26 request handlers (auth, dashboards, CRUD, insights)
+│   │   ├── middlewares/              # Custom Express middlewares (RBAC, Auth)
+│   │   ├── models/                   # 35+ Mongoose schemas (master data, lifecycle, insights)
+│   │   ├── routes/                   # 31 modular API endpoint files
+│   │   ├── scripts/                  # Seed, reset, and maintenance scripts
+│   │   ├── services/                 # Business logic & complex aggregations (kpiService)
+│   │   └── utils/                    # Helper functions (cache, validation)
+│   ├── .env                          # Environment variables
+│   ├── server.js                     # Entry point (Express + MongoDB + static serving)
 │   └── package.json
-├── frontend/                     # Vite + React 19
-│   ├── public/                   # Static assets (GeoJSON maps, icons)
+├── frontend/                         # Vite + React 19 SPA
+│   ├── public/                       # Static assets (GeoJSON maps, icons)
 │   ├── src/
-│   │   ├── api/                  # 6 API client modules (dashboard, filter, insight, management)
-│   │   ├── assets/               # Images, fonts, brand assets
+│   │   ├── api/                      # 6 API client modules
+│   │   ├── assets/                   # Images, fonts, brand assets
 │   │   ├── components/
-│   │   │   ├── charts/           # Recharts wrappers (BarChart, LineChart, PieChart)
-│   │   │   ├── common/           # Shared UI (Card, DataTable, Modal, ErrorBoundary, etc.)
-│   │   │   ├── dashboard/        # 15 dashboard-specific components (KpiCard, ChartCard, etc.)
-│   │   │   ├── layout/           # Sidebar, TopBar, MainLayout, BottomNav
-│   │   │   ├── management/       # 12 management module components
-│   │   │   └── map/              # IndonesiaMap (Leaflet)
-│   │   ├── contexts/             # 4 React Contexts (Auth, Theme, Filter, DashboardFilter)
-│   │   ├── hooks/                # 3 custom hooks (useMasterData, useManagementData, useGenericResource)
-│   │   ├── pages/                # 26 page views (dashboards, management, 15 master data CRUD)
-│   │   │   └── master/           # 17 master data CRUD pages
-│   │   ├── styles/               # Global CSS and Tailwind theme extensions
-│   │   ├── App.jsx               # Root component with routing
-│   │   └── main.jsx              # React DOM entry point
+│   │   │   ├── charts/               # Recharts wrappers (BarChart, LineChart, PieChart)
+│   │   │   ├── common/               # Shared UI (Card, DataTable, Modal, ErrorBoundary)
+│   │   │   ├── dashboard/            # 15 dashboard-specific components (KpiCard, ChartCard)
+│   │   │   ├── layout/               # Sidebar, TopBar, MainLayout, BottomNav
+│   │   │   ├── management/           # 12 management module components
+│   │   │   └── map/                  # IndonesiaMap (Leaflet)
+│   │   ├── contexts/                 # 4 React Contexts (Auth, Theme, Filter, DashboardFilter)
+│   │   ├── hooks/                    # 3 custom hooks
+│   │   ├── pages/                    # 26 page views
+│   │   │   └── master/               # 17 master data CRUD pages
+│   │   ├── App.jsx                   # Root component with routing
+│   │   └── main.jsx                  # React DOM entry point
+│   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
+├── docs/                             # Phase implementation documents
+├── image/                            # Screenshot images for README
+├── testing/                          # Playwright automated tests
 └── README.md
 ```
 
@@ -172,7 +189,7 @@ SUGI-Dashboard-DEMO/
 
 ### 1. Prerequisites
 - Node.js (v18+)
-- MongoDB (running locally or via Atlas)
+- MongoDB (local, Atlas, or Docker)
 
 ### 2. Setup Backend
 ```bash
@@ -182,9 +199,10 @@ npm install
 
 Create a `.env` file in the `backend/` directory:
 ```env
-PORT=5000
+PORT=3000
 MONGO_URI=mongodb://localhost:27017/sugi-dashboard-demo
 JWT_SECRET=supersecret
+file_path="../../client/public/"
 ```
 
 Seed default data (users, crop types, activity types):
@@ -199,18 +217,34 @@ npm run reset
 
 Start the server:
 ```bash
-npm start     # Production — http://localhost:5000
+npm start     # Production — http://localhost:3000
 npm run dev   # Development with nodemon hot-reload
 ```
 
-### 3. Setup Frontend
+### 3. Import Food Security Data
+Price, projection, and consumption data is **not seeded** by default. Use the bulk import API:
+
+```bash
+# Import from a JSON file (example: HargaProdusenNasional)
+curl -X POST http://localhost:3000/api/bulk-import/HargaProdusenNasional \
+  -H "Content-Type: application/json" \
+  -d '[{"komoditas":"Beras","tahun":"2025","bulan":"Januari","harga":12000}]'
+```
+
+Supported model names: `HargaProdusenNasional`, `HargaKonsumenNasional`, `HargaProdusenProvinsi`, `HargaKonsumenProvinsi`, `ProyeksiNeraca`, `KetidakcukupanNasional`, `KetidakcukupanProvinsi`, `KonsumsiPerJenis`, `PenyaluranDonasi`, `GerakanPanganMurah`, `SkorPPH`, `PanganTerselamatkan`, `CadanganPanganProvinsi`, `VariasiHargaProdusen`.
+
+Data sources: [SatuHarga Kemendag](https://satuharga.kemendag.go.id/), [PIKOB BPS](https://www.bps.go.id/), or your own aggregation pipeline.
+
+### 4. Setup Frontend
 ```bash
 cd frontend
 npm install
 npm run dev   # Dev server — http://localhost:5173
 ```
 
-### 4. Credentials
+The Vite dev server proxies `/api` requests to `http://localhost:3000`.
+
+### 5. Credentials
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -218,7 +252,7 @@ npm run dev   # Dev server — http://localhost:5173
 | Government | `government@sugi.id` | `government123` |
 | Farmer Owner | `owner@sugi.id` | `owner123` |
 
-### 5. Key API Endpoints
+### 6. Key API Endpoints
 
 **Authentication:**
 | Method | Endpoint | Description |
@@ -229,13 +263,22 @@ npm run dev   # Dev server — http://localhost:5173
 **Dashboards:**
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/dashboard/farmer/v2` | Farmer dashboard (prices, trends, maps, tables) |
-| GET | `/api/dashboard/govt` | Government dashboard (KPIs, charts, rankings) |
+| GET | `/api/dashboard/farmer/v2` | Farmer dashboard (KPIs, prices, trends, maps, tables) |
+| GET | `/api/dashboard/govt` | Government dashboard (KPIs, PoU, PPH, charts, rankings) |
 | GET | `/api/insights/farmer` | Market Intelligence insights (10 items) |
 | GET | `/api/insights?source=policy_recommendation` | Policy recommendation |
-| GET | `/api/dashboard/management` | Management KPIs and analytics |
 
-**Master Data CRUD (each follows same pattern):**
+**Filters & Metadata:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/filters` | Distinct years, months, commodities, provinces (cached 5 min) |
+
+**Bulk Import:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/bulk-import/:modelName` | Upsert array of records for any dataset |
+
+**Master Data CRUD (each dataset follows the same pattern):**
 | Method | Endpoint Example | Description |
 |--------|-----------------|-------------|
 | GET | `/api/master/harga-produsen-nasional` | List records |
@@ -243,9 +286,9 @@ npm run dev   # Dev server — http://localhost:5173
 | PUT | `/api/master/harga-produsen-nasional/:id` | Update record |
 | DELETE | `/api/master/harga-produsen-nasional/:id` | Delete record |
 
-**30+ RESTful endpoints** for lifecycle, sales, expenses, assignments, farmers, settings, filters, and bulk import.
+**30+ additional RESTful endpoints** for lifecycle management, sales, expenses, assignments, farmers, settings, and Unit Management.
 
-### 6. Frontend Routes
+### 7. Frontend Routes
 
 | Path | Page | Roles |
 |------|------|-------|
@@ -263,6 +306,15 @@ npm run dev   # Dev server — http://localhost:5173
 | `/master/crop-types` | Crop Type Master | superadmin, farmer_owner |
 | `/master/activity-types` | Activity Type Master | superadmin, farmer_owner |
 | `/data/*` | 15 Food Security Datasets | superadmin, government |
+
+## 🧠 Architectural Notes
+
+- **Margin calculation** normalizes producer commodity names (strips `(Rp/Kg)`, `Tk. Petani`, `Tingkat...` suffixes) before matching against consumer names, since the two collections use different naming conventions.
+- **Year filter defaults to `'all'`** to ensure first-time users see all available data regardless of which years are populated.
+- **Filter options are cached in-memory** (300s TTL), reducing 24 concurrent `distinct()` queries to a single cache lookup per page load.
+- **All API responses are compressed** via Express compression middleware.
+- **Dashboard queries use MongoDB aggregation pipelines** with `Promise.all` for parallel execution — each dashboard request runs 10-15 aggregations concurrently.
+- **Government dashboard** was restored to its original data shape after a refactor; it now runs all table queries in parallel while preserving the original response contract.
 
 ---
 

@@ -12,11 +12,6 @@ const HargaProdusenProvinsi = require('../models/HargaProdusenProvinsi');
 
 function safeNum(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 
-function pctChange(current, previous) {
-  if (!previous || previous === 0) return null;
-  return ((current - previous) / previous) * 100;
-}
-
 function buildMatch(filters, extra) {
   const match = {};
   if (filters.year && filters.year !== 'all') match.tahun = filters.year;
@@ -36,8 +31,6 @@ exports.getGovernmentDashboard = async (req, res) => {
   const pagination = {
     page: parseInt(req.query.page) || 1,
     limit: Math.min(parseInt(req.query.limit) || 10, 100),
-    sortBy: req.query.sortBy || null,
-    sortOrder: req.query.sortOrder === 'asc' ? 1 : -1,
   };
 
   try {
@@ -49,10 +42,7 @@ exports.getGovernmentDashboard = async (req, res) => {
       computeTables(filters, pagination),
     ]);
 
-    res.json({
-      success: true,
-      data: { kpis: kpi, ...trends, ...rankings, ...mapData, ...tables }
-    });
+    res.json({ success: true, data: { kpis: kpi, ...trends, ...rankings, ...mapData, ...tables } });
   } catch (error) {
     console.error('Govt dashboard error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -171,20 +161,21 @@ async function computeTrends(filters) {
 
   const priceMatch = buildMatch(filters);
   delete priceMatch.komoditas;
-  const priceConsumer = await HargaKonsumenProvinsi.aggregate([
-    { $match: priceMatch },
-    { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { harga: -1 } },
-    { $limit: 10 }
-  ]);
-
-  const priceProducer = await HargaProdusenProvinsi.aggregate([
-    { $match: priceMatch },
-    { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { harga: -1 } },
-    { $limit: 10 }
+  const [priceConsumer, priceProducer] = await Promise.all([
+    HargaKonsumenProvinsi.aggregate([
+      { $match: priceMatch },
+      { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { harga: -1 } },
+      { $limit: 10 }
+    ]),
+    HargaProdusenProvinsi.aggregate([
+      { $match: priceMatch },
+      { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { harga: -1 } },
+      { $limit: 10 }
+    ]),
   ]);
 
   return {
@@ -204,27 +195,27 @@ async function computeTrends(filters) {
 async function computeRankings(filters) {
   const year = filters.year !== 'all' ? filters.year : null;
 
-  const cppdRank = await CadanganPanganProvinsi.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { ton: '$ton' }] } },
-    { $sort: { ton: -1 } },
-    { $limit: 38 }
-  ]);
-
-  const pouProvRank = await KetidakcukupanProvinsi.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $project: { provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } }, _id: 0 } },
-    { $sort: { pou: -1 } },
-    { $limit: 38 }
-  ]);
-
-  const gpmRank = await GerakanPanganMurah.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $group: { _id: { provinsi: '$provinsi' }, kegiatan: { $sum: 1 } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { kegiatan: '$kegiatan' }] } },
-    { $sort: { kegiatan: -1 } },
-    { $limit: 38 }
+  const [cppdRank, pouProvRank, gpmRank] = await Promise.all([
+    CadanganPanganProvinsi.aggregate([
+      { $match: year ? { tahun: year } : {} },
+      { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { ton: '$ton' }] } },
+      { $sort: { ton: -1 } },
+      { $limit: 38 }
+    ]),
+    KetidakcukupanProvinsi.aggregate([
+      { $match: year ? { tahun: year } : {} },
+      { $project: { provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } }, _id: 0 } },
+      { $sort: { pou: -1 } },
+      { $limit: 38 }
+    ]),
+    GerakanPanganMurah.aggregate([
+      { $match: year ? { tahun: year } : {} },
+      { $group: { _id: { provinsi: '$provinsi' }, kegiatan: { $sum: 1 } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { kegiatan: '$kegiatan' }] } },
+      { $sort: { kegiatan: -1 } },
+      { $limit: 38 }
+    ]),
   ]);
 
   return { chartCppdRanking: cppdRank, chartPouProvRanking: pouProvRank, chartGpmRanking: gpmRank };
@@ -234,38 +225,37 @@ async function computeRankings(filters) {
 
 async function computeMapData(filters) {
   const year = filters.year !== 'all' ? filters.year : null;
+  const yearMatch = year ? { tahun: year } : {};
 
-  const pouMap = await KetidakcukupanProvinsi.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $project: { _id: 0, provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } } } }
-  ]);
-
-  const konsumenMap = await HargaKonsumenProvinsi.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $group: { _id: { provinsi: '$nama_provinsi' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { provinsi: 1 } }
-  ]);
-
-  const produsenMap = await HargaProdusenProvinsi.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $group: { _id: { provinsi: '$nama_provinsi' }, harga: { $avg: '$harga' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-    { $sort: { provinsi: 1 } }
-  ]);
-
-  const cppdMap = await CadanganPanganProvinsi.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { ton: { $round: ['$ton', 2] } }] } },
-    { $addFields: { provinsi: '$wilayah' } },
-    { $project: { wilayah: 0 } },
-  ]);
-
-  const gpmMap = await GerakanPanganMurah.aggregate([
-    { $match: year ? { tahun: year } : {} },
-    { $group: { _id: { provinsi: '$provinsi' }, kegiatan: { $sum: 1 } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { kegiatan: '$kegiatan' }] } },
+  const [pouMap, konsumenMap, produsenMap, cppdMap, gpmMap] = await Promise.all([
+    KetidakcukupanProvinsi.aggregate([
+      { $match: yearMatch },
+      { $project: { _id: 0, provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } } } }
+    ]),
+    HargaKonsumenProvinsi.aggregate([
+      { $match: yearMatch },
+      { $group: { _id: { provinsi: '$nama_provinsi' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { provinsi: 1 } }
+    ]),
+    HargaProdusenProvinsi.aggregate([
+      { $match: yearMatch },
+      { $group: { _id: { provinsi: '$nama_provinsi' }, harga: { $avg: '$harga' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
+      { $sort: { provinsi: 1 } }
+    ]),
+    CadanganPanganProvinsi.aggregate([
+      { $match: yearMatch },
+      { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { ton: { $round: ['$ton', 2] } }] } },
+      { $addFields: { provinsi: '$wilayah' } },
+      { $project: { wilayah: 0 } },
+    ]),
+    GerakanPanganMurah.aggregate([
+      { $match: yearMatch },
+      { $group: { _id: { provinsi: '$provinsi' }, kegiatan: { $sum: 1 } } },
+      { $replaceWith: { $mergeObjects: ['$_id', { kegiatan: '$kegiatan' }] } },
+    ]),
   ]);
 
   return { mapPou: pouMap, mapKonsumen: konsumenMap, mapProdusen: produsenMap, mapCppd: cppdMap, mapGpm: gpmMap };
@@ -274,44 +264,35 @@ async function computeMapData(filters) {
 /* ─── Tables (paginated) ────────────────────────────────────── */
 
 async function computeTables(filters, pagination) {
-  const { page, limit, sortBy, sortOrder } = pagination;
+  const { page, limit } = pagination;
   const skip = (page - 1) * limit;
 
   const pouMatch = buildMatch(filters);
-  const pouQuery = KetidakcukupanNasional.find(pouMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean();
-  const pouTotal = await KetidakcukupanNasional.countDocuments(pouMatch);
-
   const cppdMatch = buildMatch(filters);
-  const cppdSort = {};
-  if (sortBy && ['wilayah', 'cppd_ton', 'tahun', 'bulan'].includes(sortBy)) cppdSort[sortBy] = sortOrder;
-  else cppdSort.tahun = -1;
-  const cppdQuery = CadanganPanganProvinsi.find(cppdMatch).sort(cppdSort).skip(skip).limit(limit).lean();
-  const cppdTotal = await CadanganPanganProvinsi.countDocuments(cppdMatch);
-
   const gpmMatch = buildMatch(filters);
   delete gpmMatch.komoditas;
-  const gpmQuery = GerakanPanganMurah.find(gpmMatch).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean();
-  const gpmTotal = await GerakanPanganMurah.countDocuments(gpmMatch);
-
   const donasiMatch = buildMatch(filters);
   delete donasiMatch.komoditas;
-  const donasiQuery = PenyaluranDonasi.find(donasiMatch).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean();
-  const donasiTotal = await PenyaluranDonasi.countDocuments(donasiMatch);
-
   const neracaMatch = buildMatch(filters);
   delete neracaMatch.komoditas;
-  const neracaQuery = ProyeksiNeraca.find(neracaMatch).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean();
-  const neracaTotal = await ProyeksiNeraca.countDocuments(neracaMatch);
-
   const pouProvMatch = buildMatch(filters);
-  const pouProvQuery = KetidakcukupanProvinsi.find(pouProvMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean();
-  const pouProvTotal = await KetidakcukupanProvinsi.countDocuments(pouProvMatch);
-
-  const [pouData, cppdData, gpmData, donasiData, neracaData, pouProvData] = await Promise.all([
-    pouQuery, cppdQuery, gpmQuery, donasiQuery, neracaQuery, pouProvQuery
-  ]);
 
   const paginate = (data, total) => ({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
+
+  const [pouData, pouTotal, cppdData, cppdTotal, gpmData, gpmTotal, donasiData, donasiTotal, neracaData, neracaTotal, pouProvData, pouProvTotal] = await Promise.all([
+    KetidakcukupanNasional.find(pouMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),
+    KetidakcukupanNasional.countDocuments(pouMatch),
+    CadanganPanganProvinsi.find(cppdMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),
+    CadanganPanganProvinsi.countDocuments(cppdMatch),
+    GerakanPanganMurah.find(gpmMatch).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean(),
+    GerakanPanganMurah.countDocuments(gpmMatch),
+    PenyaluranDonasi.find(donasiMatch).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean(),
+    PenyaluranDonasi.countDocuments(donasiMatch),
+    ProyeksiNeraca.find(neracaMatch).sort({ tahun: -1, bulan: -1 }).skip(skip).limit(limit).lean(),
+    ProyeksiNeraca.countDocuments(neracaMatch),
+    KetidakcukupanProvinsi.find(pouProvMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),
+    KetidakcukupanProvinsi.countDocuments(pouProvMatch),
+  ]);
 
   return {
     tablePou: paginate(pouData, pouTotal),
