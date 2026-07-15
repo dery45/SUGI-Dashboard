@@ -31,6 +31,7 @@ const bulkImportRoutes = require('./bulkImportRoutes');
 const settingsRoutes = require('./settingsRoutes');
 const filterRoutes = require('./filterRoutes');
 const insightRoutes = require('./insightRoutes');
+const chatbotInsightRoutes = require('./chatbotInsightRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/master-data', masterDataRoutes);
@@ -49,6 +50,7 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/filters', filterRoutes);
 router.use('/insights', insightRoutes);
+router.use('/chatbot-insight', chatbotInsightRoutes);
 
 router.use('/master/ketidakcukupan-nasional', ketidakcukupanNasionalRoutes);
 router.use('/master/ketidakcukupan-provinsi', ketidakcukupanProvinsiRoutes);

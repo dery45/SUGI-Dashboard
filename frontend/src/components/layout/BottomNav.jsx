@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LayoutDashboard, Leaf, DollarSign, Settings, Building2, Tractor, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Leaf, DollarSign, Settings, Building2, Tractor, BarChart3, MessageSquare } from 'lucide-react';
 
 const linksByRole = {
   farmer: [
@@ -16,10 +16,12 @@ const linksByRole = {
     { to: '/management', label: 'Analitik', icon: BarChart3 },
     { to: '/management/lifecycle', label: 'Siklus', icon: Leaf },
     { to: '/management/sales', label: 'Penjualan', icon: DollarSign },
+    { to: '/chatbot-insight', label: 'Chatbot', icon: MessageSquare },
     { to: '/settings', label: 'Pengaturan', icon: Settings },
   ],
   government: [
     { to: '/government', label: 'Dashboard', icon: Building2 },
+    { to: '/chatbot-insight', label: 'Chatbot', icon: MessageSquare },
     { to: '/settings', label: 'Pengaturan', icon: Settings },
   ],
 };
