@@ -14,6 +14,7 @@ import UMManagementPage from './pages/UMManagementPage';
 import FarmerManagementPage from './pages/FarmerManagementPage';
 import SalesDistributionPage from './pages/SalesDistributionPage';
 import SettingsPage from './pages/SettingsPage';
+import ChatbotInsightDashboard from './pages/ChatbotInsightDashboard';
 import Login from './pages/Login';
 
 import FarmMasterPage from './pages/master/FarmMasterPage';
@@ -61,6 +62,7 @@ function AppContent() {
         <Route path="management/farmers" element={<ProtectedRoute roles={['superadmin', 'farmer_owner']}><FarmerManagementPage /></ProtectedRoute>} />
         <Route path="management/sales" element={<ProtectedRoute roles={['superadmin', 'farmer_owner']}><SalesDistributionPage /></ProtectedRoute>} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="chatbot-insight" element={<ProtectedRoute roles={['superadmin', 'government']}><ChatbotInsightDashboard /></ProtectedRoute>} />
         <Route path="master/farms" element={<ProtectedRoute roles={['superadmin', 'farmer_owner']}><FarmMasterPage /></ProtectedRoute>} />
         <Route path="master/blocks" element={<ProtectedRoute roles={['superadmin', 'farmer_owner']}><BlockMasterPage /></ProtectedRoute>} />
         <Route path="master/crop-types" element={<ProtectedRoute roles={['superadmin', 'farmer_owner']}><CropTypeMasterPage /></ProtectedRoute>} />

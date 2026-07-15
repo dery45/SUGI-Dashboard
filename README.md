@@ -76,13 +76,30 @@ Full CRUD pages for all national food security datasets:
 - **Versioned**: Each insight tracks version history and generation timestamp
 - **Rich Metadata**: Numerical values, commodity names, province names attached to each insight
 
+### Chatbot Insight Dashboard (Enterprise AI Analytics)
+- **12 KPI Cards**: Total sessions, summaries, characters, average length, unique topics/commodities/locations, active day/hour, recommendations, problems
+- **NLP Pipeline**: Indonesian stemmer, stopword removal, TF-IDF, LDA topic modeling, bigrams, trigrams, co-occurrence matrix, cosine similarity
+- **Named Entity Recognition**: 11 entity types — commodities (70+), provinces, cities, weather, diseases/pests, fertilizers, measurements, dates, percentages, organizations, technology
+- **Intent Classification**: 12 categories — Informasi, Rekomendasi, Permasalahan, Keluhan, Cuaca, Budidaya, Panen, Penyakit, Harga, Pasar, Teknologi, Lainnya
+- **Sentiment & Emotion Analysis**: Positive/Neutral/Negative sentiment, 8 emotions (Joy, Trust, Fear, Anger, Sadness, Surprise, Anticipation, Disgust), word clouds
+- **Relation Extraction**: 8 relation patterns — Located In, Affected By, Applied To, Cocok Untuk, Terserang, Dikelola Oleh, etc.
+- **Interactive Knowledge Graph**: Cytoscape-based with zoom, pan, search, filter by type, highlighted nodes
+- **Recommendation Mining**: Rule-based detection with severity scoring, category distribution, entity extraction
+- **Problem Mining**: 7 problem categories (Masalah, Risiko, Keluhan, Penyakit, Hama, Peringatan, Keterbatasan) with severity assessment
+- **Trend Analysis**: Topic, commodity, entity, intent trends with growth computation and timeline comparison
+- **Coverage Analysis**: 8 metrics (topic, commodity, location, intent, entity, KG, semantic diversity, data completeness) with radar chart
+- **AI Insight Engine**: Dynamically generated analytical insights in Bahasa Indonesia based on actual filtered data
+- **Semantic Search**: TF-IDF-based with entity, intent, and category filtering
+- **Export**: PNG, PDF, CSV, JSON export via html2canvas + jsPDF
+
 ### UI/UX Features
 - **Premium Glassmorphism UI**: Emerald & White aesthetic with smooth cubic-bezier transitions
 - **Dark/Light Theme**: Full theme toggle with system preference detection
 - **Responsive Design**: Mobile-first with bottom navigation for small screens
-- **Interactive Charts**: Recharts-based (Line, Bar, Pie) with click-to-expand detail modals
+- **Interactive Charts**: Recharts-based (Line, Bar, Pie, Area, Radar, Treemap, Heatmap) with click-to-expand detail modals
 - **Indonesia Map**: Province-level interactive choropleth with drill-down
-- **Data Export**: CSV/Excel export for all chart and table data
+- **15-Tab Analytics Interface**: Ringkasan, Aktivitas, Topik, Komoditas, Lokasi, Intent, Sentimen, Entitas, Jaringan, Graph, Rekomendasi, Masalah, Tren, Cakupan, Pencarian
+- **Data Export**: PNG, PDF, CSV, JSON export via html2canvas + jsPDF
 - **In-Memory Caching**: 5-minute TTL cache for filter options (saves 24 `distinct()` queries per page load)
 - **Response Compression**: Gzip/brotli compression on all API responses
 - **Advanced DataTable**: Page size selector (5/10/20/50), first/last navigation, total entry count, smart page numbering
@@ -123,10 +140,12 @@ An end-to-end tracking tool covering land preparation, planting schedules, maint
 ### Frontend
 - **React 19** (Vite 8, JSX-based)
 - **Tailwind CSS 4** (with custom glassmorphism utilities)
-- **Recharts 3** (Advanced business & yield analytics — Line, Bar, Pie charts)
+- **Recharts 3** (Advanced business & yield analytics — Line, Bar, Pie, Area, Radar, Treemap, Composed charts)
+- **Cytoscape** (Interactive knowledge graph visualization)
 - **Lucide React** (Modern iconography)
 - **Leaflet & React-Leaflet** (Interactive Indonesia province map)
 - **React Router 7** (Protected dashboard paths)
+- **html2canvas + jsPDF** (Dashboard export to PNG/PDF)
 - **SheetJS (xlsx)** (Client-side CSV/Excel export)
 
 ### Backend
@@ -136,6 +155,8 @@ An end-to-end tracking tool covering land preparation, planting schedules, maint
 - **RBAC Middleware** (Role-based security across all routes)
 - **compression** (Gzip/brotli response compression)
 - **Custom In-Memory Cache** (TTL-based filter options caching)
+- **natural** (TF-IDF, tokenization for NLP pipeline)
+- **Custom Indonesian Stemmer** (Rule-based prefix/suffix stripping with 150+ base word dictionary)
 
 ### Notables
 - Komoditas name normalization for margin calculation (`normMarginKomoditas` strips `(Rp/Kg)`, `Tk. Petani`, `Tingkat...` suffixes for cross-collection matching)
@@ -148,12 +169,41 @@ An end-to-end tracking tool covering land preparation, planting schedules, maint
 SUGI-Dashboard-DEMO/
 ├── backend/                          # Node.js + Express REST API
 │   ├── src/
-│   │   ├── controllers/              # 26 request handlers (auth, dashboards, CRUD, insights)
+│   │   ├── controllers/              # Request handlers (auth, dashboards, CRUD, insights)
 │   │   ├── middlewares/              # Custom Express middlewares (RBAC, Auth)
 │   │   ├── models/                   # 35+ Mongoose schemas (master data, lifecycle, insights)
-│   │   ├── routes/                   # 31 modular API endpoint files
+│   │   │   └── sugi_insights/        # Separate MongoDB connection to sugi_insights database
+│   │   │       ├── index.js          # Mongoose createConnection to sugi_insights
+│   │   │       ├── SessionSummary.js # Raw session data model
+│   │   │       └── NlpResult.js      # NLP-processed results model
+│   │   ├── nlp/                      # NLP Engine (Phase 2 & 3)
+│   │   │   ├── preprocessor.js       # Text cleaning, tokenization, stopword removal, stemming
+│   │   │   ├── stemmer.js            # Custom Indonesian stemmer (rule-based)
+│   │   │   ├── stopwords.js          # 350+ Indonesian stopwords
+│   │   │   ├── entities.js           # NER for 11 entity types (70+ commodities, 38 provinces, 60+ cities, etc.)
+│   │   │   ├── intent.js             # Intent classifier (12 categories with keyword scoring)
+│   │   │   ├── sentiment.js          # Sentiment analyzer (Positive/Neutral/Negative + 8 emotions)
+│   │   │   ├── topics.js             # TF-IDF, LDA topic modeling, bigrams, trigrams, co-occurrence
+│   │   │   ├── relations.js          # Relation extraction (8 pattern types)
+│   │   │   ├── knowledgeGraph.js     # Knowledge graph builder (nodes, edges, stats, search, filter)
+│   │   │   ├── recommendations.js    # Recommendation mining (7 pattern types, 9 categories)
+│   │   │   ├── problems.js           # Problem mining (7 categories, severity scoring)
+│   │   │   ├── trends.js             # Trend analyzer (topic, commodity, entity, intent trends)
+│   │   │   ├── coverage.js           # Coverage analyzer (8 metrics, duplicate detection, recommendations)
+│   │   │   ├── insights.js           # AI Insight Engine (10 dynamic insight types in Bahasa)
+│   │   │   ├── semanticSearch.js     # TF-IDF semantic search with entity/intent/category filters
+│   │   │   ├── optimization.js       # Production: Cache (TTL), Worker Queue, Memoizer
+│   │   │   └── pipeline.js           # NLP pipeline orchestrator
+│   │   ├── repositories/             # Data access layer
+│   │   │   ├── chatbotInsightRepository.js   # Phase 1 KPIs, filter options (aggregation pipelines)
+│   │   │   └── chatbotNlpRepository.js       # Phase 2-3: 15+ aggregation pipelines for all analytics
+│   │   ├── routes/                   # 40+ modular API endpoint files
 │   │   ├── scripts/                  # Seed, reset, and maintenance scripts
-│   │   ├── services/                 # Business logic & complex aggregations (kpiService)
+│   │   ├── services/                 # Business logic & complex aggregations
+│   │   │   ├── kpiService.js         # Farmer/Government KPI computation
+│   │   │   ├── chatbotInsightService.js     # Phase 1 dashboard data
+│   │   │   ├── chatbotNlpService.js         # Phase 2 NLP analytics (activity, topics, entities, intent)
+│   │   │   └── chatbotAdvancedService.js    # Phase 3 advanced: KG, recommendations, problems, trends, coverage, insights, semantic search
 │   │   └── utils/                    # Helper functions (cache, validation)
 │   ├── .env                          # Environment variables
 │   ├── server.js                     # Entry point (Express + MongoDB + static serving)
@@ -161,10 +211,14 @@ SUGI-Dashboard-DEMO/
 ├── frontend/                         # Vite + React 19 SPA
 │   ├── public/                       # Static assets (GeoJSON maps, icons)
 │   ├── src/
-│   │   ├── api/                      # 6 API client modules
+│   │   ├── api/                      # 12 API client modules
 │   │   ├── assets/                   # Images, fonts, brand assets
 │   │   ├── components/
 │   │   │   ├── charts/               # Recharts wrappers (BarChart, LineChart, PieChart)
+│   │   │   ├── chatbot/              # Chatbot Insight components
+│   │   │   │   ├── KnowledgeGraph.jsx # Interactive cytoscape graph
+│   │   │   │   ├── InsightPanel.jsx   # AI-generated insight cards
+│   │   │   │   └── ExportModal.jsx    # Export to PNG/PDF/CSV/JSON
 │   │   │   ├── common/               # Shared UI (Card, DataTable, Modal, ErrorBoundary)
 │   │   │   ├── dashboard/            # 15 dashboard-specific components (KpiCard, ChartCard)
 │   │   │   ├── layout/               # Sidebar, TopBar, MainLayout, BottomNav
@@ -172,14 +226,14 @@ SUGI-Dashboard-DEMO/
 │   │   │   └── map/                  # IndonesiaMap (Leaflet)
 │   │   ├── contexts/                 # 4 React Contexts (Auth, Theme, Filter, DashboardFilter)
 │   │   ├── hooks/                    # 3 custom hooks
-│   │   ├── pages/                    # 26 page views
+│   │   ├── pages/                    # 27 page views
 │   │   │   └── master/               # 17 master data CRUD pages
 │   │   ├── App.jsx                   # Root component with routing
 │   │   └── main.jsx                  # React DOM entry point
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
-├── docs/                             # Phase implementation documents
+├── docs/                             # Phase implementation documents (3 docs)
 ├── image/                            # Screenshot images for README
 ├── testing/                          # Playwright automated tests
 └── README.md
@@ -268,6 +322,33 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | GET | `/api/insights/farmer` | Market Intelligence insights (10 items) |
 | GET | `/api/insights?source=policy_recommendation` | Policy recommendation |
 
+**Chatbot Insight (Phase 1 — Core KPIs):**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/chatbot-insight/dashboard` | KPI data (12 metrics) with date/keyword/category filters |
+| GET | `/api/chatbot-insight/filters` | Distinct sessions and categories for filter dropdowns |
+| POST | `/api/chatbot-insight/process` | Trigger NLP pipeline processing |
+
+**Chatbot Insight (Phase 2 — NLP Analytics):**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/chatbot-insight/activity` | Sessions per day/hour, heatmap, timeline, summary length distribution |
+| GET | `/api/chatbot-insight/topics` | LDA topic modeling, TF-IDF ranking, bigrams, trigrams, co-occurrence matrix |
+| GET | `/api/chatbot-insight/entities` | Entity frequency, type distribution, entity timeline, searchable entity table |
+| GET | `/api/chatbot-insight/ner` | Named entities: commodities, locations, weather, diseases, fertilizers, organizations, technology |
+| GET | `/api/chatbot-insight/intent` | Intent distribution, sentiment/emotion analysis, word clouds, keyword ranking |
+
+**Chatbot Insight (Phase 3 — Advanced AI & Knowledge Graph):**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/chatbot-insight/semantic-network` | Entity relations with frequency and strength |
+| GET | `/api/chatbot-insight/knowledge-graph` | Interactive graph data (nodes/edges/stats) with search & type filter |
+| GET | `/api/chatbot-insight/recommendations` | Mined recommendations with categories, scoring, and entity extraction |
+| GET | `/api/chatbot-insight/problems` | Mined problems with 7 types, severity scoring, timeline |
+| GET | `/api/chatbot-insight/trends` | Topic/commodity/intent trends with growth analytics |
+| GET | `/api/chatbot-insight/coverage` | 8 coverage metrics with radar data and improvement recommendations |
+| GET | `/api/chatbot-insight/semantic-search?q=...` | TF-IDF semantic search with entity/intent/category filters |
+
 **Filters & Metadata:**
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -295,6 +376,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | `/login` | Login | Public |
 | `/farmer` | Farmer Dashboard | All authenticated |
 | `/government` | Government Dashboard | superadmin, government |
+| `/chatbot-insight` | Chatbot Insight Dashboard | superadmin, government |
 | `/management` | Management Dashboard | superadmin, farmer_owner |
 | `/management/lifecycle` | Lifecycle Management | superadmin, farmer_owner |
 | `/management/um` | Unit Management | superadmin, farmer_owner |
@@ -315,6 +397,26 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 - **All API responses are compressed** via Express compression middleware.
 - **Dashboard queries use MongoDB aggregation pipelines** with `Promise.all` for parallel execution — each dashboard request runs 10-15 aggregations concurrently.
 - **Government dashboard** was restored to its original data shape after a refactor; it now runs all table queries in parallel while preserving the original response contract.
+
+### Chatbot Insight — NLP Architecture
+
+- **Separate MongoDB connection** (`sugi_insights` database) using `mongoose.createConnection` with `dbName: 'sugi_insights'`, isolated from the main `sugi-dashboard-demo` database.
+- **3-phase implementation**: Phase 1 (core KPIs & filters) → Phase 2 (NLP pipeline, entity extraction, intent/sentiment analysis) → Phase 3 (knowledge graph, recommendations, problems, trends, coverage, semantic search, insight engine).
+- **NLP pipeline runs on-demand** via `POST /api/chatbot-insight/process` — processes all `session_summaries` documents through cleaning, tokenization, stopword removal, stemming, entity extraction, intent classification, sentiment analysis, and topic modeling.
+- **Custom Indonesian stemmer** uses rule-based prefix/suffix stripping (7 prefixes, 4 suffixes) with a 150+ base word dictionary, covering `me-`, `men-`, `meng-`, `mem-`, `meny-`, `ber-`, `per-`, `ter-`, `di-`, `ke-`, `se-` prefixes and `-kan`, `-an`, `-i`, `-nya` suffixes.
+- **350+ Indonesian stopwords** filtered during preprocessing to remove noise before NLP analysis.
+- **TF-IDF with natural library** for keyword ranking and document similarity computation.
+- **LDA topic modeling** implemented with collapsed Gibbs sampling (100 iterations) — 5 topics with 10 words each.
+- **Named Entity Recognition** uses regex pattern matching against curated lists of 70+ commodities, 38 provinces, 60+ cities, 30+ weather terms, 40+ disease/pest terms, and 30+ fertilizer/pesticide terms.
+- **Intent classification** uses keyword scoring across 12 categories with confidence calculation — each category has 10-30 seed keywords.
+- **Sentiment analysis** uses a lexicon of 80+ positive words and 100+ negative words, with additional emotion detection (8 categories, 15-25 seed words each).
+- **Relation extraction** uses 8 co-occurrence patterns and proximity-based association (window of 60 characters).
+- **Knowledge graph** built from extracted entities and relations, with deduplication and weight accumulation.
+- **Recommendation mining** uses 7 regex patterns targeting advisory language ("disarankan", "sebaiknya", "solusi", etc.) with 9 business rule categories.
+- **Problem mining** uses 6 problem type patterns with severity scoring based on urgency keywords.
+- **AI Insight Engine** generates 8-10 dynamically-computed insights in Bahasa Indonesia across 7 categories (metric, activity, topic, commodity, sentiment, trend, coverage) — never uses static templates.
+- **Cache layer** (`globalCache`) provides TTL-based memoization (default 5 min) for expensive NLP computations, with `memoize` wrapper for function-level caching.
+- **Production optimization** includes lazy data fetching per tab, `Promise.all` parallel loading, independent widget loading, and TTL-based result caching.
 
 ---
 

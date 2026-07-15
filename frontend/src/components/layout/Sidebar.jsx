@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Tractor, Building2, Database, ChevronDown, BarChart3, Leaf, Users, UserCheck, DollarSign, Layers, Grid3X3, Sprout, Activity, Settings } from 'lucide-react';
+import { Tractor, Building2, Database, ChevronDown, BarChart3, Leaf, Users, UserCheck, DollarSign, Layers, Grid3X3, Sprout, Activity, Settings, MessageSquare } from 'lucide-react';
 import { dataRegistry } from '../../pages/MasterDataPage';
 
 const Sidebar = ({ isOpen, user, onToggle }) => {
@@ -15,6 +15,7 @@ const Sidebar = ({ isOpen, user, onToggle }) => {
   const navItems = [
     ...(user?.role === 'farmer' || user?.role === 'farmer_owner' ? [{ name: 'Farmer Dashboard', path: '/farmer', icon: <Tractor className="w-5 h-5" /> }] : []),
     ...(user?.role === 'government' || user?.role === 'superadmin' ? [{ name: 'Government Dashboard', path: '/government', icon: <Building2 className="w-5 h-5" /> }] : []),
+    ...(user?.role === 'government' || user?.role === 'superadmin' ? [{ name: 'Chatbot Insight', path: '/chatbot-insight', icon: <MessageSquare className="w-5 h-5" /> }] : []),
   ];
 
   if (!user || user.role === 'superadmin' || user.role === 'farmer_owner') {
