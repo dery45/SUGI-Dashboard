@@ -1,8 +1,8 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
-const User = require('../models/User');
-const CropType = require('../models/CropType');
-const ActivityType = require('../models/ActivityType');
+const User = require('../model/User');
+const CropType = require('../model/CropType');
+const ActivityType = require('../model/ActivityType');
 
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/sugi-dashboard-demo');

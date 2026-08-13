@@ -13,7 +13,7 @@ app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-const apiRoutes = require('./src/routes/index');
+const apiRoutes = require('./route/index');
 const masterDataRoutes = require('./route/masterDataRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 app.use('/api/master', masterDataRoutes);
