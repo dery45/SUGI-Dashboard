@@ -3,7 +3,7 @@ const entityExtractor = require('./entities');
 const intentClassifier = require('./intent');
 const sentimentAnalyzer = require('./sentiment');
 const topicModeler = require('./topics');
-const chatbotNlpRepository = require('../repositories/chatbotNlpRepository');
+const chatbotNlpRepository = require('./repository/chatbotNlpRepository');
 
 class NlpPipeline {
   async processDocument(doc) {
@@ -91,7 +91,7 @@ class NlpPipeline {
       return { cached: true, count: existing };
     }
 
-    const SessionSummary = require('../models/sugi_insights/SessionSummary');
+    const SessionSummary = require('../model/sugi_insights/SessionSummary');
     const documents = await SessionSummary.find({}).lean();
     const result = await this.processAllDocuments(documents);
     return { cached: false, ...result };
