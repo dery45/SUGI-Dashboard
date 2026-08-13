@@ -12,7 +12,7 @@ const masterDataRoutes = require('../../route/masterDataFeatureRoutes');
 const assignmentRoutes = require('../../route/assignmentRoutes');
 
 const bulkImportRoutes = require('./bulkImportRoutes');
-const settingsRoutes = require('./settingsRoutes');
+const settingsRoutes = require('../../route/settingsRoutes');
 const filterRoutes = require('./filterRoutes');
 const insightRoutes = require('./insightRoutes');
 const chatbotInsightRoutes = require('./chatbotInsightRoutes');
