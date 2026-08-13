@@ -5,7 +5,11 @@ required to keep the Demo working when envelopes gained Auth + a `success`
 wrapper).
 
 **STATUS: COMPLETE.** Tasks 0–8 of the Phase 2 brief are executed and
-smoke-verified on `dev`. All legacy feature code has been relocated out of
+smoke-verified on `dev`, plus a **FIX pass** (`8d3e6c8` FIX 2,
+`974a7fb` guards, `aa77aaf` FIX 3, `9498205` companion, orphan cleanup):
+final file-naming convention applied uniformly, `/api/master` aggregator
+renamed, endpoint counts corrected, `dashboard/govt` + chatbot-insight guards
+aligned with README roles. All legacy feature code has been relocated out of
 `src/`, services/repositories live under `nlp/`, the response envelope is
 standardized, a centralized error handler is wired, every non-public endpoint
 carries `authenticate`, and old-`src/` has been deleted. Commits referenced
