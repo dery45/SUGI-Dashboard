@@ -363,6 +363,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | Method | Endpoint Example | Description |
 |--------|-----------------|-------------|
 | GET | `/api/master/harga-produsen-nasional` | List records |
+| GET | `/api/master/harga-produsen-nasional/:id` | Get single record |
 | POST | `/api/master/harga-produsen-nasional` | Create record |
 | PUT | `/api/master/harga-produsen-nasional/:id` | Update record |
 | DELETE | `/api/master/harga-produsen-nasional/:id` | Delete record |

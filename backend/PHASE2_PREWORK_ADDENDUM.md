@@ -51,9 +51,12 @@ Counted per endpoint (method + path), all currently **missing `authenticate`**:
 | `dashboardRoutes.js` | `GET /api/dashboard/farmer/v2`, `GET /api/dashboard/govt` | 2 |
 | `insightRoutes.js` | `GET /api/insights`, `GET /api/insights/farmer` | 2 |
 | `chatbotInsightRoutes.js` | `GET /api/chatbot-insight/dashboard`, `/filters`, `/activity`, `/topics`, `/entities`, `/ner`, `/intent`, `/semantic-network`, `/knowledge-graph`, `/recommendations`, `/problems`, `/trends`, `/coverage`, `/insights`, `/semantic-search`; `POST /api/chatbot-insight/process` | 16 |
-| 13 dataset route files | each: `POST /api/master/<slug>`, `GET /api/master/<slug>`, `PUT /api/master/<slug>/:id`, `DELETE /api/master/<slug>/:id` (ketidakcukupan-nasional, ketidakcukupan-provinsi, konsumsi-per-jenis, penyaluran-donasi, proyeksi-neraca, gerakan-pangan-murah, harga-konsumen-provinsi, harga-konsumen-nasional, harga-produsen-nasional, harga-produsen-provinsi, skor-pph, pangan-terselamatkan, cadangan-pangan-provinsi) | 52 |
+| 13 dataset route files | each: `POST /api/master/<slug>`, `GET /api/master/<slug>`, `GET /api/master/<slug>/:id`, `PUT /api/master/<slug>/:id`, `DELETE /api/master/<slug>/:id` (ketidakcukupan-nasional, ketidakcukupan-provinsi, konsumsi-per-jenis, penyaluran-donasi, proyeksi-neraca, gerakan-pangan-murah, harga-konsumen-provinsi, harga-konsumen-nasional, harga-produsen-nasional, harga-produsen-provinsi, skor-pph, pangan-terselamatkan, cadangan-pangan-provinsi) | 65 |
 
-**Corrected total: 73 endpoints (was reported as 33 at route-file level in Phase 1).**
+**Corrected total: 86 endpoints (73 original + 13 new `GET /:id` handlers added by
+the Task 2 CRUD factory — each of the 13 datasets exposes 5 verbs, so 13×5 = 65
+dataset-closed; 21 app endpoints closed separately in Task 3).** Was previously
+reported as 73 at endpoint level / 33 at route-file level in Phase 1.
 Excludes `POST /api/auth/login` (intentionally public) and the already-authenticated
 routes (`auth/me`, assignments, expenses, lifecycle, management, sales, farmers,
 master-data, settings, filters).
@@ -107,7 +110,7 @@ rotated, not just locally edited. Phase 2 must not commit any `.env` value.
 ---
 
 **Phase 2 handoff notes**
-- Auth backlog to clear to zero: 73 endpoints / 17 route files (section 3).
-- Dead frontend file to remove: `frontend/src/components/management/UMAssignmentModal.jsx`.
+- Auth backlog to clear to zero: 86 endpoints / 17 route files (section 3).
+- Dead frontend file to remove: `frontend/src/components/management/UMAssignmentModal.jsx` (removed in FIX pass).
 - No response-shape changes were introduced by this addendum; the live dashboards
   remain 200-clean (section 4).

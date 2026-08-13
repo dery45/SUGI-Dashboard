@@ -22,7 +22,7 @@ full pre-work detail).
 |---|---|---|
 | 1 | Unit Management decision + evidence | **DONE** — `umRoutes.js` stays deleted; `UMAssignmentModal.jsx` orphan deferred to Phase 3 |
 | 2 | Shim integrity | **DONE** — `src/middlewares/` re-exported real `middleware/auth.js` guards (shims later deleted with `src/`) |
-| 3 | Recomputed auth backlog total | **DONE** — 73 endpoints / 17 route files lacked auth; all closed (see §3) |
+| 3 | Recomputed auth backlog total | **DONE** — 86 endpoints (73 original + 13 new `GET /:id` from the dataset factory) lacked auth; all closed (see §3) |
 | 4 | v2 dashboard smoke test | **DONE** — `/api/dashboard/farmer/v2` and `/api/dashboard/govt` re-verified 200 after migration |
 | 5 | `file_path` status | **DONE** — deleted from `.env`, absent from `.env.example`, never read |
 | 6 | Credential rotation status | **TESTS DONE / HUMAN ACTION ITEM OPEN** — rotation confirmed at git level; owner must revoke leaked provider values |
@@ -88,10 +88,19 @@ already migrated in Task 2.**
 1-feature-1-triplet holds everywhere except the **dataset CRUD factory**
 (shared exception, documented §2 of the prior report): the 13 dataset features
 are thin triplets over `controller/_datasetCrud.factory.js` +
-`route/_datasetCrud.factory.js`, mounted by `controller/masterDataController.js` /
-`route/masterDataRoutes.js` at `/api/master <slug>`. Name collisions on the
-registry were avoided (`masterDataFeatureRoutes.js` hosts the ops master-data
-feature; `masterDataRoutes.js` is the `/api/master` aggregator).
+`route/_datasetCrud.factory.js`, mounted by `route/foodSecurityDatasetsRoutes.js`
+at `/api/master <slug>`.
+
+**FIX 1 (final naming convention):** controllers `controller/<camelCase>Controller.js`,
+routes `route/<camelCase>Routes.js`, models `model/<PascalCase>.js`. Retro-verified
+across all 27 triplets (14 features + 13 datasets) and the 30 models — already
+uniform, no renames needed.
+
+**FIX 2 (name-space cleanup):** the `/api/master` 13-dataset aggregator moved out
+of the `masterData` name space to `route/foodSecurityDatasetsRoutes.js`;
+`route/masterDataFeatureRoutes.js` reclaimed the natural name
+`route/masterDataRoutes.js` for the ops master-data feature. `/api/master/*` and
+`/api/master-data/*` URLs unchanged.
 
 All new `model/*.js` use idempotent registration
 (`mongoose.models.X || mongoose.model('X', schema)`); the two
@@ -101,12 +110,13 @@ All new `model/*.js` use idempotent registration
 
 ## 3. AUTH BACKLOG CLOSURE — endpoint-by-endpoint confirmation
 
-**STATUS: COMPLETE — 73/73 endpoints closed (excluding the intentionally public
+**STATUS: COMPLETE — 86/86 endpoints closed (excluding the intentionally public
 `POST /api/auth/login`).**
 
 ### Task-2 closures (13 dataset features, commit `3ba326b`)
 
-All four verbs of `/api/master/<slug>` → `authenticate` + `isGovernment`.
+All five verbs of `/api/master/<slug>` (POST, GET list, GET `/:id`, PUT, DELETE)
+→ `authenticate` + `isGovernment` = 13 × 5 = **65 dataset endpoints**.
 Guard-ambiguity flag (retained): the dataset set defaulted to `isGovernment`
 `['superadmin','government']` per the frontend route roles; `farmer_owner`
 write access was NOT granted.
@@ -116,9 +126,10 @@ write access was NOT granted.
 | Feature | Guard applied | FLAG |
 |---|---|---|
 | bulk-import `POST /:modelName` | `authenticate` + `isGovernment` | restrictive default (legacy had none) |
-| dashboard `GET /farmer/v2`, `GET /govt` | `authenticate` + `isFarmerOwner` / `isGovernment` | legacy had none → now 401 no-token |
+| dashboard `GET /farmer/v2` | `authenticate` (README `/farmer` = All authenticated) | legacy had none → now 401 no-token |
+| dashboard `GET /govt` | `authenticate` + `isGovernment` (README `/government` = superadmin, government) | **FIX** — was authenticate-only; owner now 403 |
 | insights `GET /insights`, `GET /insights/farmer` | `authenticate` (+ role) | legacy had none → now 401 no-token |
-| chatbot-insight (16 routes) | `authenticate` | restrictive default (legacy public); all 16 verified 200 with token, 401 without |
+| chatbot-insight (16 routes) | `authenticate` + `isGovernment` (README `/chatbot-insight` = superadmin, government) | **FIX** — was authenticate-only; owner now 403; all 16 verified 200 with govt token, 401 without |
 
 Phase-1 routes (assignments, expenses, lifecycle, management, sales, farmers,
 master-data, settings, filters) retained `authenticate` + their existing role
@@ -161,10 +172,13 @@ Applied where legacy shapes deviated:
   farmer controllers already emitted `success` + `data`/`message`/`error` and
   were left wire-compatible.
 
-**Frontend companion patches** (the two documented envelope-aware client
-changes): `useMasterData.js` already unwraps (`result?.data ?? []`); new in Task
-5 → `api/filterApi.js` now returns `json.data ?? json` so
-`DashboardFilterContext` keeps reading `data.years/commodities/provinces`.
+**Frontend companion patches** (the documented envelope-aware client changes):
+`useMasterData.js` already unwraps (`result?.data ?? []`); Task 5 →
+`api/filterApi.js` now returns `json.data ?? json` so `DashboardFilterContext`
+keeps reading `data.years/commodities/provinces`; FIX pass → `api/insightApi.js`
+gained a Bearer header (its `/insights` calls were otherwise 401 after the
+authenticate guard) and `DataImportModal.jsx` now reads `message || error`
+from the bulk-import envelope.
 
 **Centralized error middleware** (new `middleware/errorHandler.js`, wired in
 `server.js` after `/api` mounts): unknown `/api/*` → `404 { success:false,
@@ -216,8 +230,8 @@ updated (`node --check` passed on all three scripts).
 | Role | Representative calls | Result |
 |---|---|---|
 | `superadmin` | auth/me, farmers, master-data/farms, master/skor-pph, lifecycle/plantings, sales, expenses, assignments, settings/profile, filters, insights, management/kpi, chatbot-insight/insights | all 200 |
-| `government` | dashboard/govt 200; management/kpi → **403** (expected `isManagement` excludes); master/dataset read 200 | ✓ |
-| `farmer_owner` | dashboard/farmer/v2 200 | ✓ |
+| `government` | dashboard/govt 200; management/kpi → **403** (expected `isManagement` excludes); master/dataset read 200; chatbot-insight/insights 200 | ✓ |
+| `farmer_owner` | dashboard/farmer/v2 200; dashboard/govt → **403** (isGovernment); chatbot-insight/insights → **403** (isGovernment) | ✓ |
 | no token | chatbot-insight, dashboard, insights, bulk-import → **401** | ✓ |
 | mis-cased path | `/api/nonexistent-xyz` → **404** envelope | ✓ |
 
@@ -235,11 +249,13 @@ GETs all `success=true`; semantic-search `?q=harga` 200.
 1. **Credential rotation (HUMAN ACTION ITEM):** confirm leaked historical
    `MONGO_URI` password `f392wbfmUsSn1QfF` and `JWT_SECRET=supersecret` are
    revoked at the provider level. Phase 2 commits no `.env` value.
-2. **Frontend companion cleanup (Phase 3):** remove orphan
-   `frontend/src/components/management/UMAssignmentModal.jsx`.
-3. **Dev-only scripts:** `scripts/seed.js`/`reset.js`/`seedSuperAdmin.js` and
-   `_check_bulan.js` retain `mongodb://localhost:27017/sugi-dashboard-demo`
-   fallbacks for local dev (runtime paths are hardened; non-blocking).
+2. **Frontend companion cleanup (FIX pass):** orphan
+   `frontend/src/components/management/UMAssignmentModal.jsx` **removed** (dead
+   code — Unit Management stayed deleted in Task 0).
+3. **Dev-only scripts:** `scripts/seed.js`/`reset.js`/`seedSuperAdmin.js` retain
+   `mongodb://localhost:27017/sugi-dashboard-demo` fallbacks for local dev
+   (runtime paths are hardened; non-blocking). Orphan root-level `_check_bulan.js`
+   **removed** in the FIX pass.
 4. **Envelope alias tolerance:** `message`/`error` dual-key convention (§4) is a
    documented pragmatic standard, not a one-key canon; revisit if the frontend
    migrates to a single error key.
