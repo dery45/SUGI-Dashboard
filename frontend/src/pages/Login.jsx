@@ -29,9 +29,7 @@ const Login = () => {
     setError('');
     try {
       const userData = await login(email, password);
-      if (userData.role === 'government') navigate('/government');
-      else if (userData.role === 'farmer' || userData.role === 'farmer_owner') navigate('/farmer');
-      else navigate('/management');
+      navigate('/management');
     } catch (err) {
       setError(err.message || 'Email atau password salah');
     } finally {

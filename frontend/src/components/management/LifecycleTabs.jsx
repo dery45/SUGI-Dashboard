@@ -29,7 +29,7 @@ const EmptyRow = ({ cols, label }) => (
 
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div className="bg-white rounded-t-2xl rounded-b-none sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up">
+    <div className="bg-white rounded-t-2xl rounded-b-none sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up pb-16 sm:pb-0">
       <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10 min-h-[52px]">
         <h2 className="text-lg font-bold text-gray-800">{title}</h2>
         <button onClick={onClose} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
@@ -68,7 +68,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/50 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl rounded-b-none sm:rounded-2xl shadow-xl w-full sm:max-w-md overflow-hidden animate-slide-up">
+      <div className="bg-white rounded-t-2xl rounded-b-none sm:rounded-2xl shadow-xl w-full sm:max-w-md overflow-hidden animate-slide-up pb-16 sm:pb-0">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white min-h-[52px]">
           <h2 className="text-lg font-bold text-gray-800">Konfirmasi Hapus Data</h2>
           <button onClick={onClose} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
