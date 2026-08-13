@@ -15,8 +15,11 @@ app.use(express.json({ limit: '50mb' }));
 
 const apiRoutes = require('./src/routes/index');
 const masterDataRoutes = require('./route/masterDataRoutes');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
 app.use('/api/master', masterDataRoutes);
 app.use('/api', apiRoutes);
+app.use('/api', notFound);
+app.use(errorHandler);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));

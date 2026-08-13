@@ -23,11 +23,11 @@ exports.bulkImportData = async (req, res) => {
     const dataArray = req.body;
 
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
-      return res.status(400).json({ error: 'Payload must be a non-empty array' });
+      return res.status(400).json({ success: false, message: 'Payload must be a non-empty array' });
     }
 
     if (!modelUniqueKeys[modelName]) {
-      return res.status(400).json({ error: `Model ${modelName} is not supported for bulk import` });
+      return res.status(400).json({ success: false, message: `Model ${modelName} is not supported for bulk import` });
     }
 
     // Attempt to load the model
@@ -35,7 +35,7 @@ exports.bulkImportData = async (req, res) => {
     try {
       Model = require(`../model/${modelName}`);
     } catch (err) {
-      return res.status(400).json({ error: `Model file for ${modelName} not found` });
+      return res.status(400).json({ success: false, message: `Model file for ${modelName} not found` });
     }
 
     const uniqueKeys = modelUniqueKeys[modelName];
@@ -61,6 +61,7 @@ exports.bulkImportData = async (req, res) => {
     const result = await Model.bulkWrite(operations);
 
     res.status(200).json({
+      success: true,
       message: 'Bulk import successful',
       insertedCount: result.upsertedCount || 0,
       modifiedCount: result.modifiedCount || 0,
@@ -69,6 +70,6 @@ exports.bulkImportData = async (req, res) => {
 
   } catch (err) {
     console.error('Bulk Import Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };

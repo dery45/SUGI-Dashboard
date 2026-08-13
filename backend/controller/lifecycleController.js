@@ -69,8 +69,8 @@ const listLand = async (req, res) => {
   try {
     const filter = await farmFilterWithMaster(req.user);
     const data = await LandRecord.find(filter).populate('farm_id farm_master block').sort({ createdAt: -1 });
-    res.json(data);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    res.json({ success: true, data });
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const createLand = async (req, res) => {
@@ -80,26 +80,26 @@ const createLand = async (req, res) => {
       land_opening_date: [[required, 'Tanggal Buka Lahan']]
     });
     if (errs) return errorResponse(res, errs);
-    const record = new LandRecord({ ...req.body, createdBy: req.user._id });
+    const record = new LandRecord({ ...req.body, createdBy: req.user.id });
     await record.save();
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    res.status(201).json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const updateLand = async (req, res) => {
   try {
     const record = await LandRecord.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
+    res.json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const deleteLand = async (req, res) => {
   try {
     const record = await LandRecord.findByIdAndDelete(req.params.id);
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
     res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const listPlantings = async (req, res) => {
@@ -107,8 +107,8 @@ const listPlantings = async (req, res) => {
     const filter = await buildFarmFilter(req.user);
     const statusFilter = { status: { $in: ['Planned', 'In_Progress', 'Completed', 'Cancelled', 'Land_Preparation', 'Planted', 'Maintenance'] } };
     const data = await CropCycle.find({ ...filter, ...statusFilter }).populate('farm_id farm_master block crop_type_ref').sort({ createdAt: -1 });
-    res.json(data);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    res.json({ success: true, data });
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const createPlanting = async (req, res) => {
@@ -118,34 +118,34 @@ const createPlanting = async (req, res) => {
       crop_type: [[required, 'Jenis Tanaman']]
     });
     if (errs) return errorResponse(res, errs);
-    const record = new CropCycle({ ...req.body, createdBy: req.user._id });
+    const record = new CropCycle({ ...req.body, createdBy: req.user.id });
     await record.save();
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    res.status(201).json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const updatePlanting = async (req, res) => {
   try {
     const record = await CropCycle.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
+    res.json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const deletePlanting = async (req, res) => {
   try {
     const record = await CropCycle.findByIdAndDelete(req.params.id);
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
     res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const listActivities = async (req, res) => {
   try {
     const filter = await buildFarmFilterSimple(req.user);
     const data = await Activity.find(filter).populate('farm_id farm_master block crop_cycle_id activity_type_ref').sort({ date: -1 });
-    res.json(data);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    res.json({ success: true, data });
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const createActivity = async (req, res) => {
@@ -155,34 +155,34 @@ const createActivity = async (req, res) => {
       date: [[required, 'Tanggal']]
     });
     if (errs) return errorResponse(res, errs);
-    const record = new Activity({ ...req.body, createdBy: req.user._id });
+    const record = new Activity({ ...req.body, createdBy: req.user.id });
     await record.save();
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    res.status(201).json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const updateActivity = async (req, res) => {
   try {
     const record = await Activity.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
+    res.json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const deleteActivity = async (req, res) => {
   try {
     const record = await Activity.findByIdAndDelete(req.params.id);
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
     res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const listHarvests = async (req, res) => {
   try {
     const filter = await farmFilterWithMaster(req.user);
     const data = await HarvestPeriod.find(filter).populate('farm_id farm_master block crop_cycle_id').sort({ harvest_opening_date: -1 });
-    res.json(data);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    res.json({ success: true, data });
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 const createHarvest = async (req, res) => {
@@ -192,26 +192,26 @@ const createHarvest = async (req, res) => {
       harvest_opening_date: [[required, 'Tanggal Buka Panen']]
     });
     if (errs) return errorResponse(res, errs);
-    const record = new HarvestPeriod({ ...req.body, createdBy: req.user._id });
+    const record = new HarvestPeriod({ ...req.body, createdBy: req.user.id });
     await record.save();
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    res.status(201).json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const updateHarvest = async (req, res) => {
   try {
     const record = await HarvestPeriod.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
-    res.json(record);
-  } catch (error) { res.status(400).json({ error: error.message }); }
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
+    res.json({ success: true, data: record });
+  } catch (error) { res.status(400).json({ success: false, message: error.message }); }
 };
 
 const deleteHarvest = async (req, res) => {
   try {
     const record = await HarvestPeriod.findByIdAndDelete(req.params.id);
-    if (!record) return res.status(404).json({ error: 'Data tidak ditemukan' });
+    if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
     res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
 module.exports = {

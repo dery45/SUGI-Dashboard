@@ -28,6 +28,13 @@ const isEmail = (value) => {
   return null;
 };
 
+const isPhone = (value) => {
+  if (value && !/^(\+62|62|0)8[1-9][0-9]{6,11}$/.test(String(value))) {
+    return 'Format telepon tidak valid';
+  }
+  return null;
+};
+
 const minLength = (value, min, fieldName) => {
   if (value && String(value).length < min) {
     return `${fieldName} minimal ${min} karakter`;
@@ -65,4 +72,4 @@ const errorResponse = (res, errors, status = 400) => {
   });
 };
 
-module.exports = { required, isObjectId, isNumber, isEmail, minLength, minValue, validate, errorResponse };
+module.exports = { required, isObjectId, isNumber, isEmail, isPhone, minLength, minValue, validate, errorResponse };

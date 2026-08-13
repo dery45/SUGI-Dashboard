@@ -35,7 +35,7 @@ function safeModel(name) {
 exports.getFilterOptions = async (req, res) => {
   try {
     const cached = cache.get('filterOptions');
-    if (cached) return res.json(cached);
+    if (cached) return res.json({ success: true, data: cached });
 
     const [years, commodities, provinces, months] = await Promise.all([
       getDistinctYears(),
@@ -46,10 +46,10 @@ exports.getFilterOptions = async (req, res) => {
 
     const result = { years, months, commodities, provinces };
     cache.set('filterOptions', result, CACHE_TTL);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error('Filter options error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
