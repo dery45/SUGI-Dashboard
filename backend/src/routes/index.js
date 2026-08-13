@@ -7,7 +7,7 @@ const salesRoutes = require('./salesRoutes');
 const expenseRoutes = require('./expenseRoutes');
 const farmerManagementRoutes = require('./farmerManagementRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
-const authRoutes = require('./authRoutes');
+const authRoutes = require('../../route/authRoutes');
 const masterDataRoutes = require('./masterDataRoutes');
 const assignmentRoutes = require('./assignmentRoutes');
 

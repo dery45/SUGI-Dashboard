@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Register Organization model early so populate('organization_id') works
-require('./Organization');
-
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, lowercase: true },
