@@ -7,7 +7,8 @@ const coverageAnalyzer = require('../nlp/coverage');
 const insightEngine = require('../nlp/insights');
 const semanticSearch = require('../nlp/semanticSearch');
 const chatbotNlpRepository = require('../repositories/chatbotNlpRepository');
-const { globalCache, workerQueue, globalMemoizer } = require('../nlp/optimization');
+const { globalCache } = require('../utils/cache');
+const { workerQueue, globalMemoizer } = require('../nlp/optimization');
 
 class ChatbotAdvancedService {
   async _getNlpResults() {
