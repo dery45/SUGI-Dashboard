@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('[FATAL] JWT_SECRET is not set in the environment. Refusing to start.');
+  console.error('Set JWT_SECRET before starting the server (see backend/.env.example).');
+  process.exit(1);
+}
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;

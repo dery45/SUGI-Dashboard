@@ -1,8 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+const { JWT_SECRET } = require('../../middleware/auth');
 
 const login = async (req, res) => {
   try {
