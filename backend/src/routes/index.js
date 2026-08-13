@@ -14,7 +14,7 @@ const assignmentRoutes = require('../../route/assignmentRoutes');
 const bulkImportRoutes = require('./bulkImportRoutes');
 const settingsRoutes = require('../../route/settingsRoutes');
 const filterRoutes = require('../../route/filterRoutes');
-const insightRoutes = require('./insightRoutes');
+const insightRoutes = require('../../route/insightRoutes');
 const chatbotInsightRoutes = require('./chatbotInsightRoutes');
 
 router.use('/auth', authRoutes);
