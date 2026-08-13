@@ -14,9 +14,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 const apiRoutes = require('./route/index');
-const masterDataRoutes = require('./route/masterDataRoutes');
+const foodSecurityDatasetsRoutes = require('./route/foodSecurityDatasetsRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
-app.use('/api/master', masterDataRoutes);
+app.use('/api/master', foodSecurityDatasetsRoutes);
 app.use('/api', apiRoutes);
 app.use('/api', notFound);
 app.use(errorHandler);

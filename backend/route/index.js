@@ -8,7 +8,7 @@ const expenseRoutes = require('./expenseRoutes');
 const farmerManagementRoutes = require('./farmerManagementRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
 const authRoutes = require('./authRoutes');
-const masterDataRoutes = require('./masterDataFeatureRoutes');
+const masterDataRoutes = require('./masterDataRoutes');
 const assignmentRoutes = require('./assignmentRoutes');
 
 const bulkImportRoutes = require('./bulkImportRoutes');
