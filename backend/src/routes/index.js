@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const managementDashboardRoutes = require('./managementDashboardRoutes');
+const managementDashboardRoutes = require('../../route/managementDashboardRoutes');
 const lifecycleRoutes = require('../../route/lifecycleRoutes');
 const salesRoutes = require('../../route/salesRoutes');
 const expenseRoutes = require('../../route/expenseRoutes');
