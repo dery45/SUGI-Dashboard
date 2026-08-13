@@ -1,5 +1,5 @@
-const SessionSummary = require('../../model/sugi_insights/SessionSummary');
-const NlpResult = require('../../model/sugi_insights/NlpResult');
+const SessionSummary = require('../../model/insights/SessionSummary');
+const NlpResult = require('../../model/insights/NlpResult');
 
 class ChatbotInsightRepository {
   async getKPIs(filters) {

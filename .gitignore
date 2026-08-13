@@ -14,6 +14,7 @@ yarn-error.log*
 # Testing & docs
 testing/
 docs/
+!backend/docs/
 
 # Generated structure maps
 BACKEND_STRUCTURE.md

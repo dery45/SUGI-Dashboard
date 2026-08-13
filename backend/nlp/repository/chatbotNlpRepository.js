@@ -1,5 +1,5 @@
-const NlpResult = require('../../model/sugi_insights/NlpResult');
-const conn = require('../../model/sugi_insights');
+const NlpResult = require('../../model/insights/NlpResult');
+const conn = require('../../model/insights');
 
 class ChatbotNlpRepository {
   async bulkUpsert(results) {

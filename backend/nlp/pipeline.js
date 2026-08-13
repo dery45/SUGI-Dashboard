@@ -91,7 +91,7 @@ class NlpPipeline {
       return { cached: true, count: existing };
     }
 
-    const SessionSummary = require('../model/sugi_insights/SessionSummary');
+    const SessionSummary = require('../model/insights/SessionSummary');
     const documents = await SessionSummary.find({}).lean();
     const result = await this.processAllDocuments(documents);
     return { cached: false, ...result };
