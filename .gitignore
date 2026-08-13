@@ -4,6 +4,7 @@ dist-ssr/
 *.local
 .env
 .env.*
+!backend/.env.example
 .DS_Store
 .vscode/
 npm-debug.log*
