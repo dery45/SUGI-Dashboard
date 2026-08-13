@@ -1,4 +1,4 @@
-const { required, isNumber, validate, errorResponse } = require('../utils/validate');
+const { required, isNumber, validate, errorResponse } = require('../util/validate');
 
 function buildRules(Model) {
   const rules = {};
