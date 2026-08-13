@@ -175,7 +175,7 @@ export default function DataImportModal({ isOpen, onClose, template, onImportSuc
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Terjadi kesalahan saat import data');
+        throw new Error(errorData.message || errorData.error || 'Terjadi kesalahan saat import data');
       }
 
       const result = await response.json();
