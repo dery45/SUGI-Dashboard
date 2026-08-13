@@ -202,8 +202,8 @@ features (27 triplets), one consistent naming convention (§0 FIX 1).**
 | settings | `controller/settingsController.js` | `route/settingsRoutes.js` | (reuses `model/User.js`) |
 | filters | `controller/filterController.js` | `route/filterRoutes.js` | (reuses 13 dataset models) |
 | insights | `controller/insightController.js` | `route/insightRoutes.js` | `model/{GovernmentInsight,FarmerInsight}.js` |
-| dashboard farmer v2 | `controller/farmerDashboardController.js` | `route/dashboardRoutes.js` | multi-model aggregator |
-| dashboard govt | `controller/govtDashboardController.js` | `route/dashboardRoutes.js` | multi-model aggregator |
+| dashboard farmer v2 | `controller/farmerDashboardController.js` | `route/farmerDashboardRoutes.js` | multi-model aggregator |
+| dashboard govt | `controller/govtDashboardController.js` | `route/govtDashboardRoutes.js` | multi-model aggregator |
 | management dashboard | `controller/managementDashboardController.js` | `route/managementDashboardRoutes.js` | `model/UM.js` (+ FarmMaster…; kpiService folded) |
 | bulk import | `controller/bulkImportController.js` | `route/bulkImportRoutes.js` | reuses 13 dataset models |
 | chatbot insight | `controller/chatbotInsightController.js` | `route/chatbotInsightRoutes.js` | `model/sugi_insights/*` |
@@ -247,7 +247,8 @@ access was NOT granted (can be added deliberately — §9).
 | bulk-import | `POST /api/bulk-import/:modelName` | `authenticate` + `isGovernment` | **R** (`/data/*`); consistent with datasets it writes |
 | dashboard | `GET /api/dashboard/farmer/v2` | `authenticate` | **R** (`/farmer` = All authenticated) |
 | dashboard | `GET /api/dashboard/govt` | `authenticate` + `isGovernment` | **R** (`/government` = superadmin, government) |
-| insights | `GET /api/insights`, `GET /api/insights/farmer` | `authenticate` | **R** (fed to all-authenticated dashboards); restrictive default |
+| insights | `GET /api/insights` (policy recommendations) | `authenticate` + `isGovernment` | **R** (README: `/government` role; feeds government dashboard) |
+| insights | `GET /api/insights/farmer` (market intelligence) | `authenticate` | **R** (README: `/farm` = All authenticated; feeds farmer dashboard) |
 | chatbot-insight | 16 routes (`/dashboard` … `/semantic-search`, `POST /process`) | `authenticate` + `isGovernment` | **R** (`/chatbot-insight` = superadmin, government) |
 
 ### Phase-1 routes — retained guards, now from real `middleware/auth.js`
@@ -417,3 +418,58 @@ roles.
    scoping); assignments allow government read; `isGovernment` restricts the 13
    datasets to `superadmin|government` (farmer_owner write can be added
    deliberately if a business need appears).
+
+---
+
+## 10. ADDENDUM A — Pre-Phase-3 Closures
+
+Two pre-Phase-3 closures applied after the final pass; no other Phase 2 work
+was touched.
+
+### Closure 1 — Insights guard split (pending-insight decision closed)
+
+`route/insightRoutes.js` now guards the two endpoints separately instead of the
+flat `router.use(authenticate)` on both:
+
+| Endpoint | Guard | Rationale (README source of truth) |
+|---|---|---|
+| `GET /api/insights` (policy recommendations) | `authenticate` + `isGovernment` | README `/government` = superadmin, government; endpoint feeds the government dashboard |
+| `GET /api/insights/farmer` (market intelligence, 10 items) | `authenticate` | README `/farmer` = All authenticated; endpoint feeds the farmer dashboard |
+
+§3 table above updated accordingly.
+
+**Live verification** (port 3000, server booted for this pass):
+
+| Request | Expected | Result |
+|---|---|---|
+| `farmer` token → `GET /api/insights` | 403 | **403** ✓ |
+| `farmer` token → `GET /api/insights/farmer` | 200 | **200** ✓ |
+| `superadmin` token → `GET /api/insights` | 200 | **200** ✓ |
+| `superadmin` token → `GET /api/insights/farmer` | 200 | **200** ✓ |
+| no token → `GET /api/insights` | 401 | **401** ✓ |
+
+### Closure 2 — Dashboard route split (open/closed question decided: **split**)
+
+`route/dashboardRoutes.js` (shared mount) was split into
+`route/farmerDashboardRoutes.js` + `route/govtDashboardRoutes.js`, one file per
+feature (1-feature-1-file convention, §0 FIX 1). Chosen over keeping a
+documented exception because the two dashboard features are distinct — each
+already owns its controller (`farmerDashboardController`/`govtDashboardController`)
+and a distinct role surface — so the shared file was the only multi-feature mount
+left (the dataset CRUD factory remains the sole sanctioned shared file, being a
+generic factory, not a feature).
+
+- `route/index.js` now mounts `farmerDashboardRoutes` then `govtDashboardRoutes`
+  at `/dashboard`; `GET /api/dashboard/farmer/v2` and `GET /api/dashboard/govt`
+  are byte-for-byte unchanged.
+- §2 Feature Triplet Inventory updated to the two route files.
+
+**Live verification** (same server boot):
+
+| Request | Expected | Result |
+|---|---|---|
+| `farmer` token → `GET /api/dashboard/farmer/v2` | 200 | **200** ✓ |
+| `farmer` token → `GET /api/dashboard/govt` | 403 | **403** ✓ |
+| `superadmin` token → `GET /api/dashboard/govt` | 200 | **200** ✓ |
+
+All checks green; server shut down after verification.
