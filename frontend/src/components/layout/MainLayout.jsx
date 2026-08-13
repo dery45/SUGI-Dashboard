@@ -6,7 +6,7 @@ import TopBar from './TopBar';
 import BottomNav from './BottomNav';
 
 const MainLayout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { logout, user } = useAuth();
 
   return (

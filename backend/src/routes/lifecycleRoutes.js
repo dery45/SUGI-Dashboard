@@ -6,6 +6,8 @@ const HarvestPeriod = require('../models/HarvestPeriod');
 const Activity = require('../models/Activity');
 const FarmerAssignment = require('../models/FarmerAssignment');
 const User = require('../models/User');
+require('../models/Farm');
+require('../models/Block');
 const { authenticate } = require('../middlewares/authMiddleware');
 const { isManagement } = require('../middlewares/rbacMiddleware');
 const { required, isNumber, minValue, isObjectId, validate, errorResponse } = require('../utils/validate');
