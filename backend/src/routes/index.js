@@ -13,7 +13,7 @@ const assignmentRoutes = require('../../route/assignmentRoutes');
 
 const bulkImportRoutes = require('./bulkImportRoutes');
 const settingsRoutes = require('../../route/settingsRoutes');
-const filterRoutes = require('./filterRoutes');
+const filterRoutes = require('../../route/filterRoutes');
 const insightRoutes = require('./insightRoutes');
 const chatbotInsightRoutes = require('./chatbotInsightRoutes');
 
