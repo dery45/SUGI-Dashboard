@@ -1,9 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-const farmerRoutes = require('./farmerRoutes');
-const governmentRoutes = require('./governmentRoutes');
-const sharedRoutes = require('./sharedRoutes');
 const managementDashboardRoutes = require('./managementDashboardRoutes');
 const lifecycleRoutes = require('./lifecycleRoutes');
 const salesRoutes = require('./salesRoutes');
@@ -38,9 +35,6 @@ router.use('/master-data', masterDataRoutes);
 router.use('/assignments', assignmentRoutes);
 
 router.use('/bulk-import', bulkImportRoutes);
-router.use('/farmer', farmerRoutes);
-router.use('/government', governmentRoutes);
-router.use('/shared', sharedRoutes);
 router.use('/management', managementDashboardRoutes);
 router.use('/lifecycle', lifecycleRoutes);
 router.use('/sales', salesRoutes);
