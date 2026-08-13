@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+const getToken = () => localStorage.getItem('token');
+
 export const useMasterData = (endpointContext) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,10 +15,12 @@ export const useMasterData = (endpointContext) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(fetchUrl);
+      const response = await fetch(fetchUrl, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
       if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
-      setData(result);
+      setData(Array.isArray(result) ? result : (result?.data ?? []));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -30,7 +34,7 @@ export const useMasterData = (endpointContext) => {
     try {
       const response = await fetch(fetchUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Failed to create data');
@@ -50,7 +54,7 @@ export const useMasterData = (endpointContext) => {
     try {
       const response = await fetch(`${fetchUrl}/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Failed to update data');
@@ -69,7 +73,8 @@ export const useMasterData = (endpointContext) => {
     setError(null);
     try {
       const response = await fetch(`${fetchUrl}/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getToken()}` }
       });
       if (!response.ok) throw new Error('Failed to delete data');
       await fetchData();

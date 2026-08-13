@@ -43,4 +43,4 @@ const isFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
 
 const checkRole = authorize;
 
-module.exports = { authenticate, authorize, checkRole, isSuperAdmin, isGovernment, isManagement, isFarmerOwner, isFarmer };
+module.exports = { authenticate, authorize, checkRole, isSuperAdmin, isGovernment, isManagement, isFarmerOwner, isFarmer, JWT_SECRET };

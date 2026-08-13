@@ -14,6 +14,8 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 const apiRoutes = require('./src/routes/index');
+const masterDataRoutes = require('./route/masterDataRoutes');
+app.use('/api/master', masterDataRoutes);
 app.use('/api', apiRoutes);
 
 if (process.env.NODE_ENV === 'production') {
