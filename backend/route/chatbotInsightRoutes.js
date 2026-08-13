@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controller/chatbotInsightController');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, isGovernment } = require('../middleware/auth');
 
-// FLAG: legacy chatbotInsightRoutes had NO auth guard; restrictive default applied (authenticate)
-router.use(authenticate);
+// FLAG: legacy chatbotInsightRoutes had NO auth guard; isGovernment applied
+// per README `/chatbot-insight` = superadmin, government
+router.use(authenticate, isGovernment);
 
 router.get('/dashboard', ctrl.getDashboard);
 router.get('/filters', ctrl.getFilters);
