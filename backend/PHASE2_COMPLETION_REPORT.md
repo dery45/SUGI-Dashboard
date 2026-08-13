@@ -1,54 +1,200 @@
 # Phase 2 Completion Report — Feature-Based Migration & JWT Enforcement (backend)
 
-Phase 2 of 3. Scope: `backend/` (plus the two frontend companion patches
-required to keep the Demo working when envelopes gained Auth + a `success`
-wrapper).
+**FINAL** (supersedes the partial Phase 2 report). Phase 2 of 3. Scope: `backend/`
+plus every frontend companion patch required to keep the Demo working once
+envelopes gained Auth and a `success` wrapper.
 
 **STATUS: COMPLETE.** Tasks 0–8 of the Phase 2 brief are executed and
-smoke-verified on `dev`, plus a **FIX pass** (`8d3e6c8` FIX 2,
-`974a7fb` guards, `aa77aaf` FIX 3, `9498205` companion, orphan cleanup):
-final file-naming convention applied uniformly, `/api/master` aggregator
-renamed, endpoint counts corrected, `dashboard/govt` + chatbot-insight guards
-aligned with README roles. All legacy feature code has been relocated out of
-`src/`, services/repositories live under `nlp/`, the response envelope is
-standardized, a centralized error handler is wired, every non-public endpoint
-carries `authenticate`, and old-`src/` has been deleted. Commits referenced
-below are on `dev`.
+smoke-verified on `dev` (branch is 37 commits ahead of `origin/dev`), including a
+FIX pass (FIX 1 naming convention, FIX 2 `masterDataRoutes.js` collision, FIX 3
+endpoint counts) and one regression caught during this final pass
+(`GET /dashboard/farmer/v2` briefly lost its guard; restored — commit `fd6b173`).
+
+All legacy feature code has been relocated out of `src/`, services/repositories
+live under `nlp/`, the response envelope is standardized, a centralized error
+handler is wired, every non-public endpoint carries `authenticate` (with the
+documented role guard), and old-`src/` has been deleted.
 
 ---
 
-## 0. TASK 0 RESOLUTION — every Phase 1 corrections item
+## 0. FIXES CONFIRMED
 
-All six Phase 1 open items resolved (see `PHASE2_PREWORK_ADDENDUM.md` for the
-full pre-work detail).
+### FIX 1 — Final file-naming convention (adopted + verified)
 
-| # | Item | Status |
+Chosen convention (single, applied to every triplet in `controller/`, `route/`,
+`model/`):
+
+| Layer | Pattern | Example |
 |---|---|---|
-| 1 | Unit Management decision + evidence | **DONE** — `umRoutes.js` stays deleted; `UMAssignmentModal.jsx` orphan deferred to Phase 3 |
-| 2 | Shim integrity | **DONE** — `src/middlewares/` re-exported real `middleware/auth.js` guards (shims later deleted with `src/`) |
-| 3 | Recomputed auth backlog total | **DONE** — 86 endpoints (73 original + 13 new `GET /:id` from the dataset factory) lacked auth; all closed (see §3) |
-| 4 | v2 dashboard smoke test | **DONE** — `/api/dashboard/farmer/v2` and `/api/dashboard/govt` re-verified 200 after migration |
-| 5 | `file_path` status | **DONE** — deleted from `.env`, absent from `.env.example`, never read |
-| 6 | Credential rotation status | **TESTS DONE / HUMAN ACTION ITEM OPEN** — rotation confirmed at git level; owner must revoke leaked provider values |
+| Controller | `controller/<feature>Controller.js` (camelCase) | `controller/govtDashboardController.js` |
+| Route | `route/<feature>Routes.js` (camelCase) | `route/govtDashboardRoutes.js` |
+| Model | `model/<Model>.js` (PascalCase) | `model/GovernmentInsight.js` |
 
-Task 0 hardening (commit `670f232`) is unchanged and still verified: fail-fast
-on missing `MONGO_URI` / `JWT_SECRET`, and `JWT_SECRET` exported from
-`middleware/auth.js` (single source of truth — login works, verified end-to-end).
+**Confirmation for the 13 dataset triplets:** the 13 dataset feature files were
+created in Task 2 (commit `3ba326b`) already conforming to this convention —
+`controller/<slug>Controller.js`, `route/<slug>Routes.js`, `model/<PascalCase>.js`
+(e.g. `cadanganPanganProvinsiController.js` / `cadanganPanganProvinsiRoutes.js` /
+`CadanganPanganProvinsi.js`). A FIX-pass sweep verified **all 27 triplets**
+(14 features + 13 datasets) and all 30 models match; no retroactive renames were
+required for the dataset set. The only files that needed renaming were the two
+`masterData`-prefixed routers (FIX 2 below) and the orphan
+`backend/utils/validate.js` (duplicate of `util/validate.js`) which was deleted.
+
+### FIX 2 — `masterDataRoutes.js` collision resolved
+
+Pre-fix, two routers collided: `route/masterDataRoutes.js` (the `/api/master`
+13-dataset aggregator) and `route/masterDataFeatureRoutes.js` (the ops
+master-data feature). Resolution (commit `8d3e6c8`):
+
+| Before | After | Mounted at |
+|---|---|---|
+| `route/masterDataRoutes.js` (aggregator) | `route/foodSecurityDatasetsRoutes.js` | `/api/master/*` (URL unchanged) |
+| `route/masterDataFeatureRoutes.js` (ops) | `route/masterDataRoutes.js` (reclaimed natural name) | `/api/master-data/*` (URL unchanged) |
+
+`server.js` and `route/index.js` requires updated; `/api/master/*` and
+`/api/master-data/*` URLs verified unchanged end-to-end.
+
+### FIX 3 — Corrected endpoint totals
+
+The Task 2 CRUD factory exposes **5 verbs per dataset** (POST, GET list,
+GET `/:id`, PUT `/:id`, DELETE `/:id`), not 4:
+
+- **Dataset-closed endpoints:** 13 datasets × 5 = **65** (previously mis-stated
+  as 52).
+- **App endpoints closed in Task 3:** 21 (bulk-import 1, dashboard 2, insights 2,
+  chatbot-insight 16).
+- **True total:** **86 endpoints** = 73 original + 13 new `GET /:id` handlers the
+  factory added in Task 2. Closure count: **86/86 closed** (excluding the
+  intentionally public `POST /api/auth/login`).
+- Corrected in `PHASE2_PREWORK_ADDENDUM.md`, this report, and the README dataset
+  table (commit `aa77aaf`).
 
 ---
 
-## 1. FOLDER MIGRATION MAP — old path → new path
+## 1. FOLDER MIGRATION MAP — old path → new path (complete)
 
-**STATUS: DONE — `src/` deleted in Task 6 (commit `630caf6`).**
+Pre-migration tree read from git (`3ba326b^`: `backend/src/` held 115 files, and
+`controller/`/`route/`/`model/` were empty except `.gitkeep`). Every file is
+accounted for below.
 
-Every former `src/*` file moved to its feature triplet; nothing in the mounted
-graph imports `src/` (import-sweep ran immediately before deletion).
+### Controllers — `src/controllers/*` → `controller/*`
+
+| Old (`src/controllers/`) | New | Notes |
+|---|---|---|
+| `assignmentController.js` | `controller/assignmentController.js` | 1:1 |
+| `authController.js` | `controller/authController.js` | 1:1 |
+| `bulkImportController.js` | `controller/bulkImportController.js` | 1:1 |
+| `cadanganPanganProvinsiController.js` | `controller/cadanganPanganProvinsiController.js` | 1:1 (dataset) |
+| `chatbotInsightController.js` | `controller/chatbotInsightController.js` | 1:1 |
+| `farmerDashboardController.js` | `controller/farmerDashboardController.js` | 1:1 |
+| `filterController.js` | `controller/filterController.js` | 1:1 |
+| `gerakanPanganMurahController.js` | `controller/gerakanPanganMurahController.js` | 1:1 (dataset) |
+| `govtDashboardController.js` | `controller/govtDashboardController.js` | 1:1 |
+| `hargaKonsumenNasionalController.js` | `controller/hargaKonsumenNasionalController.js` | 1:1 (dataset) |
+| `hargaKonsumenProvinsiController.js` | `controller/hargaKonsumenProvinsiController.js` | 1:1 (dataset) |
+| `hargaProdusenNasionalController.js` | `controller/hargaProdusenNasionalController.js` | 1:1 (dataset) |
+| `hargaProdusenProvinsiController.js` | `controller/hargaProdusenProvinsiController.js` | 1:1 (dataset) |
+| `insightController.js` | `controller/insightController.js` | 1:1 |
+| `ketidakcukupanNasionalController.js` | `controller/ketidakcukupanNasionalController.js` | 1:1 (dataset) |
+| `ketidakcukupanProvinsiController.js` | `controller/ketidakcukupanProvinsiController.js` | 1:1 (dataset) |
+| `konsumsiPerJenisController.js` | `controller/konsumsiPerJenisController.js` | 1:1 (dataset) |
+| `masterDataController.js` | `controller/masterDataController.js` | 1:1 (ops) |
+| `panganTerselamatkanController.js` | `controller/panganTerselamatkanController.js` | 1:1 (dataset) |
+| `penyaluranDonasiController.js` | `controller/penyaluranDonasiController.js` | 1:1 (dataset) |
+| `proyeksiNeracaController.js` | `controller/proyeksiNeracaController.js` | 1:1 (dataset) |
+| `settingsController.js` | `controller/settingsController.js` | 1:1 |
+| `skorPPHController.js` | `controller/skorPPHController.js` | 1:1 (dataset) |
+
+### Controllers extracted from inline route files (Task 3)
+
+These features had their handler logic **inline in `src/routes/*.js`** (no
+`src/controllers/` file existed). Task 3 extracted them to a proper controller:
+
+| Old location (inline handlers) | New controller | New route |
+|---|---|---|
+| `src/routes/lifecycleRoutes.js` (202 lines) | `controller/lifecycleController.js` | `route/lifecycleRoutes.js` (thin) |
+| `src/routes/salesRoutes.js` (102 lines) | `controller/salesController.js` | `route/salesRoutes.js` (thin) |
+| `src/routes/expenseRoutes.js` (89 lines) | `controller/expenseController.js` | `route/expenseRoutes.js` (thin) |
+| `src/routes/farmerManagementRoutes.js` (157 lines) | `controller/farmerManagementController.js` | `route/farmerManagementRoutes.js` (thin) |
+| `src/routes/managementDashboardRoutes.js` (35 lines) | `controller/managementDashboardController.js` (+ `kpiService` folded in) | `route/managementDashboardRoutes.js` (thin) |
+
+### Routes — `src/routes/*` → `route/*`
+
+All 1:1 name-preserving moves (`assignmentRoutes`, `authRoutes`,
+`bulkImportRoutes`, `chatbotInsightRoutes`, `dashboardRoutes`, `expenseRoutes`,
+`farmerManagementRoutes`, `filterRoutes`, `gerakanPanganMurahRoutes`,
+`hargaKonsumen*`, `hargaProdusen*`, `insightRoutes`, `ketidakcukupan*`,
+`konsumsiPerJenisRoutes`, `lifecycleRoutes`, `managementDashboardRoutes`,
+`panganTerselamatkanRoutes`, `penyaluranDonasiRoutes`, `proyeksiNeracaRoutes`,
+`salesRoutes`, `settingsRoutes`, `skorPPHRoutes`, `cadanganPanganProvinsiRoutes`,
+13 dataset routers) **except**:
+
+| Old (`src/routes/`) | New | Notes |
+|---|---|---|
+| `index.js` | `route/index.js` | aggregator re-wired in `server.js` |
+| `masterDataRoutes.js` (ops: farms/blocks/crop-types/activity-types) | `route/masterDataRoutes.js` | reclaimed natural name via FIX 2 |
+| *(new in Task 2)* | `route/foodSecurityDatasetsRoutes.js` | `/api/master` 13-dataset aggregator |
+| *(new in Task 2)* | `route/_datasetCrud.factory.js` | shared CRUD factory |
+
+### Models — `src/models/*` → `model/*`
+
+All 1:1, PascalCase preserved: `Activity`, `ActivityType`, `Block`,
+`CadanganPanganProvinsi`, `CropCycle`, `CropType`, `Expense`, `Farm`,
+`FarmMaster`, `FarmerAssignment`, `FarmerInsight`, `GerakanPanganMurah`,
+`GovernmentInsight`, `HargaKonsumenNasional`, `HargaKonsumenProvinsi`,
+`HargaProdusenNasional`, `HargaProdusenProvinsi`, `HarvestPeriod`,
+`KetidakcukupanNasional`, `KetidakcukupanProvinsi`, `KonsumsiPerJenis`,
+`LandRecord`, `PanganTerselamatkan`, `PenyaluranDonasi`, `ProyeksiNeraca`,
+`Sale`, `SkorPPH`, `TaskAssignment`, `UM`, `User`.
+
+- `Organization.js` existed in `src/models/` but is **not imported by any
+  mounted module** — it was not carried over (dead model; flagged §9).
+- `model/sugi_insights/{NlpResult,SessionSummary}.js` re-export the dedicated
+  `insightsConnection` via `model/sugi_insights/index.js` (reads
+  `connection/db.js`), preserving the isolated `sugi_insights` database.
+
+### Middleware — `src/middlewares/*` → `middleware/`
+
+| Old | New | Notes |
+|---|---|---|
+| `src/middlewares/authMiddleware.js` | `middleware/auth.js` (the real one) | shim was a re-export; consolidated to single source |
+| `src/middlewares/rbacMiddleware.js` | `middleware/auth.js` | `checkRole, isSuperAdmin, isGovernment, isManagement, isFarmerOwner, isFarmer` all live in `middleware/auth.js` |
+
+### NLP — `src/nlp/*` → `nlp/*`
+
+17 modules moved 1:1 (`coverage`, `entities`, `insights`, `intent`,
+`knowledgeGraph`, `optimization`, `pipeline`, `preprocessor`, `problems`,
+`recommendations`, `relations`, `semanticSearch`, `sentiment`, `stemmer`,
+`stopwords`, `topics`, `trends`). `pipeline.js` deps re-pointed to
+`./repository` + `../model`.
+
+### Services / Repositories / Utils / Scripts
+
+| Old | New | Notes |
+|---|---|---|
+| `src/services/chatbotAdvancedService.js` | `nlp/service/chatbotAdvancedService.js` | cache dep → `../../util/cache` |
+| `src/services/chatbotInsightService.js` | `nlp/service/chatbotInsightService.js` | |
+| `src/services/chatbotNlpService.js` | `nlp/service/chatbotNlpService.js` | |
+| `src/services/kpiService.js` | **folded** into `controller/managementDashboardController.js` | Task 4 decision; module deleted |
+| `src/repositories/chatbotInsightRepository.js` | `nlp/repository/chatbotInsightRepository.js` | model deps → `../../model/sugi_insights/*` |
+| `src/repositories/chatbotNlpRepository.js` | `nlp/repository/chatbotNlpRepository.js` | |
+| `src/utils/validate.js` | `util/validate.js` | `isPhone` added (Task 5) |
+| `src/utils/cache.js` | `util/cache.js` | |
+| *(orphan duplicate)* | — | `backend/utils/validate.js` deleted (FIX pass) |
+| `src/scripts/{seed,reset,seedSuperAdmin}.js` | `scripts/` | deps → `../model/*`; `package.json` paths updated |
+
+---
+
+## 2. FEATURE TRIPLET INVENTORY
+
+**STATUS: DONE — 1-feature-1-triplet confirmed for all 14 features + 13 dataset
+features (27 triplets), one consistent naming convention (§0 FIX 1).**
 
 | Feature | Controller | Route | Model |
 |---|---|---|---|
 | auth | `controller/authController.js` | `route/authRoutes.js` | `model/User.js` |
 | farmer management | `controller/farmerManagementController.js` | `route/farmerManagementRoutes.js` | (reuses `model/User.js`) |
-| master data (ops) | `controller/masterDataController.js` | `route/masterDataFeatureRoutes.js` | `model/{FarmMaster,Block,CropType,ActivityType}.js` |
+| master data (ops) | `controller/masterDataController.js` | `route/masterDataRoutes.js` | `model/{FarmMaster,Block,CropType,ActivityType}.js` |
 | lifecycle | `controller/lifecycleController.js` | `route/lifecycleRoutes.js` | `model/{LandRecord,CropCycle,Activity,HarvestPeriod}.js` |
 | sales | `controller/salesController.js` | `route/salesRoutes.js` | `model/Sale.js` |
 | expenses | `controller/expenseController.js` | `route/expenseRoutes.js` | `model/Expense.js` |
@@ -56,105 +202,101 @@ graph imports `src/` (import-sweep ran immediately before deletion).
 | settings | `controller/settingsController.js` | `route/settingsRoutes.js` | (reuses `model/User.js`) |
 | filters | `controller/filterController.js` | `route/filterRoutes.js` | (reuses 13 dataset models) |
 | insights | `controller/insightController.js` | `route/insightRoutes.js` | `model/{GovernmentInsight,FarmerInsight}.js` |
-| dashboard govt | `controller/govtDashboardController.js` | `route/dashboardRoutes.js` | multi-model aggregator |
 | dashboard farmer v2 | `controller/farmerDashboardController.js` | `route/dashboardRoutes.js` | multi-model aggregator |
-| management dashboard | `controller/managementDashboardController.js` | `route/managementDashboardRoutes.js` | `model/UM.js` (+ FarmMaster…, kpiService folded) |
+| dashboard govt | `controller/govtDashboardController.js` | `route/dashboardRoutes.js` | multi-model aggregator |
+| management dashboard | `controller/managementDashboardController.js` | `route/managementDashboardRoutes.js` | `model/UM.js` (+ FarmMaster…; kpiService folded) |
 | bulk import | `controller/bulkImportController.js` | `route/bulkImportRoutes.js` | reuses 13 dataset models |
 | chatbot insight | `controller/chatbotInsightController.js` | `route/chatbotInsightRoutes.js` | `model/sugi_insights/*` |
 
-Non-feature moves:
+**13 dataset features** (`ketidakcukupan-nasional`, `ketidakcukupan-provinsi`,
+`konsumsi-per-jenis`, `penyaluran-donasi`, `proyeksi-neraca`,
+`gerakan-pangan-murah`, `harga-konsumen-provinsi`, `harga-konsumen-nasional`,
+`harga-produsen-nasional`, `harga-produsen-provinsi`, `skor-pph`,
+`pangan-terselamatkan`, `cadangan-pangan-provinsi`): each is a thin triplet over
+`controller/_datasetCrud.factory.js` + `route/_datasetCrud.factory.js`, mounted
+by `route/foodSecurityDatasetsRoutes.js` at `/api/master/<slug>`. Model names
+match PascalCase (§0 FIX 1).
 
-| Former | Target | Note |
-|---|---|---|
-| `src/nlp/*` (17 algorithm modules) | `nlp/*` | pipeline.js requires updated to `./repository` + `../model` |
-| `src/services/{chatbotAdvanced,chatbotInsight,chatbotNlp}Service.js` | `nlp/service/` | cache dep now `../../util/cache` |
-| `src/repositories/{chatbotInsight,chatbotNlp}Repository.js` | `nlp/repository/` | model deps now `../../model/sugi_insights/*` |
-| `src/services/kpiService.js` | **folded** into `controller/managementDashboardController.js` | single-use; no longer a separate module |
-| `src/models/sugi_insights/*` | `model/sugi_insights/*` | connection re-export path fixed |
-| `src/utils/{validate,cache}.js` | `util/` | shared utilities |
-| `src/scripts/{seed,reset,seedSuperAdmin}.js` | `scripts/` | deps → `../model/*`; `package.json` seed/reset paths updated |
-| `src/routes/index.js` (aggregator) | `route/index.js` | server.js mounts `./route/index` |
-
-Task 3 feature commits (one per feature): `792b84e` auth · `5ceb5fd`
-farmer-management · `39abd82` master-data · `39e2f2d` lifecycle · `c2ee10c`
-sales · `15497a1` expenses · `6f7a8b0` assignments · `773e637` settings ·
-`89b3822` filters · `1d0ed66` insights · `846bea9` dashboards ·
-`87f7c8d` management-dashboard · `b6ad37f` bulk-import · `70d227c`
-chatbot-insight + NLP relocation.
-
----
-
-## 2. FEATURE TRIPLET INVENTORY
-
-**STATUS: DONE — all 14 remaining features relocated; 13 dataset features
-already migrated in Task 2.**
-
-1-feature-1-triplet holds everywhere except the **dataset CRUD factory**
-(shared exception, documented §2 of the prior report): the 13 dataset features
-are thin triplets over `controller/_datasetCrud.factory.js` +
-`route/_datasetCrud.factory.js`, mounted by `route/foodSecurityDatasetsRoutes.js`
-at `/api/master <slug>`.
-
-**FIX 1 (final naming convention):** controllers `controller/<camelCase>Controller.js`,
-routes `route/<camelCase>Routes.js`, models `model/<PascalCase>.js`. Retro-verified
-across all 27 triplets (14 features + 13 datasets) and the 30 models — already
-uniform, no renames needed.
-
-**FIX 2 (name-space cleanup):** the `/api/master` 13-dataset aggregator moved out
-of the `masterData` name space to `route/foodSecurityDatasetsRoutes.js`;
-`route/masterDataFeatureRoutes.js` reclaimed the natural name
-`route/masterDataRoutes.js` for the ops master-data feature. `/api/master/*` and
-`/api/master-data/*` URLs unchanged.
-
-All new `model/*.js` use idempotent registration
+All `model/*.js` use idempotent registration
 (`mongoose.models.X || mongoose.model('X', schema)`); the two
 `model/sugi_insights/*` models register on the dedicated `insightsConnection`.
 
 ---
 
-## 3. AUTH BACKLOG CLOSURE — endpoint-by-endpoint confirmation
+## 3. AUTH BACKLOG CLOSURE — corrected backlog, closed to zero
 
-**STATUS: COMPLETE — 86/86 endpoints closed (excluding the intentionally public
-`POST /api/auth/login`).**
+**STATUS: COMPLETE — 86/86 endpoints closed** (65 dataset + 21 app), excluding
+the intentionally public `POST /api/auth/login`.
 
-### Task-2 closures (13 dataset features, commit `3ba326b`)
+**Guard source legend:** **R** = README Frontend Routes table · **B** =
+`BACKEND_STRUCTURE.md` · **both** = both agree.
 
-All five verbs of `/api/master/<slug>` (POST, GET list, GET `/:id`, PUT, DELETE)
-→ `authenticate` + `isGovernment` = 13 × 5 = **65 dataset endpoints**.
-Guard-ambiguity flag (retained): the dataset set defaulted to `isGovernment`
-`['superadmin','government']` per the frontend route roles; `farmer_owner`
-write access was NOT granted.
+### Dataset endpoints (Task 2) — 65 endpoints
 
-### Task-3 closures (21 endpoints)
+| Routes | Verbs | Guard | Source |
+|---|---|---|---|
+| `/api/master/<slug>` ×13 | POST, GET list, GET `/:id`, PUT `/:id`, DELETE `/:id` | `authenticate` + `isGovernment` (`superadmin`,`government`) | **R** (`/data/*` = superadmin, government) |
 
-| Feature | Guard applied | FLAG |
+Flag (retained): dataset set defaulted to `isGovernment`; `farmer_owner` write
+access was NOT granted (can be added deliberately — §9).
+
+### App endpoints (Task 3) — 21 endpoints
+
+| Feature | Endpoints | Guard | Source |
+|---|---|---|---|
+| bulk-import | `POST /api/bulk-import/:modelName` | `authenticate` + `isGovernment` | **R** (`/data/*`); consistent with datasets it writes |
+| dashboard | `GET /api/dashboard/farmer/v2` | `authenticate` | **R** (`/farmer` = All authenticated) |
+| dashboard | `GET /api/dashboard/govt` | `authenticate` + `isGovernment` | **R** (`/government` = superadmin, government) |
+| insights | `GET /api/insights`, `GET /api/insights/farmer` | `authenticate` | **R** (fed to all-authenticated dashboards); restrictive default |
+| chatbot-insight | 16 routes (`/dashboard` … `/semantic-search`, `POST /process`) | `authenticate` + `isGovernment` | **R** (`/chatbot-insight` = superadmin, government) |
+
+### Phase-1 routes — retained guards, now from real `middleware/auth.js`
+
+| Feature | Guard | Source |
 |---|---|---|
-| bulk-import `POST /:modelName` | `authenticate` + `isGovernment` | restrictive default (legacy had none) |
-| dashboard `GET /farmer/v2` | `authenticate` (README `/farmer` = All authenticated) | legacy had none → now 401 no-token |
-| dashboard `GET /govt` | `authenticate` + `isGovernment` (README `/government` = superadmin, government) | **FIX** — was authenticate-only; owner now 403 |
-| insights `GET /insights`, `GET /insights/farmer` | `authenticate` (+ role) | legacy had none → now 401 no-token |
-| chatbot-insight (16 routes) | `authenticate` + `isGovernment` (README `/chatbot-insight` = superadmin, government) | **FIX** — was authenticate-only; owner now 403; all 16 verified 200 with govt token, 401 without |
-
-Phase-1 routes (assignments, expenses, lifecycle, management, sales, farmers,
-master-data, settings, filters) retained `authenticate` + their existing role
-guards, now sourced from real `middleware/auth.js` (the `src/middlewares/`
-shims are deleted).
+| auth `/me` | `authenticate` | **B** (JWT auth) |
+| farmers (farmer management) | `authenticate` (router) + inline role checks | **B** |
+| master-data (ops) | `authenticate` (owner farm-scoping inline) | **B** |
+| lifecycle | `authenticate` + `isManagement` | **R** (`/management/*`) |
+| sales | `authenticate` + `isManagement` | **R** (`/management/sales`) |
+| expenses | `authenticate` + `isManagement` | **R** (`/management` family) |
+| assignments | `authenticate` router; mutations `isFarmerOwner`; GETs scoped | **B** |
+| settings | `authenticate` | **R** (`/settings` = All authenticated) |
+| filters | `authenticate` | **B** |
+| management dashboard | `authenticate` + `isManagement` | **R** (`/management` = superadmin, farmer_owner) |
 
 ### Preserved quirks (flagged, deliberately kept)
 
-- `route/masterDataRoutes.js` keeps `authenticate` only (no role guard) on the
-  ops master-data feature — owner farm-scoping retained.
+- `route/masterDataRoutes.js` (ops) keeps `authenticate`-only; owner farm-scoping
+  is the guard.
 - Assignments: government may list (authenticate-only), retained.
-- Lifecycle POST `createdBy` used `req.user._id` while `authenticate` sets
-  `req.user.id` — **FIXED in Task 5** (see §5).
+- Lifecycle POST `createdBy` `req.user.id` fix applied (Task 5).
 
 ---
 
-## 4. RESPONSE ENVELOPE & ERROR HANDLING
+## 4. FRONTEND COMPANION PATCHES — complete list
 
-**STATUS: COMPLETE (Task 5, commit `35a21b4`).**
+Precedent: `useMasterData.js` already unwraps the envelope
+(`result?.data ?? []`) and sends the Bearer token. Every other client that hits
+a now-guarded/unwrapped endpoint was patched:
 
-Canonical envelope (matches the dataset factory from Task 2):
+| File | Patch | Why |
+|---|---|---|
+| `frontend/src/hooks/useMasterData.js` | (pre-existing) unwraps `result?.data ?? []` + sends Bearer | envelope + auth baseline |
+| `frontend/src/api/filterApi.js` | Task 5 (`35a21b4`): returns `json.data ?? json` | `DashboardFilterContext` reads `data.years/…` |
+| `frontend/src/api/insightApi.js` | FIX pass (`9498205`): added Bearer header + reads `message \|\| error` | `/insights` gained `authenticate`; client was headerless |
+| `frontend/src/components/DataImportModal.jsx` | FIX pass (`9498205`): reads `message \|\| error` from bulk-import envelope | bulk-import now returns `{success,message}/…` |
+| `frontend/src/api/govtDashboardApi.js` | verified already Bearer + `json.data` | `/dashboard/govt` guarded |
+| `frontend/src/api/farmerDashboardApi.js` | verified already Bearer + `json.data` | `/dashboard/farmer/v2` guarded |
+| `frontend/src/api/chatbotInsightApi.js` | verified already Bearer + `json.data` | `/chatbot-insight/*` guarded |
+| `frontend/src/api/managementApi.js` | verified already Bearer + `message \|\| error` | management endpoints guarded |
+| `frontend/src/api/dashboardApi.js` | **ORPHAN** — not imported by any page; hits legacy `/dashboard/farmer` + `/dashboard/government` (no longer exist). Flagged §9. | — |
+
+---
+
+## 5. RESPONSE ENVELOPE & ERROR HANDLING — confirmed uniform
+
+Canonical envelope (matches the Task 2 dataset factory):
 
 - List: `{ success: true, data, total, page, totalPages }` (meta tolerated)
 - Single: `{ success: true, data }`
@@ -165,109 +307,113 @@ Canonical envelope (matches the dataset factory from Task 2):
 - 404: `{ success: false, message: 'Data tidak ditemukan' }`
 - 5xx: `{ success: false, error: <message> }`
 
-Applied where legacy shapes deviated:
+Applied/confirmed across all controllers (Task 5, commit `35a21b4`):
 
-- `lifecycleController` — bare arrays/records/`{error}` → wrapped; create now
-  `201`; all responses carry `success`.
-- `filterController` — bare `{years,months,commodities,provinces}` →
-  `{ success: true, data: {…} }`; error → `{ success: false, error }`.
+- `lifecycleController` — bare arrays/records/`{error}` → wrapped; create `201`.
+- `filterController` — bare object → `{ success:true, data:{…} }`.
 - `bulkImportController` — added `success` to success + all 400/500 bodies.
 - Auth/dashboard/insight/chatbot/master/sales/expense/settings/assignment/
-  farmer controllers already emitted `success` + `data`/`message`/`error` and
-  were left wire-compatible.
+  farmer controllers already emitted `success` + `data`/`message`/`error`;
+  verified wire-compatible (no field renames).
 
-**Frontend companion patches** (the documented envelope-aware client changes):
-`useMasterData.js` already unwraps (`result?.data ?? []`); Task 5 →
-`api/filterApi.js` now returns `json.data ?? json` so `DashboardFilterContext`
-keeps reading `data.years/commodities/provinces`; FIX pass → `api/insightApi.js`
-gained a Bearer header (its `/insights` calls were otherwise 401 after the
-authenticate guard) and `DataImportModal.jsx` now reads `message || error`
-from the bulk-import envelope.
+**Centralized error middleware** — `middleware/errorHandler.js`, wired in
+`server.js` after `/api` mounts: unknown `/api/*` → `404 { success:false,
+message:'Endpoint tidak ditemukan' }`; unhandled → `5xx { success:false, error }`.
+Verified: `GET /api/nonexistent-xyz → 404`.
 
-**Centralized error middleware** (new `middleware/errorHandler.js`, wired in
-`server.js` after `/api` mounts): unknown `/api/*` → `404 { success:false,
-message:'Endpoint tidak ditemukan' }`; unhandled errors → `5xx { success:false,
-error }`. Verified: `GET /api/nonexistent-xyz → 404` envelope.
-
-**Documented tolerance:** error text historically lives in `message` (most 4xx)
-or `error` (5xx / sales / expense / management / factory). Both keys are read by
-the frontend clients (`managementApi` reads `message || error`; dashboard/
-chatbot/insight clients read `message`). Task 5 did not rename existing keys to
-avoid degrading UI error display; the invariant (every response has `success`,
-successes carry `data`) is enforced.
+**Documented tolerance:** error text lives in `message` (most 4xx) or `error`
+(5xx / sales / expense / management / factory). Both keys are read by frontend
+clients (`managementApi` reads `message || error`; dashboard/chatbot/insight
+clients read `message`). Invariant: every response has `success`, successes carry
+`data`.
 
 ---
 
-## 5. SERVICES / REPOSITORIES / KPI SERVICE — EXECUTED DECISION
+## 6. SERVICES / REPOSITORIES / KPI SERVICE — final locations (confirmed)
 
-**STATUS: DONE (Task 3 chatbot commit `70d227c` + Task 4 commit `d192bb1`).**
+| Module | Final location | Confirmed |
+|---|---|---|
+| `chatbotAdvancedService.js` | `nlp/service/` | ✓ (cache dep → `../../util/cache`) |
+| `chatbotInsightService.js` | `nlp/service/` | ✓ |
+| `chatbotNlpService.js` | `nlp/service/` | ✓ |
+| `kpiService.js` | **folded** into `controller/managementDashboardController.js` | ✓ module deleted |
+| `chatbotInsightRepository.js` | `nlp/repository/` | ✓ |
+| `chatbotNlpRepository.js` | `nlp/repository/` | ✓ |
+| `cache.js`, `validate.js` | `util/` | ✓ |
 
-- `chatbotAdvancedService.js`, `chatbotInsightService.js`, `chatbotNlpService.js`
-  → **`nlp/service/`** (NLP-domain logic colocated with `nlp/*`).
-- `chatbotInsightRepository.js`, `chatbotNlpRepository.js` → **`nlp/repository/`**.
-- `kpiService.js` → **folded into `controller/managementDashboardController.js`**
-  (final single choice: controller; the old module is deleted).
-- Dead `src/services|repositories|utils|nlp` copies removed (Task 4). All 16
-  chatbot-insight endpoints re-verified 200 after move.
+All 16 chatbot-insight endpoints re-verified 200 after the move.
 
 ---
 
-## 6. OLD DIRECTORIES REMOVED
+## 7. OLD DIRECTORIES REMOVED — confirmed gone
 
-**STATUS: DONE (Task 6, commit `630caf6`).**
-
-`backend/src/` does not exist. Deleted: `src/routes`, `src/controllers`,
+**STATUS: DONE.** `backend/src/` **does not exist** (`Test-Path` → `False`).
+Deleted in Task 6 (commit `630caf6`): `src/routes`, `src/controllers`,
 `src/models`, `src/middlewares`, `src/services`, `src/repositories`,
 `src/utils`, `src/nlp`, `src/scripts`. Import-sweep immediately before deletion:
-**zero `require` of `src/`** in the mounted tree (server.js → `route/index.js` →
-`route/*` → `controller|middleware|model|nlp|util`). Scripts relocated to
-`backend/scripts/` with `../model/*` deps; `package.json` `seed`/`reset` paths
-updated (`node --check` passed on all three scripts).
+**zero `require` of `src/`** in the mounted tree.
+
+Also removed in the FIX pass:
+
+- `backend/utils/` — orphan duplicate of `util/` (last `utils/` reference,
+  `controller/_datasetCrud.factory.js`, re-pointed to `../util/validate`; commit
+  `a5c2184`). Search evidence: `grep "utils/"` → **0 matches** in `backend/**/*.js`.
+- `_check_bulan.js` (repo root) — orphan dev script (local-mongo fallback).
+- `frontend/src/components/management/UMAssignmentModal.jsx` — orphan component
+  (Unit Management stayed deleted in Task 0).
+
+Current `backend/` top-level dirs: `connection`, `controller`, `middleware`,
+`model`, `nlp`, `route`, `scripts`, `util` (+ `node_modules`).
 
 ---
 
-## 7. REGRESSION CHECK — per-role login + representative calls
+## 8. FULL REGRESSION CHECK — all four roles, end-to-end
 
-**STATUS: COMPLETE.** Final sweep run after the last Task-6 deletion of `src/`
-(superadmin / government / farmer_owner / management-403 / auth-failures).
+Live server (main + `sugi_insights` DBs connected). A `farmer` role account was
+created for the check; all calls used real JWTs from `POST /api/auth/login`.
 
 | Role | Representative calls | Result |
 |---|---|---|
-| `superadmin` | auth/me, farmers, master-data/farms, master/skor-pph, lifecycle/plantings, sales, expenses, assignments, settings/profile, filters, insights, management/kpi, chatbot-insight/insights | all 200 |
-| `government` | dashboard/govt 200; management/kpi → **403** (expected `isManagement` excludes); master/dataset read 200; chatbot-insight/insights 200 | ✓ |
-| `farmer_owner` | dashboard/farmer/v2 200; dashboard/govt → **403** (isGovernment); chatbot-insight/insights → **403** (isGovernment) | ✓ |
-| no token | chatbot-insight, dashboard, insights, bulk-import → **401** | ✓ |
+| `superadmin` | auth/me, farmers, master-data/farms, master/skor-pph, lifecycle/plantings, sales, expenses, assignments, settings/profile, filters, insights, management/kpi, chatbot-insight/insights, dashboard/govt, dashboard/farmer/v2 | **all 200** |
+| `government` | dashboard/govt 200, chatbot-insight/insights 200, master/skor-pph 200; management/kpi → **403** (isManagement excludes) | ✓ |
+| `farmer_owner` | dashboard/farmer/v2 200, management/kpi 200, master-data/farms 200; dashboard/govt → **403**, chatbot-insight → **403** (isGovernment) | ✓ |
+| `farmer` | dashboard/farmer/v2 200, filters 200, insights 200; dashboard/govt → **403**, chatbot-insight → **403**, management/kpi → **403** | ✓ |
+| no token | dashboard/farmer/v2 → **401**, chatbot-insight → **401**, master/skor-pph → **401** | ✓ |
 | mis-cased path | `/api/nonexistent-xyz` → **404** envelope | ✓ |
 
-Envelope spot-checks: `settings/profile` `{success,data}`; `PUT
-settings/profile {phone}` → **200** (previously 500 — `isPhone` now exported);
-`filters` `{success,data:{years,…}}`; lifecycle lists `{success,true,data:[…]}`;
-bulk-import empty → `400 {success:false,message}`; lifecycle POST `createdBy`
-populated (the `req.user.id` fix); DELETE → `{success:true}`; chatbot-insight 15
-GETs all `success=true`; semantic-search `?q=harga` 200.
+Envelope spot-checks: `settings/profile` `{success,data}`; `PUT settings/profile
+{phone}` → **200** (`isPhone` exported); `filters` `{success,data:{years,…}}`;
+lifecycle lists `{success,data:[…]}`; bulk-import empty → `400
+{success:false,message}`; lifecycle POST `createdBy` populated (`req.user.id`
+fix); DELETE → `{success:true}`; chatbot-insight GETs all `success=true`;
+`semantic-search ?q=harga` 200.
+
+**Regression caught & fixed in this final pass:** `GET /dashboard/farmer/v2`
+was briefly public after the FIX-pass per-route guard refactor (the Task-3
+`router.use(authenticate)` was dropped when `/govt` gained `isGovernment`).
+Restored in commit `fd6b173`; re-verified 401 without token, 200 for all four
+roles.
 
 ---
 
-## 8. OUTSTANDING ITEMS — deferred to Phase 3 or human review
+## 9. OUTSTANDING ITEMS — Phase 3 or human review
 
 1. **Credential rotation (HUMAN ACTION ITEM):** confirm leaked historical
    `MONGO_URI` password `f392wbfmUsSn1QfF` and `JWT_SECRET=supersecret` are
    revoked at the provider level. Phase 2 commits no `.env` value.
-2. **Frontend companion cleanup (FIX pass):** orphan
-   `frontend/src/components/management/UMAssignmentModal.jsx` **removed** (dead
-   code — Unit Management stayed deleted in Task 0).
-3. **Dev-only scripts:** `scripts/seed.js`/`reset.js`/`seedSuperAdmin.js` retain
+2. **Orphan frontend client:** `frontend/src/api/dashboardApi.js` is not
+   imported anywhere and targets legacy paths `/dashboard/farmer` +
+   `/dashboard/government` (no longer mounted). Safe to delete in Phase 3.
+3. **Dead model (pre-existing):** `Organization.js` was in `src/models/` but is
+   not imported by any mounted module; not carried over. Verify nothing depends
+   on it before Phase 3.
+4. **Dev-only scripts:** `scripts/seed.js`/`reset.js`/`seedSuperAdmin.js` retain
    `mongodb://localhost:27017/sugi-dashboard-demo` fallbacks for local dev
-   (runtime paths are hardened; non-blocking). Orphan root-level `_check_bulan.js`
-   **removed** in the FIX pass.
-4. **Envelope alias tolerance:** `message`/`error` dual-key convention (§4) is a
-   documented pragmatic standard, not a one-key canon; revisit if the frontend
-   migrates to a single error key.
-5. **Flagged design decisions kept:** master-data ops feature is
-   `authenticate`-only (owner farm scoping is the guard); assignments allow
-   government read; `isGovernment` restricts the 13 government datasets to
-   `superadmin|government` (farmer_owner write access can be added deliberately
-   if a business need appears).
-6. **Docs:** this report supersedes the PARTIAL version for Phase 2 status;
-   `PHASE1_COMPLETION_REPORT.md` and `PHASE2_PREWORK_ADDENDUM.md` remain as
-   historical records of Phase 1 + pre-work.
+   (runtime paths hardened; non-blocking).
+5. **Envelope alias tolerance:** `message`/`error` dual-key convention (§5) is a
+   documented pragmatic standard; revisit if the frontend migrates to a single
+   error key.
+6. **Flagged design decisions kept:** ops master-data `authenticate`-only (owner
+   scoping); assignments allow government read; `isGovernment` restricts the 13
+   datasets to `superadmin|government` (farmer_owner write can be added
+   deliberately if a business need appears).
