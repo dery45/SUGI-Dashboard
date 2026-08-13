@@ -15,15 +15,15 @@ class Preprocessor {
 
   tokenize(text) {
     if (!text) return [];
-    return text.split(/\s+/).filter(t => t.length > 1);
+    return text.split(/\s+/).filter((t) => t.length > 1);
   }
 
   removeStopwords(tokens) {
-    return tokens.filter(t => !stopwords.has(t));
+    return tokens.filter((t) => !stopwords.has(t));
   }
 
   stemTokens(tokens) {
-    return tokens.map(t => stemmer.stem(t));
+    return tokens.map((t) => stemmer.stem(t));
   }
 
   process(text) {

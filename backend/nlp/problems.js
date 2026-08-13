@@ -61,14 +61,16 @@ class ProblemMiner {
     }
 
     const typeDistribution = {};
-    problems.forEach(p => { typeDistribution[p.type] = (typeDistribution[p.type] || 0) + 1; });
+    problems.forEach((p) => {
+      typeDistribution[p.type] = (typeDistribution[p.type] || 0) + 1;
+    });
 
     return {
       problems: problems.sort((a, b) => b.severity - a.severity),
       total: problems.length,
       typeDistribution: Object.entries(typeDistribution).map(([type, count]) => ({ type, count })),
       topProblems: problems
-        .filter(p => p.severity >= 7)
+        .filter((p) => p.severity >= 7)
         .sort((a, b) => b.severity - a.severity)
         .slice(0, 10),
     };
@@ -87,7 +89,7 @@ class ProblemMiner {
   _extractEntities(text) {
     const entityExtractor = require('./entities');
     const entities = entityExtractor.extract(text);
-    return entities.map(e => ({ value: e.value, type: e.type }));
+    return entities.map((e) => ({ value: e.value, type: e.type }));
   }
 
   _clean(text) {

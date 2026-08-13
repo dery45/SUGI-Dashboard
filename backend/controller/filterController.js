@@ -1,16 +1,28 @@
-const mongoose = require('mongoose');
 const cache = require('../util/cache');
 
 const MODELS = [
-  'KetidakcukupanNasional', 'KetidakcukupanProvinsi', 'KonsumsiPerJenis',
-  'PenyaluranDonasi', 'ProyeksiNeraca', 'GerakanPanganMurah',
-  'HargaKonsumenProvinsi', 'HargaKonsumenNasional', 'HargaProdusenNasional',
-  'HargaProdusenProvinsi', 'SkorPPH', 'PanganTerselamatkan', 'CadanganPanganProvinsi'
+  'KetidakcukupanNasional',
+  'KetidakcukupanProvinsi',
+  'KonsumsiPerJenis',
+  'PenyaluranDonasi',
+  'ProyeksiNeraca',
+  'GerakanPanganMurah',
+  'HargaKonsumenProvinsi',
+  'HargaKonsumenNasional',
+  'HargaProdusenNasional',
+  'HargaProdusenProvinsi',
+  'SkorPPH',
+  'PanganTerselamatkan',
+  'CadanganPanganProvinsi',
 ];
 
 const COMMODITY_SOURCES = [
-  'KonsumsiPerJenis', 'ProyeksiNeraca', 'HargaKonsumenNasional',
-  'HargaKonsumenProvinsi', 'HargaProdusenNasional', 'HargaProdusenProvinsi'
+  'KonsumsiPerJenis',
+  'ProyeksiNeraca',
+  'HargaKonsumenNasional',
+  'HargaKonsumenProvinsi',
+  'HargaProdusenNasional',
+  'HargaProdusenProvinsi',
 ];
 
 const PROVINCE_SOURCES = [
@@ -18,18 +30,32 @@ const PROVINCE_SOURCES = [
   { model: 'HargaKonsumenProvinsi', field: 'nama_provinsi' },
   { model: 'HargaProdusenProvinsi', field: 'nama_provinsi' },
   { model: 'GerakanPanganMurah', field: 'provinsi' },
-  { model: 'CadanganPanganProvinsi', field: 'wilayah' }
+  { model: 'CadanganPanganProvinsi', field: 'wilayah' },
 ];
 
 const MONTH_ORDER = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  'Januari',
+  'Februari',
+  'Maret',
+  'April',
+  'Mei',
+  'Juni',
+  'Juli',
+  'Agustus',
+  'September',
+  'Oktober',
+  'November',
+  'Desember',
 ];
 
 const CACHE_TTL = 300000;
 
 function safeModel(name) {
-  try { return require(`../model/${name}`); } catch { return null; }
+  try {
+    return require(`../model/${name}`);
+  } catch {
+    return null;
+  }
 }
 
 exports.getFilterOptions = async (req, res) => {
@@ -41,7 +67,7 @@ exports.getFilterOptions = async (req, res) => {
       getDistinctYears(),
       getDistinctCommodities(),
       getDistinctProvinces(),
-      Promise.resolve(MONTH_ORDER)
+      Promise.resolve(MONTH_ORDER),
     ]);
 
     const result = { years, months, commodities, provinces };
@@ -60,8 +86,12 @@ async function getDistinctYears() {
     if (!Model) continue;
     try {
       const years = await Model.distinct('tahun', { tahun: { $ne: null, $ne: '' } });
-      years.forEach(y => { if (y) allYears.add(String(y)); });
-    } catch { /* skip */ }
+      years.forEach((y) => {
+        if (y) allYears.add(String(y));
+      });
+    } catch {
+      /* skip */
+    }
   }
   return [...allYears].sort((a, b) => Number(b) - Number(a));
 }
@@ -73,8 +103,12 @@ async function getDistinctCommodities() {
     if (!Model) continue;
     try {
       const items = await Model.distinct('komoditas', { komoditas: { $ne: null, $ne: '' } });
-      items.forEach(c => { if (c) all.add(String(c)); });
-    } catch { /* skip */ }
+      items.forEach((c) => {
+        if (c) all.add(String(c));
+      });
+    } catch {
+      /* skip */
+    }
   }
   return [...all].sort((a, b) => a.localeCompare(b, 'id'));
 }
@@ -86,8 +120,12 @@ async function getDistinctProvinces() {
     if (!Model) continue;
     try {
       const items = await Model.distinct(field, { [field]: { $ne: null, $ne: '' } });
-      items.forEach(p => { if (p) all.add(String(p)); });
-    } catch { /* skip */ }
+      items.forEach((p) => {
+        if (p) all.add(String(p));
+      });
+    } catch {
+      /* skip */
+    }
   }
   return [...all].sort((a, b) => a.localeCompare(b, 'id'));
 }

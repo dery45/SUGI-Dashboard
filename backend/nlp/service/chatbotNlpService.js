@@ -6,7 +6,7 @@ class ChatbotNlpService {
     return nlpPipeline.getOrProcess();
   }
 
-  async getActivityData(filters = {}) {
+  async getActivityData(_filters = {}) {
     await this._ensureProcessed();
     const results = await chatbotNlpRepository.getAllResults();
 
@@ -15,7 +15,7 @@ class ChatbotNlpService {
     const summaryLengths = [];
     let totalChars = 0;
 
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.pushed_at) {
         const day = new Date(r.pushed_at).toISOString().slice(0, 10);
         sessionsPerDay[day] = (sessionsPerDay[day] || 0) + 1;
@@ -29,8 +29,7 @@ class ChatbotNlpService {
     });
 
     const dayEntries = Object.entries(sessionsPerDay).sort(([a], [b]) => a.localeCompare(b));
-    const avgLength = summaryLengths.length > 0
-      ? Math.round(totalChars / summaryLengths.length) : 0;
+    const avgLength = summaryLengths.length > 0 ? Math.round(totalChars / summaryLengths.length) : 0;
 
     const heatmap = [];
     for (let d = 0; d < 7; d++) {
@@ -38,12 +37,12 @@ class ChatbotNlpService {
         heatmap.push({ day: d, hour: h, value: 0 });
       }
     }
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.pushed_at) {
         const d = new Date(r.pushed_at);
         const day = d.getDay();
         const hour = d.getHours();
-        const idx = heatmap.findIndex(h => h.day === day && h.hour === hour);
+        const idx = heatmap.findIndex((h) => h.day === day && h.hour === hour);
         if (idx >= 0) heatmap[idx].value++;
       }
     });
@@ -61,7 +60,7 @@ class ChatbotNlpService {
     };
   }
 
-  async getTopicData(filters = {}) {
+  async getTopicData(_filters = {}) {
     await this._ensureProcessed();
     const topicModel = await chatbotNlpRepository.getTopicModel();
     const keywordRanking = await chatbotNlpRepository.getKeywordRanking();
@@ -69,12 +68,13 @@ class ChatbotNlpService {
     return {
       bertopic: topicModel?.lda || null,
       lda: topicModel?.lda || null,
-      topicDistribution: topicModel?.lda?.topics?.map(t => ({
-        topicId: t.topicId,
-        label: t.label,
-        count: t.documentCount,
-        words: t.words,
-      })) || [],
+      topicDistribution:
+        topicModel?.lda?.topics?.map((t) => ({
+          topicId: t.topicId,
+          label: t.label,
+          count: t.documentCount,
+          words: t.words,
+        })) || [],
       topicTimeline: [],
       tfidfRanking: topicModel?.tfidf?.overallRanking || [],
       keywordRanking: keywordRanking || [],
@@ -85,7 +85,7 @@ class ChatbotNlpService {
     };
   }
 
-  async getEntityData(filters = {}) {
+  async getEntityData(_filters = {}) {
     await this._ensureProcessed();
     const [entityStats, typeDistribution, entityTimeline] = await Promise.all([
       chatbotNlpRepository.getEntityStats(),
@@ -95,9 +95,9 @@ class ChatbotNlpService {
 
     const results = await chatbotNlpRepository.getAllResults();
     const allEntities = [];
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.entities) {
-        r.entities.forEach(e => {
+        r.entities.forEach((e) => {
           allEntities.push({ ...e, session_id: r.session_id, pushed_at: r.pushed_at });
         });
       }
@@ -111,7 +111,7 @@ class ChatbotNlpService {
     };
   }
 
-  async getNerData(filters = {}) {
+  async getNerData(_filters = {}) {
     await this._ensureProcessed();
     const results = await chatbotNlpRepository.getAllResults();
 
@@ -126,36 +126,63 @@ class ChatbotNlpService {
     const percentages = [];
     const technologies = [];
 
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.entities) {
-        r.entities.forEach(e => {
+        r.entities.forEach((e) => {
           const entry = { ...e, session_id: r.session_id, insight_id: r.insight_id, pushed_at: r.pushed_at };
           switch (e.type) {
-            case 'Komoditas': commodities.push(entry); break;
-            case 'Provinsi': case 'Kota': locations.push(entry); break;
-            case 'Organisasi': organizations.push(entry); break;
-            case 'Cuaca': weather.push(entry); break;
-            case 'Penyakit/Hama': diseases.push(entry); break;
-            case 'Pupuk/Pestisida': fertilizers.push(entry); break;
-            case 'Ukuran': measurements.push(entry); break;
-            case 'Tanggal': dates.push(entry); break;
-            case 'Persentase': percentages.push(entry); break;
-            case 'Teknologi': technologies.push(entry); break;
+            case 'Komoditas':
+              commodities.push(entry);
+              break;
+            case 'Provinsi':
+            case 'Kota':
+              locations.push(entry);
+              break;
+            case 'Organisasi':
+              organizations.push(entry);
+              break;
+            case 'Cuaca':
+              weather.push(entry);
+              break;
+            case 'Penyakit/Hama':
+              diseases.push(entry);
+              break;
+            case 'Pupuk/Pestisida':
+              fertilizers.push(entry);
+              break;
+            case 'Ukuran':
+              measurements.push(entry);
+              break;
+            case 'Tanggal':
+              dates.push(entry);
+              break;
+            case 'Persentase':
+              percentages.push(entry);
+              break;
+            case 'Teknologi':
+              technologies.push(entry);
+              break;
           }
         });
       }
     });
 
     const commodityCounts = {};
-    commodities.forEach(c => { commodityCounts[c.value] = (commodityCounts[c.value] || 0) + 1; });
+    commodities.forEach((c) => {
+      commodityCounts[c.value] = (commodityCounts[c.value] || 0) + 1;
+    });
     const locationCounts = {};
-    locations.forEach(l => { locationCounts[l.value] = (locationCounts[l.value] || 0) + 1; });
+    locations.forEach((l) => {
+      locationCounts[l.value] = (locationCounts[l.value] || 0) + 1;
+    });
 
     return {
       commodities: Object.entries(commodityCounts)
-        .sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count })),
+        .sort((a, b) => b[1] - a[1])
+        .map(([value, count]) => ({ value, count })),
       locations: Object.entries(locationCounts)
-        .sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count })),
+        .sort((a, b) => b[1] - a[1])
+        .map(([value, count]) => ({ value, count })),
       organizations,
       weather,
       diseases,
@@ -168,7 +195,7 @@ class ChatbotNlpService {
     };
   }
 
-  async getIntentData(filters = {}) {
+  async getIntentData(_filters = {}) {
     await this._ensureProcessed();
     const [intentDistribution, intentTimeline, intentByCommodity, intentByLocation] = await Promise.all([
       chatbotNlpRepository.getIntentDistribution(),
@@ -205,9 +232,9 @@ class ChatbotNlpService {
     const lowerQuery = query.toLowerCase();
     const matches = [];
 
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.entities) {
-        r.entities.forEach(e => {
+        r.entities.forEach((e) => {
           if (e.value.toLowerCase().includes(lowerQuery) || e.type.toLowerCase().includes(lowerQuery)) {
             matches.push({
               entity: e,
@@ -231,22 +258,31 @@ class ChatbotNlpService {
   }
 
   _generateWordClouds(results) {
-    const posWords = {}, negWords = {}, neuWords = {};
-    results.forEach(r => {
+    const posWords = {},
+      negWords = {},
+      neuWords = {};
+    results.forEach((r) => {
       const tokens = r.stemmed_tokens || [];
       if (r.sentiment === 'Positive') {
-        tokens.forEach(t => { posWords[t] = (posWords[t] || 0) + 1; });
+        tokens.forEach((t) => {
+          posWords[t] = (posWords[t] || 0) + 1;
+        });
       } else if (r.sentiment === 'Negative') {
-        tokens.forEach(t => { negWords[t] = (negWords[t] || 0) + 1; });
+        tokens.forEach((t) => {
+          negWords[t] = (negWords[t] || 0) + 1;
+        });
       } else {
-        tokens.forEach(t => { neuWords[t] = (neuWords[t] || 0) + 1; });
+        tokens.forEach((t) => {
+          neuWords[t] = (neuWords[t] || 0) + 1;
+        });
       }
     });
 
-    const toArray = obj => Object.entries(obj)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 50)
-      .map(([word, weight]) => ({ word, weight }));
+    const toArray = (obj) =>
+      Object.entries(obj)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 50)
+        .map(([word, weight]) => ({ word, weight }));
 
     return {
       positive: toArray(posWords),

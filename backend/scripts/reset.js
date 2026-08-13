@@ -7,7 +7,11 @@ async function reset() {
 
   const collections = await mongoose.connection.db.listCollections().toArray();
   for (const col of collections) {
-    if (['users', 'croptypes', 'activitytypes', 'farmmasters', 'blocks', 'farmerassignments', 'taskassignments'].includes(col.name)) {
+    if (
+      ['users', 'croptypes', 'activitytypes', 'farmmasters', 'blocks', 'farmerassignments', 'taskassignments'].includes(
+        col.name
+      )
+    ) {
       await mongoose.connection.db.dropCollection(col.name);
       console.log(`Dropped ${col.name}`);
     }
@@ -18,4 +22,7 @@ async function reset() {
   process.exit(0);
 }
 
-reset().catch(e => { console.error('Reset error:', e); process.exit(1); });
+reset().catch((e) => {
+  console.error('Reset error:', e);
+  process.exit(1);
+});

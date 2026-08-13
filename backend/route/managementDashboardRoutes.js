@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, isManagement } = require('../middleware/auth');
-const { getKpi, getYieldTrendHandler, getUMPerformanceHandler } = require('../controller/managementDashboardController');
+const {
+  getKpi,
+  getYieldTrendHandler,
+  getUMPerformanceHandler,
+} = require('../controller/managementDashboardController');
 
 /**
  * @swagger

@@ -12,9 +12,7 @@ const options = {
         'Bearer-token protected except `POST /auth/login` (public). ' +
         'Envelope is `{ success, data }` on 2xx and `{ success, message }` on 4xx. ',
     },
-    servers: [
-      { url: 'http://localhost:3000/api', description: 'Local development (backend on port 3000)' },
-    ],
+    servers: [{ url: 'http://localhost:3000/api', description: 'Local development (backend on port 3000)' }],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -29,7 +27,10 @@ const options = {
           description:
             'Error envelope. On 4xx the message lives in `message`; on 5xx (and a few specific controllers) it may instead live in `error`. Both keys are officially tolerated — see anyOf.',
           anyOf: [
-            { type: 'object', properties: { success: { type: 'boolean', example: false }, message: { type: 'string' } } },
+            {
+              type: 'object',
+              properties: { success: { type: 'boolean', example: false }, message: { type: 'string' } },
+            },
             { type: 'object', properties: { success: { type: 'boolean', example: false }, error: { type: 'string' } } },
           ],
         },
@@ -47,7 +48,10 @@ const options = {
     },
     tags: [
       { name: 'Auth', description: 'Login + current-user info' },
-      { name: 'Master Data — Operational', description: 'Operational master data: farms, blocks, crop types, activity types' },
+      {
+        name: 'Master Data — Operational',
+        description: 'Operational master data: farms, blocks, crop types, activity types',
+      },
       { name: 'Food Security Datasets', description: '13 dataset CRUD endpoints via the shared factory under /master' },
       { name: 'Lifecycle', description: 'Land, crop cycle, activity, harvest period management' },
       { name: 'Sales', description: 'Sales records (management roles)' },
@@ -64,9 +68,7 @@ const options = {
       { name: 'Chatbot Insight', description: 'NLP chatbot dashboards, process, semantic search' },
     ],
   },
-  apis: [
-    path.join(__dirname, '../route/*.js').replace(/\\/g, '/'),
-  ],
+  apis: [path.join(__dirname, '../route/*.js').replace(/\\/g, '/')],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
@@ -110,9 +112,12 @@ function datasetPath(slug) {
         security: [{ bearerAuth: [] }],
         parameters: datasetListParams(),
         responses: {
-          '200': { description: 'Paged list', content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } } },
-          '401': { $ref: '#/components/schemas/Error' },
-          '403': { $ref: '#/components/schemas/Error' },
+          200: {
+            description: 'Paged list',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } },
+          },
+          401: { $ref: '#/components/schemas/Error' },
+          403: { $ref: '#/components/schemas/Error' },
         },
       },
       post: {
@@ -122,13 +127,20 @@ function datasetPath(slug) {
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
-          content: { 'application/json': { schema: { type: 'object', description: `Document fields for \`${slug}\` (see model).` } } },
+          content: {
+            'application/json': {
+              schema: { type: 'object', description: `Document fields for \`${slug}\` (see model).` },
+            },
+          },
         },
         responses: {
-          '201': { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } } },
-          '400': { $ref: '#/components/schemas/Error' },
-          '401': { $ref: '#/components/schemas/Error' },
-          '403': { $ref: '#/components/schemas/Error' },
+          201: {
+            description: 'Created',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } },
+          },
+          400: { $ref: '#/components/schemas/Error' },
+          401: { $ref: '#/components/schemas/Error' },
+          403: { $ref: '#/components/schemas/Error' },
         },
       },
     },
@@ -139,10 +151,13 @@ function datasetPath(slug) {
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'One document', content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } } },
-          '401': { $ref: '#/components/schemas/Error' },
-          '403': { $ref: '#/components/schemas/Error' },
-          '404': { $ref: '#/components/schemas/Error' },
+          200: {
+            description: 'One document',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } },
+          },
+          401: { $ref: '#/components/schemas/Error' },
+          403: { $ref: '#/components/schemas/Error' },
+          404: { $ref: '#/components/schemas/Error' },
         },
       },
       put: {
@@ -152,14 +167,19 @@ function datasetPath(slug) {
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
-          content: { 'application/json': { schema: { type: 'object', description: `Partial fields for \`${slug}\`.` } } },
+          content: {
+            'application/json': { schema: { type: 'object', description: `Partial fields for \`${slug}\`.` } },
+          },
         },
         responses: {
-          '200': { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } } },
-          '400': { $ref: '#/components/schemas/Error' },
-          '401': { $ref: '#/components/schemas/Error' },
-          '403': { $ref: '#/components/schemas/Error' },
-          '404': { $ref: '#/components/schemas/Error' },
+          200: {
+            description: 'Updated',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DatasetEnvelope' } } },
+          },
+          400: { $ref: '#/components/schemas/Error' },
+          401: { $ref: '#/components/schemas/Error' },
+          403: { $ref: '#/components/schemas/Error' },
+          404: { $ref: '#/components/schemas/Error' },
         },
       },
       delete: {
@@ -168,10 +188,17 @@ function datasetPath(slug) {
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
-          '200': { description: 'Deleted', content: { 'application/json': { schema: { type: 'object', properties: { success: { type: 'boolean', example: true } } } } } },
-          '401': { $ref: '#/components/schemas/Error' },
-          '403': { $ref: '#/components/schemas/Error' },
-          '404': { $ref: '#/components/schemas/Error' },
+          200: {
+            description: 'Deleted',
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { success: { type: 'boolean', example: true } } },
+              },
+            },
+          },
+          401: { $ref: '#/components/schemas/Error' },
+          403: { $ref: '#/components/schemas/Error' },
+          404: { $ref: '#/components/schemas/Error' },
         },
       },
     },

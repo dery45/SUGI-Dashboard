@@ -4,15 +4,39 @@ const { required, isObjectId, isNumber, minValue, validate, errorResponse } = re
 // POST /api/sales — Record a new sale
 const createSale = async (req, res) => {
   try {
-    const { crop_cycle_id, farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg, transport_notes, invoice_ref, sale_date } = req.body;
+    const {
+      crop_cycle_id,
+      farm_id,
+      buyer_name,
+      buyer_type,
+      quantity_kg,
+      price_per_kg,
+      transport_notes,
+      invoice_ref,
+      sale_date,
+    } = req.body;
 
-    const errs = validate({ farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg }, {
-      farm_id:     [[required, 'Farm'], [isObjectId, 'Farm']],
-      buyer_name:  [[required, 'Nama Pembeli']],
-      buyer_type:  [[required, 'Tipe Pembeli']],
-      quantity_kg: [[required, 'Jumlah (Kg)'], [isNumber, 'Jumlah (Kg)'], [minValue, 0, 'Jumlah (Kg)']],
-      price_per_kg:[[required, 'Harga/Kg'], [isNumber, 'Harga/Kg'], [minValue, 0, 'Harga/Kg']],
-    });
+    const errs = validate(
+      { farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg },
+      {
+        farm_id: [
+          [required, 'Farm'],
+          [isObjectId, 'Farm'],
+        ],
+        buyer_name: [[required, 'Nama Pembeli']],
+        buyer_type: [[required, 'Tipe Pembeli']],
+        quantity_kg: [
+          [required, 'Jumlah (Kg)'],
+          [isNumber, 'Jumlah (Kg)'],
+          [minValue, 0, 'Jumlah (Kg)'],
+        ],
+        price_per_kg: [
+          [required, 'Harga/Kg'],
+          [isNumber, 'Harga/Kg'],
+          [minValue, 0, 'Harga/Kg'],
+        ],
+      }
+    );
     if (errs) return errorResponse(res, errs);
     if (crop_cycle_id && !isObjectId(crop_cycle_id, null)) {
       const objErr = { crop_cycle_id: 'Siklus tanam tidak valid' };
@@ -54,17 +78,35 @@ const listSales = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [sales, total] = await Promise.all([
-      Sale.find(query).populate('farm_id', 'name').populate('crop_cycle_id', 'crop_type status').sort({ sale_date: -1 }).skip(skip).limit(parseInt(limit)),
-      Sale.countDocuments(query)
+      Sale.find(query)
+        .populate('farm_id', 'name')
+        .populate('crop_cycle_id', 'crop_type status')
+        .sort({ sale_date: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Sale.countDocuments(query),
     ]);
 
     // Aggregate totals
     const totals = await Sale.aggregate([
       { $match: query },
-      { $group: { _id: null, totalKg: { $sum: '$quantity_kg' }, totalRevenue: { $sum: '$total_revenue' }, avgPrice: { $avg: '$price_per_kg' } } }
+      {
+        $group: {
+          _id: null,
+          totalKg: { $sum: '$quantity_kg' },
+          totalRevenue: { $sum: '$total_revenue' },
+          avgPrice: { $avg: '$price_per_kg' },
+        },
+      },
     ]);
 
-    res.json({ success: true, data: sales, total, page: parseInt(page), totals: totals[0] || { totalKg: 0, totalRevenue: 0, avgPrice: 0 } });
+    res.json({
+      success: true,
+      data: sales,
+      total,
+      page: parseInt(page),
+      totals: totals[0] || { totalKg: 0, totalRevenue: 0, avgPrice: 0 },
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

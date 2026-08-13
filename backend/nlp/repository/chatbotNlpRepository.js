@@ -4,7 +4,7 @@ const conn = require('../../model/insights');
 class ChatbotNlpRepository {
   async bulkUpsert(results) {
     if (!results || results.length === 0) return;
-    const ops = results.map(r => ({
+    const ops = results.map((r) => ({
       updateOne: {
         filter: { insight_id: r.insight_id },
         update: { $set: r },
@@ -36,9 +36,13 @@ class ChatbotNlpRepository {
     await coll.insertOne(model);
     const count = await coll.countDocuments();
     if (count > 5) {
-      const old = await coll.find().sort({ computed_at: 1 }).limit(count - 5).toArray();
+      const old = await coll
+        .find()
+        .sort({ computed_at: 1 })
+        .limit(count - 5)
+        .toArray();
       if (old.length > 0) {
-        await coll.deleteMany({ _id: { $in: old.map(o => o._id) } });
+        await coll.deleteMany({ _id: { $in: old.map((o) => o._id) } });
       }
     }
     return model;

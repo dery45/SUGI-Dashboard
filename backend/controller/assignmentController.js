@@ -1,6 +1,5 @@
 const FarmerAssignment = require('../model/FarmerAssignment');
 const TaskAssignment = require('../model/TaskAssignment');
-const User = require('../model/User');
 
 const listFarmerAssignments = async (req, res) => {
   try {
@@ -26,12 +25,21 @@ const listFarmerAssignments = async (req, res) => {
       .lean();
 
     // Translate access_stages for frontend display
-    const stageLabels = { Land_Preparation: 'Persiapan Lahan', Planting: 'Penanaman', Maintenance: 'Perawatan', Harvesting: 'Panen' };
-    data.forEach(d => {
-      d.access_stages_labels = (d.access_stages || []).map(s => stageLabels[s] || s);
+    const stageLabels = {
+      Land_Preparation: 'Persiapan Lahan',
+      Planting: 'Penanaman',
+      Maintenance: 'Perawatan',
+      Harvesting: 'Panen',
+    };
+    data.forEach((d) => {
+      d.access_stages_labels = (d.access_stages || []).map((s) => stageLabels[s] || s);
     });
 
-    res.json({ success: true, data, meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) } });
+    res.json({
+      success: true,
+      data,
+      meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -59,16 +67,16 @@ const createFarmerAssignment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Farmer dan block wajib diisi' });
     }
 
-    const validatedStages = Array.isArray(access_stages) ? access_stages.filter(s =>
-      ['Land_Preparation', 'Planting', 'Maintenance', 'Harvesting'].includes(s)
-    ) : [];
+    const validatedStages = Array.isArray(access_stages)
+      ? access_stages.filter((s) => ['Land_Preparation', 'Planting', 'Maintenance', 'Harvesting'].includes(s))
+      : [];
 
-    const assignments = blocks.map(b => ({
+    const assignments = blocks.map((b) => ({
       farmer,
       block: b,
       farm,
       access_stages: validatedStages,
-      assigned_by: req.user.id
+      assigned_by: req.user.id,
     }));
 
     for (const a of assignments) {
@@ -80,7 +88,10 @@ const createFarmerAssignment = async (req, res) => {
       await FarmerAssignment.create(a);
     }
 
-    const data = await FarmerAssignment.find({ farmer }).populate('block', 'name code').populate('farm', 'name code').lean();
+    const data = await FarmerAssignment.find({ farmer })
+      .populate('block', 'name code')
+      .populate('farm', 'name code')
+      .lean();
     res.status(201).json({ success: true, data });
   } catch (error) {
     if (error.code === 11000) return res.status(400).json({ success: false, message: 'Assignment sudah ada' });
@@ -93,9 +104,9 @@ const updateFarmerAssignment = async (req, res) => {
     const { access_stages, status } = req.body;
     const update = {};
     if (access_stages !== undefined) {
-      update.access_stages = Array.isArray(access_stages) ? access_stages.filter(s =>
-        ['Land_Preparation', 'Planting', 'Maintenance', 'Harvesting'].includes(s)
-      ) : [];
+      update.access_stages = Array.isArray(access_stages)
+        ? access_stages.filter((s) => ['Land_Preparation', 'Planting', 'Maintenance', 'Harvesting'].includes(s))
+        : [];
     }
     if (status !== undefined) update.status = status;
 
@@ -107,8 +118,13 @@ const updateFarmerAssignment = async (req, res) => {
 
     if (!data) return res.status(404).json({ success: false, message: 'Assignment tidak ditemukan' });
 
-    const stageLabels = { Land_Preparation: 'Persiapan Lahan', Planting: 'Penanaman', Maintenance: 'Perawatan', Harvesting: 'Panen' };
-    data.access_stages_labels = (data.access_stages || []).map(s => stageLabels[s] || s);
+    const stageLabels = {
+      Land_Preparation: 'Persiapan Lahan',
+      Planting: 'Penanaman',
+      Maintenance: 'Perawatan',
+      Harvesting: 'Panen',
+    };
+    data.access_stages_labels = (data.access_stages || []).map((s) => stageLabels[s] || s);
 
     res.json({ success: true, data });
   } catch (error) {
@@ -183,5 +199,5 @@ module.exports = {
   removeFarmerAssignment,
   listTaskAssignments,
   createTaskAssignment,
-  removeTaskAssignment
+  removeTaskAssignment,
 };

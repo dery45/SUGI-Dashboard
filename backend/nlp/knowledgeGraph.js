@@ -1,5 +1,4 @@
 const relationExtractor = require('./relations');
-const preprocessor = require('./preprocessor');
 const entityExtractor = require('./entities');
 
 class KnowledgeGraph {
@@ -26,7 +25,7 @@ class KnowledgeGraph {
         nodes.get(key).sessions.add(doc.session_id);
       }
 
-      const sentences = doc.summary.split(/[.!?]+/).filter(s => s.trim().length > 15);
+      const sentences = doc.summary.split(/[.!?]+/).filter((s) => s.trim().length > 15);
       const relations = relationExtractor.extract(sentences, entities);
       allRelations = allRelations.concat(relations);
     }
@@ -35,9 +34,7 @@ class KnowledgeGraph {
       const srcKey = this._findNodeKey(nodes, r.source);
       const tgtKey = this._findNodeKey(nodes, r.target);
       if (srcKey && tgtKey && srcKey !== tgtKey) {
-        const existing = edges.find(e =>
-          e.source === srcKey && e.target === tgtKey && e.label === r.label
-        );
+        const existing = edges.find((e) => e.source === srcKey && e.target === tgtKey && e.label === r.label);
         if (existing) {
           existing.weight += r.count;
           existing.weight = Math.min(existing.weight, 10);
@@ -54,11 +51,11 @@ class KnowledgeGraph {
       }
     }
 
-    const nodeTypes = [...new Set(Array.from(nodes.values()).map(n => n.type))];
-    const relationTypes = [...new Set(edges.map(e => e.label))];
+    const nodeTypes = [...new Set(Array.from(nodes.values()).map((n) => n.type))];
+    const relationTypes = [...new Set(edges.map((e) => e.label))];
 
     return {
-      nodes: Array.from(nodes.values()).map(n => ({
+      nodes: Array.from(nodes.values()).map((n) => ({
         id: n.id,
         label: n.label,
         type: n.type,
@@ -78,13 +75,12 @@ class KnowledgeGraph {
 
   search(knowledgeGraph, query) {
     const lower = query.toLowerCase();
-    const matchingNodes = knowledgeGraph.nodes.filter(n =>
-      n.label.toLowerCase().includes(lower) || n.type.toLowerCase().includes(lower)
+    const matchingNodes = knowledgeGraph.nodes.filter(
+      (n) => n.label.toLowerCase().includes(lower) || n.type.toLowerCase().includes(lower)
     );
-    const matchingNodeIds = new Set(matchingNodes.map(n => n.id));
-    const matchingEdges = knowledgeGraph.edges.filter(e =>
-      matchingNodeIds.has(e.source) || matchingNodeIds.has(e.target) ||
-      e.label.toLowerCase().includes(lower)
+    const matchingNodeIds = new Set(matchingNodes.map((n) => n.id));
+    const matchingEdges = knowledgeGraph.edges.filter(
+      (e) => matchingNodeIds.has(e.source) || matchingNodeIds.has(e.target) || e.label.toLowerCase().includes(lower)
     );
     return { nodes: matchingNodes, edges: matchingEdges };
   }
@@ -93,14 +89,17 @@ class KnowledgeGraph {
     let nodes = knowledgeGraph.nodes;
     let edges = knowledgeGraph.edges;
 
-    if (nodeType) nodes = nodes.filter(n => n.type === nodeType);
-    if (relationType) edges = edges.filter(e => e.label === relationType);
+    if (nodeType) nodes = nodes.filter((n) => n.type === nodeType);
+    if (relationType) edges = edges.filter((e) => e.label === relationType);
 
-    const nodeIds = new Set(nodes.map(n => n.id));
-    edges = edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+    const nodeIds = new Set(nodes.map((n) => n.id));
+    edges = edges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
     const edgeNodeIds = new Set();
-    edges.forEach(e => { edgeNodeIds.add(e.source); edgeNodeIds.add(e.target); });
-    nodes = nodes.filter(n => edgeNodeIds.has(n.id));
+    edges.forEach((e) => {
+      edgeNodeIds.add(e.source);
+      edgeNodeIds.add(e.target);
+    });
+    nodes = nodes.filter((n) => edgeNodeIds.has(n.id));
 
     return { nodes, edges };
   }

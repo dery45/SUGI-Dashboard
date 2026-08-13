@@ -7,44 +7,68 @@ const { required, isNumber, minValue, isObjectId, validate, errorResponse } = re
 
 const getModel = (type) => {
   switch (type) {
-    case 'farms': return FarmMaster;
-    case 'blocks': return Block;
-    case 'crop-types': return CropType;
-    case 'activity-types': return ActivityType;
-    default: return null;
+    case 'farms':
+      return FarmMaster;
+    case 'blocks':
+      return Block;
+    case 'crop-types':
+      return CropType;
+    case 'activity-types':
+      return ActivityType;
+    default:
+      return null;
   }
 };
 
-const farmValidation = (data) => validate(data, {
-  name: [[required, 'Nama Farm']],
-  code: [[required, 'Kode Farm']],
-  total_area_ha: [[isNumber, 'Luas Area'], [minValue, 0, 'Luas Area']]
-});
+const farmValidation = (data) =>
+  validate(data, {
+    name: [[required, 'Nama Farm']],
+    code: [[required, 'Kode Farm']],
+    total_area_ha: [
+      [isNumber, 'Luas Area'],
+      [minValue, 0, 'Luas Area'],
+    ],
+  });
 
-const blockValidation = (data) => validate(data, {
-  name: [[required, 'Nama Block']],
-  code: [[required, 'Kode Block']],
-  farm: [[required, 'Farm'], [isObjectId, 'Farm']],
-  area_ha: [[required, 'Luas Area'], [isNumber, 'Luas Area'], [minValue, 0, 'Luas Area']]
-});
+const blockValidation = (data) =>
+  validate(data, {
+    name: [[required, 'Nama Block']],
+    code: [[required, 'Kode Block']],
+    farm: [
+      [required, 'Farm'],
+      [isObjectId, 'Farm'],
+    ],
+    area_ha: [
+      [required, 'Luas Area'],
+      [isNumber, 'Luas Area'],
+      [minValue, 0, 'Luas Area'],
+    ],
+  });
 
-const cropTypeValidation = (data) => validate(data, {
-  name: [[required, 'Nama Tanaman']],
-  code: [[required, 'Kode Tanaman']]
-});
+const cropTypeValidation = (data) =>
+  validate(data, {
+    name: [[required, 'Nama Tanaman']],
+    code: [[required, 'Kode Tanaman']],
+  });
 
-const activityTypeValidation = (data) => validate(data, {
-  name: [[required, 'Nama Aktivitas']],
-  code: [[required, 'Kode Aktivitas']]
-});
+const activityTypeValidation = (data) =>
+  validate(data, {
+    name: [[required, 'Nama Aktivitas']],
+    code: [[required, 'Kode Aktivitas']],
+  });
 
 const getValidation = (type) => {
   switch (type) {
-    case 'farms': return farmValidation;
-    case 'blocks': return blockValidation;
-    case 'crop-types': return cropTypeValidation;
-    case 'activity-types': return activityTypeValidation;
-    default: return null;
+    case 'farms':
+      return farmValidation;
+    case 'blocks':
+      return blockValidation;
+    case 'crop-types':
+      return cropTypeValidation;
+    case 'activity-types':
+      return activityTypeValidation;
+    default:
+      return null;
   }
 };
 
@@ -84,7 +108,11 @@ const list = (type) => async (req, res) => {
       .limit(parseInt(limit))
       .lean();
 
-    res.json({ success: true, data, meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) } });
+    res.json({
+      success: true,
+      data,
+      meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -99,14 +127,16 @@ const getById = (type) => async (req, res) => {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
     }
 
-    const data = await Model.findById(req.params.id).populate(type === 'blocks' ? 'farm' : '').lean();
+    const data = await Model.findById(req.params.id)
+      .populate(type === 'blocks' ? 'farm' : '')
+      .lean();
     if (!data) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
 
     // Farmer owner scoping for farms
     if (type === 'farms' && req.user && req.user.role === 'farmer_owner') {
       const User = require('../model/User');
       const user = await User.findById(req.user.id);
-      if (!user || !user.assigned_farms || !user.assigned_farms.some(f => f.toString() === data._id.toString())) {
+      if (!user || !user.assigned_farms || !user.assigned_farms.some((f) => f.toString() === data._id.toString())) {
         return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke farm ini' });
       }
     }
@@ -137,7 +167,8 @@ const create = (type) => async (req, res) => {
     const data = await Model.create(payload);
     res.status(201).json({ success: true, data });
   } catch (error) {
-    if (error.code === 11000) return res.status(400).json({ success: false, message: 'Data dengan kode tersebut sudah ada' });
+    if (error.code === 11000)
+      return res.status(400).json({ success: false, message: 'Data dengan kode tersebut sudah ada' });
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -151,7 +182,7 @@ const update = (type) => async (req, res) => {
     if (type === 'farms' && req.user && req.user.role === 'farmer_owner') {
       const User = require('../model/User');
       const user = await User.findById(req.user.id);
-      if (!user || !user.assigned_farms || !user.assigned_farms.some(f => f.toString() === req.params.id)) {
+      if (!user || !user.assigned_farms || !user.assigned_farms.some((f) => f.toString() === req.params.id)) {
         return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke farm ini' });
       }
     }
@@ -167,7 +198,8 @@ const update = (type) => async (req, res) => {
 
     res.json({ success: true, data });
   } catch (error) {
-    if (error.code === 11000) return res.status(400).json({ success: false, message: 'Data dengan kode tersebut sudah ada' });
+    if (error.code === 11000)
+      return res.status(400).json({ success: false, message: 'Data dengan kode tersebut sudah ada' });
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -211,7 +243,10 @@ const getAll = (type) => async (req, res) => {
       }
     }
 
-    const data = await Model.find(query).populate(type === 'blocks' ? 'farm' : '').sort({ name: 1 }).lean();
+    const data = await Model.find(query)
+      .populate(type === 'blocks' ? 'farm' : '')
+      .sort({ name: 1 })
+      .lean();
     res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -245,5 +280,5 @@ module.exports = {
   createActivityType: create('activity-types'),
   updateActivityType: update('activity-types'),
   deleteActivityType: remove('activity-types'),
-  getAllActivityTypes: getAll('activity-types')
+  getAllActivityTypes: getAll('activity-types'),
 };

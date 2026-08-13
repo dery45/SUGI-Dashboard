@@ -161,18 +161,27 @@ exports.getCoverage = async (req, res) => {
 
 exports.getInsights = async (req, res) => {
   try {
-    const [kpiData, activityData, topicData, commodityData, locationData, intentData, trendData, coverageData] = await Promise.all([
-      chatbotInsightService.getDashboardData(),
-      chatbotNlpService.getActivityData().catch(() => null),
-      chatbotNlpService.getTopicData().catch(() => null),
-      chatbotNlpService.getNerData().catch(() => null),
-      chatbotNlpService.getNerData().catch(() => null),
-      chatbotNlpService.getIntentData().catch(() => null),
-      chatbotAdvancedService.getTrends().catch(() => null),
-      chatbotAdvancedService.getCoverage().catch(() => null),
-    ]);
-    const data = await chatbotAdvancedService.getInsights(kpiData, activityData, topicData,
-      commodityData, locationData, intentData, trendData, coverageData);
+    const [kpiData, activityData, topicData, commodityData, locationData, intentData, trendData, coverageData] =
+      await Promise.all([
+        chatbotInsightService.getDashboardData(),
+        chatbotNlpService.getActivityData().catch(() => null),
+        chatbotNlpService.getTopicData().catch(() => null),
+        chatbotNlpService.getNerData().catch(() => null),
+        chatbotNlpService.getNerData().catch(() => null),
+        chatbotNlpService.getIntentData().catch(() => null),
+        chatbotAdvancedService.getTrends().catch(() => null),
+        chatbotAdvancedService.getCoverage().catch(() => null),
+      ]);
+    const data = await chatbotAdvancedService.getInsights(
+      kpiData,
+      activityData,
+      topicData,
+      commodityData,
+      locationData,
+      intentData,
+      trendData,
+      coverageData
+    );
     res.json({ success: true, data });
   } catch (error) {
     console.error('Insights error:', error);
@@ -184,7 +193,12 @@ exports.semanticSearch = async (req, res) => {
   try {
     const { q, type, intent, category, limit } = req.query;
     if (!q) return res.status(400).json({ success: false, message: 'Query parameter "q" required' });
-    const data = await chatbotAdvancedService.semanticSearch(q, { type, intent, category, limit: parseInt(limit) || 20 });
+    const data = await chatbotAdvancedService.semanticSearch(q, {
+      type,
+      intent,
+      category,
+      limit: parseInt(limit) || 20,
+    });
     res.json({ success: true, data });
   } catch (error) {
     console.error('Semantic search error:', error);

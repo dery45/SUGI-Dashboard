@@ -20,11 +20,9 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Password salah' });
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email, name: user.name },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = jwt.sign({ id: user._id, role: user.role, email: user.email, name: user.name }, JWT_SECRET, {
+      expiresIn: '24h',
+    });
 
     res.json({
       success: true,
@@ -34,8 +32,8 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone
-      }
+        phone: user.phone,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);

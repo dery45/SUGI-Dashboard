@@ -11,6 +11,7 @@ Search run: `grep -i` over `frontend/` for `um`, `unit-management`, `/api/um`,
 `um_id`, `assigned_processes`, `assigned_farms`, `UMPerformance`, `um-performance`.
 
 What exists:
+
 - `frontend/src/pages/UMManagementPage.jsx` — the reachable page at route
   `/management/um` (`App.jsx:61`), sidebar entry "Unit Manajemen (UM)"
   (`Sidebar.jsx:30`). **It calls only mounted endpoints**:
@@ -31,13 +32,14 @@ Phase 2.
 ## 2. Middleware/model shims → **all exist and re-export correctly**
 
 Verified at runtime (Node check):
+
 - `src/middlewares/authMiddleware.js` → `authMiddleware.authenticate ===
-  middleware/auth.js authenticate` → `true`.
+middleware/auth.js authenticate` → `true`.
 - `src/middlewares/rbacMiddleware.js` → exports `checkRole, isSuperAdmin,
-  isGovernment, isManagement, isFarmerOwner, isFarmer`; `rbac.isManagement ===
-  auth.isManagement` → `true`.
+isGovernment, isManagement, isFarmerOwner, isFarmer`; `rbac.isManagement ===
+auth.isManagement` → `true`.
 - `src/models/sugi_insights/index.js` → `=== connection/db.js
-  insightsConnection` → `true`, and still exposes `.model(...)`.
+insightsConnection` → `true`, and still exposes `.model(...)`.
 
 No recreation needed; all three shims are intact.
 
@@ -45,13 +47,13 @@ No recreation needed; all three shims are intact.
 
 Counted per endpoint (method + path), all currently **missing `authenticate`**:
 
-| Route file | Endpoints | Count |
-|---|---|---|
-| `bulkImportRoutes.js` | `POST /api/bulk-import/:modelName` | 1 |
-| `dashboardRoutes.js` | `GET /api/dashboard/farmer/v2`, `GET /api/dashboard/govt` | 2 |
-| `insightRoutes.js` | `GET /api/insights`, `GET /api/insights/farmer` | 2 |
-| `chatbotInsightRoutes.js` | `GET /api/chatbot-insight/dashboard`, `/filters`, `/activity`, `/topics`, `/entities`, `/ner`, `/intent`, `/semantic-network`, `/knowledge-graph`, `/recommendations`, `/problems`, `/trends`, `/coverage`, `/insights`, `/semantic-search`; `POST /api/chatbot-insight/process` | 16 |
-| 13 dataset route files | each: `POST /api/master/<slug>`, `GET /api/master/<slug>`, `GET /api/master/<slug>/:id`, `PUT /api/master/<slug>/:id`, `DELETE /api/master/<slug>/:id` (ketidakcukupan-nasional, ketidakcukupan-provinsi, konsumsi-per-jenis, penyaluran-donasi, proyeksi-neraca, gerakan-pangan-murah, harga-konsumen-provinsi, harga-konsumen-nasional, harga-produsen-nasional, harga-produsen-provinsi, skor-pph, pangan-terselamatkan, cadangan-pangan-provinsi) | 65 |
+| Route file                | Endpoints                                                                                                                                                                                                                                                                                                                                                                                                                                             | Count |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `bulkImportRoutes.js`     | `POST /api/bulk-import/:modelName`                                                                                                                                                                                                                                                                                                                                                                                                                    | 1     |
+| `dashboardRoutes.js`      | `GET /api/dashboard/farmer/v2`, `GET /api/dashboard/govt`                                                                                                                                                                                                                                                                                                                                                                                             | 2     |
+| `insightRoutes.js`        | `GET /api/insights`, `GET /api/insights/farmer`                                                                                                                                                                                                                                                                                                                                                                                                       | 2     |
+| `chatbotInsightRoutes.js` | `GET /api/chatbot-insight/dashboard`, `/filters`, `/activity`, `/topics`, `/entities`, `/ner`, `/intent`, `/semantic-network`, `/knowledge-graph`, `/recommendations`, `/problems`, `/trends`, `/coverage`, `/insights`, `/semantic-search`; `POST /api/chatbot-insight/process`                                                                                                                                                                      | 16    |
+| 13 dataset route files    | each: `POST /api/master/<slug>`, `GET /api/master/<slug>`, `GET /api/master/<slug>/:id`, `PUT /api/master/<slug>/:id`, `DELETE /api/master/<slug>/:id` (ketidakcukupan-nasional, ketidakcukupan-provinsi, konsumsi-per-jenis, penyaluran-donasi, proyeksi-neraca, gerakan-pangan-murah, harga-konsumen-provinsi, harga-konsumen-nasional, harga-produsen-nasional, harga-produsen-provinsi, skor-pph, pangan-terselamatkan, cadangan-pangan-provinsi) | 65    |
 
 **Corrected total: 86 endpoints (73 original + 13 new `GET /:id` handlers added by
 the Task 2 CRUD factory — each of the 13 datasets exposes 5 verbs, so 13×5 = 65
@@ -65,6 +67,7 @@ master-data, settings, filters).
 
 Live-server checks (server booted via `node server.js`; main + sugi_insights
 connected):
+
 - `GET /api/dashboard/farmer/v2` → **HTTP 200**, body 59,742 bytes.
 - `GET /api/dashboard/govt` → **HTTP 200**, body 40,727 bytes, `success=true` with
   22 top-level keys (`kpis`, `chartPouTrend`, `chartPphTrend`, `chartNeraca`,
@@ -88,6 +91,7 @@ If a client-side screenshot/export pipeline is planned, the variable can be rest
 ## 6. Credential rotation → **current credentials are NOT the leaked ones; confirm provider-level invalidation as an action item**
 
 Evidence from git history:
+
 - `backend/.env` was committed in `1af4021` (localhost URI) and `1c5e9a8`
   (production URI `mongodb+srv://...@sugi-online-database...` with password
   `f392wbfmUsSn1QfF`, `JWT_SECRET=supersecret`).
@@ -110,6 +114,7 @@ rotated, not just locally edited. Phase 2 must not commit any `.env` value.
 ---
 
 **Phase 2 handoff notes**
+
 - Auth backlog to clear to zero: 86 endpoints / 17 route files (section 3).
 - Dead frontend file to remove: `frontend/src/components/management/UMAssignmentModal.jsx` (removed in FIX pass).
 - No response-shape changes were introduced by this addendum; the live dashboards

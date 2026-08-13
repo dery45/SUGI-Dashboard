@@ -1,22 +1,25 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, lowercase: true },
-  password: { type: String, required: true },
-  role: {
-    type: String,
-    enum: ['superadmin', 'government', 'farmer_owner', 'farmer'],
-    default: 'farmer'
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, lowercase: true },
+    password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ['superadmin', 'government', 'farmer_owner', 'farmer'],
+      default: 'farmer',
+    },
+    organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', default: null },
+    phone: { type: String },
+    address: { type: String },
+    assigned_farms: [{ type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster' }],
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   },
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', default: null },
-  phone: { type: String },
-  address: { type: String },
-  assigned_farms: [{ type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster' }],
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });

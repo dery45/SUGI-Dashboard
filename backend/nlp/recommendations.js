@@ -1,5 +1,3 @@
-const preprocessor = require('./preprocessor');
-
 const RECOMMENDATION_PATTERNS = [
   /(?:disarankan|direkomendasikan|sebaiknya|seharusnya|alangkah baiknya|saya sarankan|kami rekomendasikan|saya rekomendasikan)\s+(.+?)(?:\.|!)/gi,
   /(?:rekomendasi|saran|anjuran|usulan|masukan)(?:\s+yang\s+)?(?:\s+dapat\s+)?(?:\s+adalah\s+)?(.+?)(?:\.|!)/gi,
@@ -40,10 +38,12 @@ class RecommendationMiner {
       }
     }
 
-    const categories = [...new Set(recommendations.map(r => r.category))];
+    const categories = [...new Set(recommendations.map((r) => r.category))];
     const entityCounts = {};
-    recommendations.forEach(r => {
-      r.entities.forEach(e => { entityCounts[e] = (entityCounts[e] || 0) + 1; });
+    recommendations.forEach((r) => {
+      r.entities.forEach((e) => {
+        entityCounts[e] = (entityCounts[e] || 0) + 1;
+      });
     });
 
     return {
@@ -54,9 +54,9 @@ class RecommendationMiner {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 20)
         .map(([value, count]) => ({ value, count })),
-      categoryDistribution: categories.map(c => ({
+      categoryDistribution: categories.map((c) => ({
         category: c,
-        count: recommendations.filter(r => r.category === c).length,
+        count: recommendations.filter((r) => r.category === c).length,
       })),
     };
   }
@@ -85,7 +85,7 @@ class RecommendationMiner {
   _extractEntities(text) {
     const entityExtractor = require('./entities');
     const entities = entityExtractor.extract(text);
-    return entities.map(e => e.value);
+    return entities.map((e) => e.value);
   }
 
   _clean(text) {

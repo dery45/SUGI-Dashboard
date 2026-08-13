@@ -18,7 +18,7 @@ function authenticate(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({ success: false, message: 'Token tidak valid' });
   }
 }
@@ -29,7 +29,9 @@ function authorize(...allowedRoles) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: `Akses ditolak. Required roles: ${allowedRoles.join(', ')}` });
+      return res
+        .status(403)
+        .json({ success: false, message: `Akses ditolak. Required roles: ${allowedRoles.join(', ')}` });
     }
     next();
   };
@@ -43,4 +45,14 @@ const isFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
 
 const checkRole = authorize;
 
-module.exports = { authenticate, authorize, checkRole, isSuperAdmin, isGovernment, isManagement, isFarmerOwner, isFarmer, JWT_SECRET };
+module.exports = {
+  authenticate,
+  authorize,
+  checkRole,
+  isSuperAdmin,
+  isGovernment,
+  isManagement,
+  isFarmerOwner,
+  isFarmer,
+  JWT_SECRET,
+};

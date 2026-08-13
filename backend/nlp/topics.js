@@ -5,12 +5,10 @@ const preprocessor = require('./preprocessor');
 class TopicModeler {
   computeTFIDF(documents) {
     const tfidf = new TfIdf();
-    documents.forEach((doc, i) => {
+    documents.forEach((doc) => {
       if (doc && doc.trim()) tfidf.addDocument(doc);
     });
 
-    const terms = tfidf.listTerms(0);
-    const allTerms = [];
     const termSet = new Set();
 
     for (let i = 0; i < documents.length; i++) {
@@ -21,7 +19,7 @@ class TopicModeler {
     tfidf.documents.forEach((doc, docIndex) => {
       if (!documents[docIndex] || !documents[docIndex].trim()) return;
       const localTerms = tfidf.listTerms(docIndex).slice(0, 20);
-      localTerms.forEach(t => termSet.add(t.term));
+      localTerms.forEach((t) => termSet.add(t.term));
     });
 
     const termArray = Array.from(termSet);
@@ -34,23 +32,28 @@ class TopicModeler {
         continue;
       }
       const docTerms = new Map();
-      tfidf.listTerms(di).forEach(t => docTerms.set(t.term, t.tfidf));
-      const vector = termArray.map(t => docTerms.get(t) || 0);
+      tfidf.listTerms(di).forEach((t) => docTerms.set(t.term, t.tfidf));
+      const vector = termArray.map((t) => docTerms.get(t) || 0);
       tfidfMatrix.push(vector);
       documentVectors.push(Array.from(docTerms.entries()));
     }
 
-    const overall = termArray.map(term => {
-      let totalTfidf = 0;
-      let docCount = 0;
-      for (let di = 0; di < documents.length; di++) {
-        if (!documents[di] || !documents[di].trim()) continue;
-        const terms = tfidf.listTerms(di);
-        const found = terms.find(t => t.term === term);
-        if (found) { totalTfidf += found.tfidf; docCount++; }
-      }
-      return { term, score: totalTfidf, docCount };
-    }).sort((a, b) => b.score - a.score);
+    const overall = termArray
+      .map((term) => {
+        let totalTfidf = 0;
+        let docCount = 0;
+        for (let di = 0; di < documents.length; di++) {
+          if (!documents[di] || !documents[di].trim()) continue;
+          const terms = tfidf.listTerms(di);
+          const found = terms.find((t) => t.term === term);
+          if (found) {
+            totalTfidf += found.tfidf;
+            docCount++;
+          }
+        }
+        return { term, score: totalTfidf, docCount };
+      })
+      .sort((a, b) => b.score - a.score);
 
     return {
       overallRanking: overall.slice(0, 50),
@@ -61,18 +64,20 @@ class TopicModeler {
   }
 
   computeLDA(documents, numTopics = 5, numWordsPerTopic = 10) {
-    const processed = documents.map(doc => {
-      const p = preprocessor.process(doc || '');
-      return p.stemmed;
-    }).filter(tokens => tokens.length > 0);
+    const processed = documents
+      .map((doc) => {
+        const p = preprocessor.process(doc || '');
+        return p.stemmed;
+      })
+      .filter((tokens) => tokens.length > 0);
 
     const vocab = new Map();
     let termId = 0;
     const docWordCounts = [];
 
-    processed.forEach(tokens => {
+    processed.forEach((tokens) => {
       const counts = new Map();
-      tokens.forEach(t => {
+      tokens.forEach((t) => {
         if (!vocab.has(t)) vocab.set(t, termId++);
         const id = vocab.get(t);
         counts.set(id, (counts.get(id) || 0) + 1);
@@ -121,7 +126,10 @@ class TopicModeler {
           let newTopic = K - 1;
           for (let k = 0; k < K; k++) {
             r -= probs[k];
-            if (r <= 0) { newTopic = k; break; }
+            if (r <= 0) {
+              newTopic = k;
+              break;
+            }
           }
 
           docTopics[d].set(w, newTopic);
@@ -137,7 +145,7 @@ class TopicModeler {
         .sort((a, b) => b[1] - a[1])
         .slice(0, numWordsPerTopic)
         .map(([w, c]) => ({
-          word: Array.from(vocab.entries()).find(e => e[1] === w)[0],
+          word: Array.from(vocab.entries()).find((e) => e[1] === w)[0],
           count: c,
           probability: c / topicTotals[k],
         }));
@@ -171,14 +179,20 @@ class TopicModeler {
   _getDominantTopic(docTopicMap, K) {
     const counts = new Array(K).fill(0);
     for (const [, topic] of docTopicMap) counts[topic]++;
-    let maxC = 0, maxT = 0;
-    counts.forEach((c, t) => { if (c > maxC) { maxC = c; maxT = t; } });
+    let maxC = 0,
+      maxT = 0;
+    counts.forEach((c, t) => {
+      if (c > maxC) {
+        maxC = c;
+        maxT = t;
+      }
+    });
     return maxT;
   }
 
   computeBigrams(documents) {
     const bigrams = new Map();
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       const p = preprocessor.process(doc || '');
       const tokens = p.stemmed;
       for (let i = 0; i < tokens.length - 1; i++) {
@@ -194,7 +208,7 @@ class TopicModeler {
 
   computeTrigrams(documents) {
     const trigrams = new Map();
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       const p = preprocessor.process(doc || '');
       const tokens = p.stemmed;
       for (let i = 0; i < tokens.length - 2; i++) {
@@ -212,11 +226,11 @@ class TopicModeler {
     const cooc = new Map();
     const termFreq = new Map();
 
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       const p = preprocessor.process(doc || '');
       const tokens = p.stemmed;
       const unique = [...new Set(tokens)];
-      unique.forEach(t => termFreq.set(t, (termFreq.get(t) || 0) + 1));
+      unique.forEach((t) => termFreq.set(t, (termFreq.get(t) || 0) + 1));
 
       for (let i = 0; i < tokens.length; i++) {
         const start = Math.max(0, i - windowSize);
@@ -239,14 +253,14 @@ class TopicModeler {
   }
 
   computeSimilarity(documents) {
-    const processed = documents.map(doc => {
+    const processed = documents.map((doc) => {
       const p = preprocessor.process(doc || '');
       return p.stemmed;
     });
 
     const vocab = [...new Set(processed.flat())];
-    const vectors = processed.map(tokens => {
-      return vocab.map(v => tokens.filter(t => t === v).length);
+    const vectors = processed.map((tokens) => {
+      return vocab.map((v) => tokens.filter((t) => t === v).length);
     });
 
     const similarityMatrix = [];
@@ -260,7 +274,9 @@ class TopicModeler {
   }
 
   _cosineSimilarity(a, b) {
-    let dot = 0, magA = 0, magB = 0;
+    let dot = 0,
+      magA = 0,
+      magB = 0;
     for (let i = 0; i < a.length; i++) {
       dot += a[i] * b[i];
       magA += a[i] * a[i];

@@ -96,6 +96,7 @@ const { createExpense, listExpenses, updateExpense, deleteExpense } = require('.
  */
 
 // POST /api/expenses — Log an expense
+router.use(authenticate);
 router.post('/', isManagement, createExpense);
 
 // GET /api/expenses — List with optional filters

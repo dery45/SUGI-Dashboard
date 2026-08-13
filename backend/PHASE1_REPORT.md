@@ -11,6 +11,7 @@ endpoints were first confirmed unused by any frontend caller.
 ## Task 1 — Remove confirmed dead code (DONE)
 
 Deleted:
+
 - `src/models/FoodPrice.js` — no importer anywhere (verified by repo-wide search).
 - `src/models/FoodInsecurity.js` — no importer anywhere.
 - `src/models/KPI.js` — no importer anywhere. (`kpiService.js`'s "KPI Error" is only
@@ -26,6 +27,7 @@ Deleted:
 Decision: **delete** `src/routes/umRoutes.js` rather than fix it.
 
 Why:
+
 - The Unit Management feature **is** delivered and consumed by the frontend — but
   through already-mounted, working routes that umRoutes.js merely duplicates or
   conflicts with:
@@ -135,6 +137,7 @@ below is the corrected, authoritative **Phase 2 auth backlog** — Phase 2 must 
 it to zero.
 
 ### Already authenticated (NOT in backlog)
+
 - `authRoutes.js` — `POST /auth/login` public (by design); `GET /auth/me` uses
   `authenticate`.
 - `assignmentRoutes.js` — `router.use(authenticate)` + role guards (isFarmerOwner).
@@ -145,6 +148,7 @@ it to zero.
 - `filterRoutes.js` — `GET /` uses `authenticate`.
 
 ### Missing authentication (Phase 2 backlog)
+
 1. **`bulkImportRoutes.js`** — `POST /:modelName` (bulk import / upsert writes).
 2. **`dashboardRoutes.js`** — `GET /farmer/v2`, `GET /govt` (both v2 endpoints).
 3. **`insightRoutes.js`** — `GET /`, `GET /farmer`.
@@ -173,6 +177,7 @@ Total: 2 dashboard + 2 insight + 1 bulk-import + 15 chatbot + 13 master = **33
 endpoints across 17 route files** to be secured in Phase 2.
 
 ### Recommended role mapping for Phase 2 (proposal, not implemented)
+
 - Master dataset routes + bulk import: `authenticate` + `isSuperAdmin`/`isGovernment`
   for writes, readable at least by government/superadmin (matches how fronts share
   these datasets).
@@ -183,6 +188,7 @@ endpoints across 17 route files** to be secured in Phase 2.
 ---
 
 ## Cross-cutting constraints honored
+
 - No response JSON shape used by the frontend was changed.
 - Commits are one per numbered task (8 functional commits in this phase + 1 follow-up
   commit for `.env.example` tracking).

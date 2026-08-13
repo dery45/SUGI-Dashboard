@@ -29,14 +29,11 @@ function createDatasetController(Model) {
           const skip = (page - 1) * limit;
           [data, total] = await Promise.all([
             Model.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-            Model.countDocuments()
+            Model.countDocuments(),
           ]);
           totalPages = Math.ceil(total / limit);
         } else {
-          [data, total] = await Promise.all([
-            Model.find().sort({ createdAt: -1 }),
-            Model.countDocuments()
-          ]);
+          [data, total] = await Promise.all([Model.find().sort({ createdAt: -1 }), Model.countDocuments()]);
         }
         res.json({ success: true, data, total, page, totalPages });
       } catch (err) {
@@ -90,7 +87,7 @@ function createDatasetController(Model) {
       } catch (err) {
         res.status(500).json({ success: false, error: err.message });
       }
-    }
+    },
   };
 }
 

@@ -34,8 +34,12 @@ class WorkerQueue {
     }
   }
 
-  get queueLength() { return this.queue.length; }
-  get isBusy() { return this.running >= this.concurrency; }
+  get queueLength() {
+    return this.queue.length;
+  }
+  get isBusy() {
+    return this.running >= this.concurrency;
+  }
 }
 
 class Memoizer {
@@ -54,7 +58,9 @@ class Memoizer {
     };
   }
 
-  clear() { this.cache.clear(); }
+  clear() {
+    this.cache.clear();
+  }
 }
 
 const workerQueue = new WorkerQueue(2);

@@ -1,18 +1,38 @@
 const Expense = require('../model/Expense');
 const { required, isObjectId, isNumber, minValue, validate, errorResponse } = require('../util/validate');
 
-const EXPENSE_CATEGORIES = ['Bibit', 'Pupuk', 'Pestisida', 'Tenaga Kerja', 'Transportasi', 'Peralatan', 'Sewa Lahan', 'Lainnya'];
+const EXPENSE_CATEGORIES = [
+  'Bibit',
+  'Pupuk',
+  'Pestisida',
+  'Tenaga Kerja',
+  'Transportasi',
+  'Peralatan',
+  'Sewa Lahan',
+  'Lainnya',
+];
 
 // POST /api/expenses — Log an expense
 const createExpense = async (req, res) => {
   try {
-    const { farm_id, crop_cycle_id, category, amount_idr, description, expense_date, um_responsible_id, receipt_ref } = req.body;
+    const { farm_id, crop_cycle_id, category, amount_idr, description, expense_date, um_responsible_id, receipt_ref } =
+      req.body;
 
-    const errs = validate({ farm_id, category, amount_idr }, {
-      farm_id:   [[required, 'Farm'], [isObjectId, 'Farm']],
-      category:  [[required, 'Kategori']],
-      amount_idr:[[required, 'Jumlah (Rp)'], [isNumber, 'Jumlah (Rp)'], [minValue, 0, 'Jumlah (Rp)']],
-    });
+    const errs = validate(
+      { farm_id, category, amount_idr },
+      {
+        farm_id: [
+          [required, 'Farm'],
+          [isObjectId, 'Farm'],
+        ],
+        category: [[required, 'Kategori']],
+        amount_idr: [
+          [required, 'Jumlah (Rp)'],
+          [isNumber, 'Jumlah (Rp)'],
+          [minValue, 0, 'Jumlah (Rp)'],
+        ],
+      }
+    );
     if (errs) return errorResponse(res, errs);
     if (!EXPENSE_CATEGORIES.includes(category)) {
       return errorResponse(res, { category: 'Kategori tidak valid. Pilihan: ' + EXPENSE_CATEGORIES.join(', ') });
@@ -52,14 +72,14 @@ const listExpenses = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [expenses, total] = await Promise.all([
       Expense.find(query).populate('farm_id', 'name').sort({ expense_date: -1 }).skip(skip).limit(parseInt(limit)),
-      Expense.countDocuments(query)
+      Expense.countDocuments(query),
     ]);
 
     // Aggregate total cost by category
     const breakdown = await Expense.aggregate([
       { $match: query },
       { $group: { _id: '$category', totalAmount: { $sum: '$amount_idr' }, count: { $sum: 1 } } },
-      { $sort: { totalAmount: -1 } }
+      { $sort: { totalAmount: -1 } },
     ]);
 
     res.json({ success: true, data: expenses, total, page: parseInt(page), breakdown });

@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
-const { listUsers, getUserById, createUser, updateUser, deleteUser } = require('../controller/farmerManagementController');
+const {
+  listUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+} = require('../controller/farmerManagementController');
 
 /**
  * @swagger

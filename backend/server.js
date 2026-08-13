@@ -37,7 +37,7 @@ if (process.env.NODE_ENV === 'production') {
 
 connectMainDB()
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+  .catch((err) => console.log('MongoDB connection error:', err));
 
 app.get('/', (req, res) => {
   res.send('SUGIDash API is running...');

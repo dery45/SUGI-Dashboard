@@ -1,5 +1,3 @@
-const mongoose = require('mongoose');
-
 // Map of unique dimension fields for each model to be used as query for upserting
 const modelUniqueKeys = {
   KetidakcukupanNasional: ['tahun'],
@@ -14,7 +12,7 @@ const modelUniqueKeys = {
   HargaProdusenProvinsi: ['tahun', 'bulan', 'kode_provinsi', 'komoditas'],
   SkorPPH: ['tahun'],
   PanganTerselamatkan: ['tahun', 'bulan'],
-  CadanganPanganProvinsi: ['tahun', 'bulan', 'kode_wilayah']
+  CadanganPanganProvinsi: ['tahun', 'bulan', 'kode_wilayah'],
 };
 
 exports.bulkImportData = async (req, res) => {
@@ -34,16 +32,16 @@ exports.bulkImportData = async (req, res) => {
     let Model;
     try {
       Model = require(`../model/${modelName}`);
-    } catch (err) {
+    } catch {
       return res.status(400).json({ success: false, message: `Model file for ${modelName} not found` });
     }
 
     const uniqueKeys = modelUniqueKeys[modelName];
 
     // Prepare bulkWrite operations
-    const operations = dataArray.map(item => {
+    const operations = dataArray.map((item) => {
       const query = {};
-      uniqueKeys.forEach(key => {
+      uniqueKeys.forEach((key) => {
         if (item[key] !== undefined) {
           query[key] = item[key];
         }
@@ -53,8 +51,8 @@ exports.bulkImportData = async (req, res) => {
         updateOne: {
           filter: query,
           update: { $set: item },
-          upsert: true
-        }
+          upsert: true,
+        },
       };
     });
 
@@ -65,9 +63,8 @@ exports.bulkImportData = async (req, res) => {
       message: 'Bulk import successful',
       insertedCount: result.upsertedCount || 0,
       modifiedCount: result.modifiedCount || 0,
-      matchedCount: result.matchedCount || 0
+      matchedCount: result.matchedCount || 0,
     });
-
   } catch (err) {
     console.error('Bulk Import Error:', err);
     res.status(500).json({ success: false, error: err.message });

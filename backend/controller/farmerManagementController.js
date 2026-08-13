@@ -9,17 +9,11 @@ const listUsers = async (req, res) => {
 
     if (role) query.role = role;
     if (search) {
-      query.$or = [
-        { name: new RegExp(search, 'i') },
-        { email: new RegExp(search, 'i') }
-      ];
+      query.$or = [{ name: new RegExp(search, 'i') }, { email: new RegExp(search, 'i') }];
     }
 
     if (req.user.role === 'farmer_owner') {
-      query.$or = [
-        { createdBy: req.user.id },
-        { _id: req.user.id }
-      ];
+      query.$or = [{ createdBy: req.user.id }, { _id: req.user.id }];
     }
 
     const total = await User.countDocuments(query);
@@ -31,11 +25,14 @@ const listUsers = async (req, res) => {
       .limit(parseInt(limit))
       .lean();
 
-    const roleStats = await User.aggregate([
-      { $group: { _id: '$role', count: { $sum: 1 } } }
-    ]);
+    const roleStats = await User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]);
 
-    res.json({ success: true, data, meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) }, roleStats });
+    res.json({
+      success: true,
+      data,
+      meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) },
+      roleStats,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -60,8 +57,14 @@ const createUser = async (req, res) => {
 
     const errors = validate(req.body, {
       name: [[required, 'Nama']],
-      email: [[required, 'Email'], [isEmail, 'Email']],
-      password: [[required, 'Password'], [minLength, 3, 'Password']]
+      email: [
+        [required, 'Email'],
+        [isEmail, 'Email'],
+      ],
+      password: [
+        [required, 'Password'],
+        [minLength, 3, 'Password'],
+      ],
     });
     if (errors) return errorResponse(res, errors);
 
@@ -88,7 +91,7 @@ const createUser = async (req, res) => {
       role: role || 'farmer',
       phone,
       address,
-      createdBy: req.user.id
+      createdBy: req.user.id,
     };
 
     if (req.user.role === 'farmer_owner') {
@@ -100,7 +103,16 @@ const createUser = async (req, res) => {
     }
 
     const user = await User.create(payload);
-    res.status(201).json({ success: true, data: { id: user._id, name: user.name, email: user.email, role: user.role, assigned_farms: user.assigned_farms } });
+    res.status(201).json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        assigned_farms: user.assigned_farms,
+      },
+    });
   } catch (error) {
     if (error.code === 11000) return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
     res.status(500).json({ success: false, message: error.message });
@@ -109,7 +121,7 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { password, ...updateData } = req.body;
+    const { password: _password, ...updateData } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
@@ -131,7 +143,9 @@ const updateUser = async (req, res) => {
 
     if (req.body.assigned_farms !== undefined) {
       if (req.user.role !== 'superadmin' && req.user.role !== 'government') {
-        return res.status(403).json({ success: false, message: 'Hanya Super Admin atau Pemerintah yang dapat mengubah penugasan farm' });
+        return res
+          .status(403)
+          .json({ success: false, message: 'Hanya Super Admin atau Pemerintah yang dapat mengubah penugasan farm' });
       }
       if (!Array.isArray(req.body.assigned_farms)) {
         return res.status(400).json({ success: false, message: 'assigned_farms harus berupa array' });
@@ -144,7 +158,9 @@ const updateUser = async (req, res) => {
       updateData.assigned_farms = req.body.assigned_farms;
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true }).select('-password');
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true }).select(
+      '-password'
+    );
     if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
 
     res.json({ success: true, data: user });
@@ -170,7 +186,7 @@ const deleteUser = async (req, res) => {
       }
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, { status: 'Inactive' }, { new: true });
+    await User.findByIdAndUpdate(req.params.id, { status: 'Inactive' }, { new: true });
     res.json({ success: true, message: 'User dinonaktifkan' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

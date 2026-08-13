@@ -11,12 +11,9 @@ function connectMainDB() {
   return mongoose.connect(MONGO_URI);
 }
 
-const insightsConnection = mongoose.createConnection(
-  MONGO_URI,
-  { dbName: 'sugi_insights' }
-);
+const insightsConnection = mongoose.createConnection(MONGO_URI, { dbName: 'sugi_insights' });
 
-insightsConnection.on('error', err => console.error('sugi_insights connection error:', err));
+insightsConnection.on('error', (err) => console.error('sugi_insights connection error:', err));
 insightsConnection.once('open', () => console.log('sugi_insights MongoDB connected'));
 
 function connectInsightsDB() {

@@ -8,7 +8,7 @@ const insightEngine = require('../insights');
 const semanticSearch = require('../semanticSearch');
 const chatbotNlpRepository = require('../repository/chatbotNlpRepository');
 const { globalCache } = require('../../util/cache');
-const { workerQueue, globalMemoizer } = require('../optimization');
+const { workerQueue } = require('../optimization');
 
 class ChatbotAdvancedService {
   async _getNlpResults() {
@@ -30,17 +30,20 @@ class ChatbotAdvancedService {
     const results = await this._getNlpResultsCached();
 
     const allSentences = [];
-    results.forEach(r => {
+    results.forEach((r) => {
       if (r.original_text) {
-        r.original_text.split(/[.!?]+/).filter(s => s.trim().length > 15).forEach(s => allSentences.push(s));
+        r.original_text
+          .split(/[.!?]+/)
+          .filter((s) => s.trim().length > 15)
+          .forEach((s) => allSentences.push(s));
       }
     });
 
-    const allEntities = results.flatMap(r => r.entities || []);
+    const allEntities = results.flatMap((r) => r.entities || []);
     const relations = relationExtractor.extract(allSentences, allEntities);
 
     const entityFreq = {};
-    allEntities.forEach(e => {
+    allEntities.forEach((e) => {
       entityFreq[e.value] = (entityFreq[e.value] || 0) + e.count;
     });
 
@@ -57,7 +60,7 @@ class ChatbotAdvancedService {
 
   async getKnowledgeGraph() {
     const results = await this._getNlpResultsCached();
-    const docs = results.map(r => ({
+    const docs = results.map((r) => ({
       summary: r.original_text || '',
       session_id: r.session_id,
       insight_id: r.insight_id,
@@ -75,7 +78,7 @@ class ChatbotAdvancedService {
 
   async getRecommendations() {
     const results = await this._getNlpResultsCached();
-    const docs = results.map(r => ({
+    const docs = results.map((r) => ({
       summary: r.original_text || '',
       session_id: r.session_id,
       insight_id: r.insight_id,
@@ -88,7 +91,7 @@ class ChatbotAdvancedService {
 
   async getProblems() {
     const results = await this._getNlpResultsCached();
-    const docs = results.map(r => ({
+    const docs = results.map((r) => ({
       summary: r.original_text || '',
       session_id: r.session_id,
       insight_id: r.insight_id,
@@ -98,7 +101,7 @@ class ChatbotAdvancedService {
     const mined = problemMiner.mine(docs);
 
     const timelineData = {};
-    mined.problems.forEach(p => {
+    mined.problems.forEach((p) => {
       if (p.pushed_at) {
         const date = new Date(p.pushed_at).toISOString().slice(0, 10);
         if (!timelineData[date]) timelineData[date] = { date, total: 0, byType: {} };
@@ -121,7 +124,7 @@ class ChatbotAdvancedService {
   async getCoverage() {
     const results = await this._getNlpResultsCached();
     const kg = await this.getKnowledgeGraph();
-    const docs = results.map(r => ({
+    const docs = results.map((r) => ({
       summary: r.original_text || '',
       session_id: r.session_id,
       insight_id: r.insight_id,
@@ -132,9 +135,25 @@ class ChatbotAdvancedService {
     return coverageAnalyzer.analyze(docs, results, kg);
   }
 
-  async getInsights(kpiData, activityData, topicData, commodityData, locationData, intentData, trendData, coverageData) {
+  async getInsights(
+    kpiData,
+    activityData,
+    topicData,
+    commodityData,
+    locationData,
+    intentData,
+    trendData,
+    coverageData
+  ) {
     const insights = insightEngine.generateIntelligently(
-      kpiData, activityData, topicData, commodityData, locationData, intentData, trendData, coverageData
+      kpiData,
+      activityData,
+      topicData,
+      commodityData,
+      locationData,
+      intentData,
+      trendData,
+      coverageData
     );
     return insights;
   }

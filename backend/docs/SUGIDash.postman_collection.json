@@ -51,13 +51,8 @@
             },
             "url": {
               "raw": "http://localhost:3000/api/auth/login",
-              "host": [
-                "http://localhost:3000/api"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
+              "host": ["http://localhost:3000/api"],
+              "path": ["auth", "login"]
             }
           },
           "event": [
@@ -100,9 +95,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/farmer-assignments",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -126,9 +119,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/farmer-assignments",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -161,9 +152,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/farmer-assignments/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -200,9 +189,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/farmer-assignments/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -230,9 +217,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/task-assignments",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -256,9 +241,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/task-assignments",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -291,9 +274,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/assignments/task-assignments/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -326,9 +307,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/auth/login",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -361,9 +340,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/auth/me",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -392,9 +369,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/bulk-import/{{modelName}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -436,9 +411,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/dashboard",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -506,9 +479,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/filters",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -532,9 +503,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/activity",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -558,9 +527,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/topics",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -584,9 +551,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/entities",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -618,9 +583,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/ner",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -644,9 +607,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/intent",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -670,9 +631,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/process",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -696,9 +655,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/semantic-network",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -722,9 +679,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/knowledge-graph",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -768,9 +723,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/recommendations",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -794,9 +747,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/problems",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -820,9 +771,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/trends",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -846,9 +795,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/coverage",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -872,9 +819,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/insights",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -898,9 +843,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/chatbot-insight/semantic-search",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -961,9 +904,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/expenses",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -996,9 +937,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/expenses",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -1048,9 +987,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/expenses/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1087,9 +1024,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/expenses/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1122,9 +1057,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/dashboard/farmer/v2",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -1191,9 +1124,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/farmers",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -1243,9 +1174,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/farmers",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -1278,9 +1207,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/farmers/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1308,9 +1235,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/farmers/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1347,9 +1272,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/farmers/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1382,9 +1305,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/filters",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -1413,9 +1334,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-nasional",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -1471,9 +1390,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-nasional",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -1506,9 +1423,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1536,9 +1451,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1575,9 +1488,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1605,9 +1516,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -1663,9 +1572,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -1698,9 +1605,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1728,9 +1633,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1767,9 +1670,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/ketidakcukupan-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1797,9 +1698,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/konsumsi-per-jenis",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -1855,9 +1754,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/konsumsi-per-jenis",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -1890,9 +1787,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/konsumsi-per-jenis/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1920,9 +1815,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/konsumsi-per-jenis/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1959,9 +1852,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/konsumsi-per-jenis/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -1989,9 +1880,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/penyaluran-donasi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -2047,9 +1936,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/penyaluran-donasi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -2082,9 +1969,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/penyaluran-donasi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2112,9 +1997,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/penyaluran-donasi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2151,9 +2034,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/penyaluran-donasi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2181,9 +2062,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/proyeksi-neraca",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -2239,9 +2118,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/proyeksi-neraca",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -2274,9 +2151,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/proyeksi-neraca/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2304,9 +2179,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/proyeksi-neraca/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2343,9 +2216,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/proyeksi-neraca/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2373,9 +2244,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/gerakan-pangan-murah",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -2431,9 +2300,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/gerakan-pangan-murah",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -2466,9 +2333,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/gerakan-pangan-murah/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2496,9 +2361,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/gerakan-pangan-murah/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2535,9 +2398,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/gerakan-pangan-murah/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2565,9 +2426,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -2623,9 +2482,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -2658,9 +2515,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2688,9 +2543,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2727,9 +2580,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2757,9 +2608,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-nasional",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -2815,9 +2664,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-nasional",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -2850,9 +2697,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2880,9 +2725,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2919,9 +2762,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-konsumen-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -2949,9 +2790,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-nasional",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -3007,9 +2846,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-nasional",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -3042,9 +2879,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3072,9 +2907,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3111,9 +2944,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-nasional/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3141,9 +2972,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -3199,9 +3028,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -3234,9 +3061,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3264,9 +3089,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3303,9 +3126,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/harga-produsen-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3333,9 +3154,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/skor-pph",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -3391,9 +3210,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/skor-pph",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -3426,9 +3243,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/skor-pph/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3456,9 +3271,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/skor-pph/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3495,9 +3308,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/skor-pph/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3525,9 +3336,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/pangan-terselamatkan",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -3583,9 +3392,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/pangan-terselamatkan",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -3618,9 +3425,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/pangan-terselamatkan/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3648,9 +3453,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/pangan-terselamatkan/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3687,9 +3490,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/pangan-terselamatkan/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3717,9 +3518,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/cadangan-pangan-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -3775,9 +3574,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/cadangan-pangan-provinsi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -3810,9 +3607,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/cadangan-pangan-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3840,9 +3635,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/cadangan-pangan-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3879,9 +3672,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master/cadangan-pangan-provinsi/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -3914,9 +3705,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/dashboard/govt",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -3983,9 +3772,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/insights",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -4017,9 +3804,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/insights/farmer",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4048,9 +3833,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/land",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4074,9 +3857,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/land",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -4109,9 +3890,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/land/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4148,9 +3927,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/land/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4178,9 +3955,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/plantings",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4204,9 +3979,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/plantings",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -4239,9 +4012,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/plantings/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4278,9 +4049,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/plantings/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4308,9 +4077,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/activities",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4334,9 +4101,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/activities",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -4369,9 +4134,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/activities/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4408,9 +4171,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/activities/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4438,9 +4199,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/harvests",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4464,9 +4223,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/harvests",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -4499,9 +4256,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/harvests/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4538,9 +4293,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/lifecycle/harvests/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4573,9 +4326,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/management/kpi",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4599,9 +4350,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/management/yield-trend",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4625,9 +4374,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/management/um-performance",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4656,9 +4403,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/farms/all",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4682,9 +4427,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/farms",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -4734,9 +4477,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/farms",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -4769,9 +4510,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/farms/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4799,9 +4538,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/farms/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4838,9 +4575,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/farms/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -4868,9 +4603,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/blocks/all",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -4894,9 +4627,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/blocks",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -4946,9 +4677,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/blocks",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -4981,9 +4710,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/blocks/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5011,9 +4738,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/blocks/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5050,9 +4775,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/blocks/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5080,9 +4803,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/crop-types/all",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -5106,9 +4827,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/crop-types",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -5152,9 +4871,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/crop-types",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -5187,9 +4904,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/crop-types/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5217,9 +4932,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/crop-types/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5256,9 +4969,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/crop-types/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5286,9 +4997,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/activity-types/all",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -5312,9 +5021,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/activity-types",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -5358,9 +5065,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/activity-types",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -5393,9 +5098,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/activity-types/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5423,9 +5126,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/activity-types/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5462,9 +5163,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/master-data/activity-types/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5497,9 +5196,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/sales",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -5532,9 +5229,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/sales",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [],
               "query": [
@@ -5590,9 +5285,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/sales/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5620,9 +5313,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/sales/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5659,9 +5350,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/sales/{{id}}",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": [
                 {
@@ -5694,9 +5383,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/settings/profile",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             }
@@ -5720,9 +5407,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/settings/profile",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -5755,9 +5440,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/settings/change-password",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },
@@ -5790,9 +5473,7 @@
             ],
             "url": {
               "raw": "http://localhost:3000/api/settings/assign-farm",
-              "host": [
-                "localhost:3000"
-              ],
+              "host": ["localhost:3000"],
               "path": [],
               "variable": []
             },

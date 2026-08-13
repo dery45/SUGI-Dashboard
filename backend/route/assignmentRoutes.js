@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, isSuperAdmin, isFarmerOwner } = require('../middleware/auth');
+const { authenticate, isFarmerOwner } = require('../middleware/auth');
 const ctrl = require('../controller/assignmentController');
 
 /**

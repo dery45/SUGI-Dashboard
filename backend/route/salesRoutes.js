@@ -112,6 +112,7 @@ const { createSale, listSales, getSale, updateSale, deleteSale } = require('../c
  */
 
 // POST /api/sales — Record a new sale
+router.use(authenticate);
 router.post('/', isManagement, createSale);
 
 // GET /api/sales — List sales with optional filters

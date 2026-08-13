@@ -10,13 +10,17 @@ const CadanganPanganProvinsi = require('../model/CadanganPanganProvinsi');
 const HargaKonsumenProvinsi = require('../model/HargaKonsumenProvinsi');
 const HargaProdusenProvinsi = require('../model/HargaProdusenProvinsi');
 
-function safeNum(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function safeNum(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
 
 function buildMatch(filters, extra) {
   const match = {};
   if (filters.year && filters.year !== 'all') match.tahun = filters.year;
   if (filters.month && filters.month !== 'all') match.bulan = filters.month;
-  if (filters.commodity && filters.commodity !== 'all') match.komoditas = { $regex: `^${filters.commodity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' };
+  if (filters.commodity && filters.commodity !== 'all')
+    match.komoditas = { $regex: `^${filters.commodity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' };
   if (extra) Object.assign(match, extra);
   return match;
 }
@@ -62,21 +66,21 @@ async function computeKpis(filters) {
   delete neracaMatch.komoditas;
   const neracaAgg = await ProyeksiNeraca.aggregate([
     { $match: neracaMatch },
-    { $group: { _id: null, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } }
+    { $group: { _id: null, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } },
   ]);
 
   const gpmMatch = buildMatch(filters);
   delete gpmMatch.komoditas;
   const gpmAgg = await GerakanPanganMurah.aggregate([
     { $match: gpmMatch },
-    { $group: { _id: null, total: { $sum: '$pelaksana' } } }
+    { $group: { _id: null, total: { $sum: '$pelaksana' } } },
   ]);
 
   const cppdMatch = buildMatch(filters);
   delete cppdMatch.komoditas;
   const cppdAgg = await CadanganPanganProvinsi.aggregate([
     { $match: cppdMatch },
-    { $group: { _id: null, total: { $sum: '$cppd_ton' } } }
+    { $group: { _id: null, total: { $sum: '$cppd_ton' } } },
   ]);
 
   const neraca = neracaAgg[0] || { ketersediaan: 0, kebutuhan: 0 };
@@ -87,23 +91,23 @@ async function computeKpis(filters) {
     neraca: {
       current: neraca.ketersediaan - neraca.kebutuhan,
       label: 'Surplus Neraca (Ton)',
-      sub: `${neraca.ketersediaan.toLocaleString()} avail Â· ${neraca.kebutuhan.toLocaleString()} need`
+      sub: `${neraca.ketersediaan.toLocaleString()} avail Â· ${neraca.kebutuhan.toLocaleString()} need`,
     },
     pph: {
       current: skorPPH ? safeNum(skorPPH.pph_ketersediaan) : 0,
       label: 'Skor PPH Nasional',
-      sub: skorPPH?.tahun || '-'
+      sub: skorPPH?.tahun || '-',
     },
     gpm: {
       current: gpm.total,
       label: 'Gerakan Pangan Murah',
-      sub: `${gpm.total} kegiatan`
+      sub: `${gpm.total} kegiatan`,
     },
     cppd: {
       current: cppd.total,
       label: 'Cadangan Pangan Daerah (Ton)',
-      sub: `${cppd.total.toLocaleString()} ton`
-    }
+      sub: `${cppd.total.toLocaleString()} ton`,
+    },
   };
 }
 
@@ -116,27 +120,41 @@ async function computeTrends(filters) {
     .lean()
     .limit(50);
 
-  const pphTrend = await SkorPPH.find()
-    .sort({ tahun: 1 })
-    .select('tahun pph_ketersediaan keterangan')
-    .lean()
-    .limit(50);
+  const pphTrend = await SkorPPH.find().sort({ tahun: 1 }).select('tahun pph_ketersediaan keterangan').lean().limit(50);
 
   const neracaMatch = buildMatch(filters, { tingkat: 'Nasional' });
   delete neracaMatch.bulan;
   delete neracaMatch.komoditas;
   const neracaTrend = await ProyeksiNeraca.aggregate([
     { $match: neracaMatch },
-    { $group: { _id: { bulan: '$bulan' }, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } } },
-    { $replaceWith: { $mergeObjects: ['$_id', { ketersediaan: '$ketersediaan', kebutuhan: '$kebutuhan', surplus: { $subtract: ['$ketersediaan', '$kebutuhan'] } }] } },
-    { $sort: { bulan: 1 } }
+    {
+      $group: { _id: { bulan: '$bulan' }, ketersediaan: { $sum: '$ketersediaan' }, kebutuhan: { $sum: '$kebutuhan' } },
+    },
+    {
+      $replaceWith: {
+        $mergeObjects: [
+          '$_id',
+          {
+            ketersediaan: '$ketersediaan',
+            kebutuhan: '$kebutuhan',
+            surplus: { $subtract: ['$ketersediaan', '$kebutuhan'] },
+          },
+        ],
+      },
+    },
+    { $sort: { bulan: 1 } },
   ]);
 
   const konsumsi = await KonsumsiPerJenis.aggregate([
-    { $group: { _id: { kelompok: '$kelompok_bahan_pangan', komoditas: '$komoditas' }, total: { $first: '$konsumsi_pangan' } } },
+    {
+      $group: {
+        _id: { kelompok: '$kelompok_bahan_pangan', komoditas: '$komoditas' },
+        total: { $first: '$konsumsi_pangan' },
+      },
+    },
     { $replaceWith: { $mergeObjects: ['$_id', { nilai: { $toDouble: { $ifNull: ['$total', '0'] } } }] } },
     { $sort: { kelompok: 1, nilai: -1 } },
-    { $limit: 20 }
+    { $limit: 20 },
   ]);
 
   const donasiMatch = buildMatch(filters);
@@ -144,9 +162,15 @@ async function computeTrends(filters) {
   delete donasiMatch.komoditas;
   const donasiTrend = await PenyaluranDonasi.aggregate([
     { $match: donasiMatch },
-    { $group: { _id: { bulan: '$bulan' }, donasi_kg: { $sum: '$jumlah_donasi_kg' }, penerima: { $sum: '$penerima_manfaat_jiwa' } } },
+    {
+      $group: {
+        _id: { bulan: '$bulan' },
+        donasi_kg: { $sum: '$jumlah_donasi_kg' },
+        penerima: { $sum: '$penerima_manfaat_jiwa' },
+      },
+    },
     { $replaceWith: { $mergeObjects: ['$_id', { donasi_kg: '$donasi_kg', penerima: '$penerima' }] } },
-    { $sort: { bulan: 1 } }
+    { $sort: { bulan: 1 } },
   ]);
 
   const rescueMatch = buildMatch(filters);
@@ -156,7 +180,7 @@ async function computeTrends(filters) {
     { $match: rescueMatch },
     { $group: { _id: { bulan: '$bulan' }, kg: { $sum: '$jumlah_donasi_kg' } } },
     { $replaceWith: { $mergeObjects: ['$_id', { kg: '$kg' }] } },
-    { $sort: { bulan: 1 } }
+    { $sort: { bulan: 1 } },
   ]);
 
   const priceMatch = buildMatch(filters);
@@ -167,20 +191,29 @@ async function computeTrends(filters) {
       { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
       { $sort: { harga: -1 } },
-      { $limit: 10 }
+      { $limit: 10 },
     ]),
     HargaProdusenProvinsi.aggregate([
       { $match: priceMatch },
       { $group: { _id: { komoditas: '$komoditas' }, harga: { $avg: '$harga' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
       { $sort: { harga: -1 } },
-      { $limit: 10 }
+      { $limit: 10 },
     ]),
   ]);
 
   return {
-    chartPouTrend: pouTrend.map(p => ({ tahun: p.tahun, pou: safeNum(p.pou), jumlah_penduduk: p.jumlah_penduduk, undernourish: p.penduduk_undernourish })),
-    chartPphTrend: pphTrend.map(s => ({ tahun: s.tahun, skor: safeNum(s.pph_ketersediaan), keterangan: s.keterangan })),
+    chartPouTrend: pouTrend.map((p) => ({
+      tahun: p.tahun,
+      pou: safeNum(p.pou),
+      jumlah_penduduk: p.jumlah_penduduk,
+      undernourish: p.penduduk_undernourish,
+    })),
+    chartPphTrend: pphTrend.map((s) => ({
+      tahun: s.tahun,
+      skor: safeNum(s.pph_ketersediaan),
+      keterangan: s.keterangan,
+    })),
     chartNeraca: neracaTrend,
     chartKonsumsi: konsumsi,
     chartDonasi: donasiTrend,
@@ -201,20 +234,20 @@ async function computeRankings(filters) {
       { $group: { _id: { wilayah: '$wilayah' }, ton: { $sum: '$cppd_ton' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { ton: '$ton' }] } },
       { $sort: { ton: -1 } },
-      { $limit: 38 }
+      { $limit: 38 },
     ]),
     KetidakcukupanProvinsi.aggregate([
       { $match: year ? { tahun: year } : {} },
       { $project: { provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } }, _id: 0 } },
       { $sort: { pou: -1 } },
-      { $limit: 38 }
+      { $limit: 38 },
     ]),
     GerakanPanganMurah.aggregate([
       { $match: year ? { tahun: year } : {} },
       { $group: { _id: { provinsi: '$provinsi' }, kegiatan: { $sum: 1 } } },
       { $replaceWith: { $mergeObjects: ['$_id', { kegiatan: '$kegiatan' }] } },
       { $sort: { kegiatan: -1 } },
-      { $limit: 38 }
+      { $limit: 38 },
     ]),
   ]);
 
@@ -230,19 +263,19 @@ async function computeMapData(filters) {
   const [pouMap, konsumenMap, produsenMap, cppdMap, gpmMap] = await Promise.all([
     KetidakcukupanProvinsi.aggregate([
       { $match: yearMatch },
-      { $project: { _id: 0, provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } } } }
+      { $project: { _id: 0, provinsi: 1, pou: { $toDouble: { $ifNull: ['$pou', '0'] } } } },
     ]),
     HargaKonsumenProvinsi.aggregate([
       { $match: yearMatch },
       { $group: { _id: { provinsi: '$nama_provinsi' }, harga: { $avg: '$harga' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-      { $sort: { provinsi: 1 } }
+      { $sort: { provinsi: 1 } },
     ]),
     HargaProdusenProvinsi.aggregate([
       { $match: yearMatch },
       { $group: { _id: { provinsi: '$nama_provinsi' }, harga: { $avg: '$harga' } } },
       { $replaceWith: { $mergeObjects: ['$_id', { harga: { $round: ['$harga', 0] } }] } },
-      { $sort: { provinsi: 1 } }
+      { $sort: { provinsi: 1 } },
     ]),
     CadanganPanganProvinsi.aggregate([
       { $match: yearMatch },
@@ -279,7 +312,20 @@ async function computeTables(filters, pagination) {
 
   const paginate = (data, total) => ({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
 
-  const [pouData, pouTotal, cppdData, cppdTotal, gpmData, gpmTotal, donasiData, donasiTotal, neracaData, neracaTotal, pouProvData, pouProvTotal] = await Promise.all([
+  const [
+    pouData,
+    pouTotal,
+    cppdData,
+    cppdTotal,
+    gpmData,
+    gpmTotal,
+    donasiData,
+    donasiTotal,
+    neracaData,
+    neracaTotal,
+    pouProvData,
+    pouProvTotal,
+  ] = await Promise.all([
     KetidakcukupanNasional.find(pouMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),
     KetidakcukupanNasional.countDocuments(pouMatch),
     CadanganPanganProvinsi.find(cppdMatch).sort({ tahun: -1 }).skip(skip).limit(limit).lean(),

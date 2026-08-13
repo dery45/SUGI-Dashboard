@@ -1,23 +1,26 @@
 const mongoose = require('mongoose');
 
-const saleSchema = new mongoose.Schema({
-  crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
-  farm_id:       { type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster', required: true },
-  organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+const saleSchema = new mongoose.Schema(
+  {
+    crop_cycle_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CropCycle' },
+    farm_id: { type: mongoose.Schema.Types.ObjectId, ref: 'FarmMaster', required: true },
+    organization_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
 
-  buyer_name: { type: String, required: true },
-  buyer_type: { type: String, enum: ['Mill', 'Middleman', 'Direct', 'Government'], required: true },
+    buyer_name: { type: String, required: true },
+    buyer_type: { type: String, enum: ['Mill', 'Middleman', 'Direct', 'Government'], required: true },
 
-  quantity_kg:   { type: Number, required: true, min: 0 },
-  price_per_kg:  { type: Number, required: true, min: 0 },
-  total_revenue: { type: Number }, // auto-computed pre-save
+    quantity_kg: { type: Number, required: true, min: 0 },
+    price_per_kg: { type: Number, required: true, min: 0 },
+    total_revenue: { type: Number }, // auto-computed pre-save
 
-  transport_notes: { type: String },
-  invoice_ref:     { type: String },
-  sale_date:       { type: Date, required: true, default: Date.now },
+    transport_notes: { type: String },
+    invoice_ref: { type: String },
+    sale_date: { type: Date, required: true, default: Date.now },
 
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-}, { timestamps: true });
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  },
+  { timestamps: true }
+);
 
 // Auto-compute total_revenue before save
 saleSchema.pre('save', function () {

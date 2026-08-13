@@ -1,6 +1,6 @@
 const User = require('../model/User');
 const bcrypt = require('bcryptjs');
-const { validate, errorResponse, required, isEmail, isPhone, minLength } = require('../util/validate');
+const { validate, errorResponse, required, isPhone, minLength } = require('../util/validate');
 
 const getProfile = async (req, res) => {
   try {
@@ -21,7 +21,7 @@ const updateProfile = async (req, res) => {
 
     const errors = validate(req.body, {
       name: [[required, 'Nama']],
-      phone: [[isPhone, 'Telepon']]
+      phone: [[isPhone, 'Telepon']],
     });
     if (errors) return errorResponse(res, errors);
 
@@ -47,8 +47,11 @@ const changePassword = async (req, res) => {
 
     const errors = validate(req.body, {
       current_password: [[required, 'Password saat ini']],
-      new_password: [[required, 'Password baru'], [minLength, 6, 'Password baru']],
-      confirm_password: [[required, 'Konfirmasi password']]
+      new_password: [
+        [required, 'Password baru'],
+        [minLength, 6, 'Password baru'],
+      ],
+      confirm_password: [[required, 'Konfirmasi password']],
     });
     if (errors) return errorResponse(res, errors);
 
@@ -94,7 +97,7 @@ const updateAssignedFarm = async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
 
     const assigned = user.assigned_farms || [];
-    if (!assigned.some(f => f.toString() === farm_id)) {
+    if (!assigned.some((f) => f.toString() === farm_id)) {
       assigned.push(farm_id);
       user.assigned_farms = assigned;
       await user.save();

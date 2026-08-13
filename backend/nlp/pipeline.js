@@ -54,7 +54,7 @@ class NlpPipeline {
       await chatbotNlpRepository.bulkUpsert(results);
     }
 
-    const summaries = documents.map(d => d.summary || '').filter(s => s.trim());
+    const summaries = documents.map((d) => d.summary || '').filter((s) => s.trim());
     const tfidf = topicModeler.computeTFIDF(summaries);
     const lda = topicModeler.computeLDA(summaries);
     const bigrams = topicModeler.computeBigrams(summaries);

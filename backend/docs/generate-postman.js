@@ -21,9 +21,7 @@ function buildRequest(pathTemplate, method, op) {
     { key: 'Authorization', value: 'Bearer {{token}}', type: 'text' },
     { key: 'Content-Type', value: 'application/json', type: 'text' },
   ];
-  const body = op.requestBody
-    ? { mode: 'raw', raw: '{}', options: { raw: { language: 'json' } } }
-    : undefined;
+  const body = op.requestBody ? { mode: 'raw', raw: '{}', options: { raw: { language: 'json' } } } : undefined;
 
   const query = [];
   const params = op.parameters || [];
@@ -68,10 +66,12 @@ const collection = {
           name: 'POST /auth/login',
           request: {
             method: 'POST',
-            header: [
-              { key: 'Content-Type', value: 'application/json', type: 'text' },
-            ],
-            body: { mode: 'raw', raw: '{\n  "email": "superadmin@sugi.id",\n  "password": "superadmin123"\n}', options: { raw: { language: 'json' } } },
+            header: [{ key: 'Content-Type', value: 'application/json', type: 'text' }],
+            body: {
+              mode: 'raw',
+              raw: '{\n  "email": "superadmin@sugi.id",\n  "password": "superadmin123"\n}',
+              options: { raw: { language: 'json' } },
+            },
             url: { raw: `${BASE}/auth/login`, host: [BASE], path: ['auth', 'login'] },
           },
           event: [

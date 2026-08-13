@@ -68,7 +68,7 @@ const errorResponse = (res, errors, status = 400) => {
   return res.status(status).json({
     success: false,
     message: 'Validasi gagal',
-    errors
+    errors,
   });
 };
 

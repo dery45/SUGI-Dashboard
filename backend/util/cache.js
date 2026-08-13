@@ -26,7 +26,10 @@ class Cache {
   }
 
   invalidate(pattern) {
-    if (!pattern) { this.store.clear(); return; }
+    if (!pattern) {
+      this.store.clear();
+      return;
+    }
     for (const key of this.store.keys()) {
       if (key.includes(pattern)) this.store.delete(key);
     }

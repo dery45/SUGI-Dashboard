@@ -19,7 +19,7 @@ async function seed() {
       password: 'superadmin123',
       role: 'superadmin',
       phone: '081234567890',
-      address: 'Jakarta, Indonesia'
+      address: 'Jakarta, Indonesia',
     });
     console.log('Super Admin created: superadmin@sugi.id / superadmin123');
   }
@@ -32,7 +32,7 @@ async function seed() {
       password: 'government123',
       role: 'government',
       phone: '081234567891',
-      address: 'Jakarta, Indonesia'
+      address: 'Jakarta, Indonesia',
     });
     console.log('Government user created: government@sugi.id / government123');
   }
@@ -45,7 +45,7 @@ async function seed() {
       password: 'owner123',
       role: 'farmer_owner',
       phone: '081234567892',
-      address: 'Sumatera Utara, Indonesia'
+      address: 'Sumatera Utara, Indonesia',
     });
     console.log('Farmer Owner created: owner@sugi.id / owner123');
   }
@@ -55,4 +55,7 @@ async function seed() {
   process.exit(0);
 }
 
-seed().catch(e => { console.error('Seed error:', e); process.exit(1); });
+seed().catch((e) => {
+  console.error('Seed error:', e);
+  process.exit(1);
+});
