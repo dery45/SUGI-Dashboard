@@ -171,6 +171,8 @@ const ctrl = require('../controller/lifecycleController');
 
 router.use(authenticate);
 
+router.get('/cycles/eligible', isManagement, ctrl.listEligibleCycles);
+
 router.get('/land', isManagement, ctrl.listLand);
 router.post('/land', isManagement, ctrl.createLand);
 router.put('/land/:id', isManagement, ctrl.updateLand);

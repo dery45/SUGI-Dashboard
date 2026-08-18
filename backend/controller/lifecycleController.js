@@ -174,6 +174,27 @@ const listPlantings = async (req, res) => {
   }
 };
 
+// GET /lifecycle/cycles/eligible?stage=planting|maintenance|harvest
+// Returns only CropCycles whose status makes them eligible for the requested
+// stage — used to power dropdown selects in Penanaman/Perawatan/Panen forms.
+const listEligibleCycles = async (req, res) => {
+  try {
+    const reqMap = { planting: 'planting', maintenance: 'maintenance', harvest: 'harvest' };
+    const key = reqMap[req.query.stage];
+    if (!key) return errorResponse(res, { stage: 'Parameter stage harus planting, maintenance, atau harvest' }, 400);
+    const filter = await buildFarmFilter(req.user);
+    const data = await CropCycle.find({
+      ...filter,
+      status: { $in: STAGE_REQ[key].requireStatus },
+    })
+      .populate('farm_id farm_master block crop_type_ref')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 const createPlanting = async (req, res) => {
   try {
     const errs = validate(req.body, {
@@ -367,6 +388,7 @@ module.exports = {
   createLand,
   updateLand,
   deleteLand,
+  listEligibleCycles,
   listPlantings,
   createPlanting,
   updatePlanting,
