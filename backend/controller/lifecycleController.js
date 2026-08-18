@@ -44,6 +44,36 @@ const buildFarmFilterSimple = async (user) => {
   return {};
 };
 
+// Per-stage eligibility: a CropCycle must be in one of the allowed statuses
+// before the corresponding lifecycle stage can be recorded. Stages advance the
+// cycle status; Completed/Failed cycles are never eligible again.
+const STAGE_REQ = {
+  planting: {
+    requireStatus: ['Planned', 'Land_Preparation'],
+    advanceTo: 'Planted',
+    label: 'Penanaman',
+  },
+  maintenance: {
+    requireStatus: ['Planted', 'Maintenance'],
+    advanceTo: 'Maintenance',
+    label: 'Perawatan',
+  },
+  harvest: {
+    requireStatus: ['Planted', 'Maintenance', 'Harvesting'],
+    advanceTo: 'Harvesting',
+    label: 'Panen',
+  },
+};
+
+const eligibilityError = (cycle, stageKey) => {
+  const req = STAGE_REQ[stageKey];
+  if (!req) return null;
+  if (!req.requireStatus.includes(cycle.status)) {
+    return `${req.label} tidak dapat dilakukan pada siklus dengan status "${String(cycle.status || '').replace(/_/g, ' ')}"`;
+  }
+  return null;
+};
+
 const farmFilterWithMaster = async (user) => {
   if (user.role === 'superadmin' || user.role === 'government') return {};
   if (user.role === 'farmer_owner') {
@@ -132,7 +162,7 @@ const listPlantings = async (req, res) => {
     const filter = await buildFarmFilter(req.user);
     const statusFilter = {
       status: {
-        $in: ['Planned', 'In_Progress', 'Completed', 'Cancelled', 'Land_Preparation', 'Planted', 'Maintenance'],
+        $in: ['Planned', 'In_Progress', 'Completed', 'Cancelled', 'Land_Preparation', 'Planted', 'Maintenance', 'Harvesting'],
       },
     };
     const data = await CropCycle.find({ ...filter, ...statusFilter })
@@ -155,6 +185,8 @@ const createPlanting = async (req, res) => {
     if (errs) return errorResponse(res, errs);
     const cycle = await CropCycle.findById(req.body.crop_cycle_id);
     if (!cycle) return res.status(404).json({ success: false, message: 'Siklus tanam tidak ditemukan' });
+    const gateErr = eligibilityError(cycle, 'planting');
+    if (gateErr) return errorResponse(res, { stage: gateErr }, 400);
     // Penanaman does not create the cycle — it records planting data onto the
     // existing cycle that was created during Persiapan Lahan.
     cycle.crop_type = req.body.crop_type ?? cycle.crop_type;
@@ -166,7 +198,7 @@ const createPlanting = async (req, res) => {
     cycle.planting_date = req.body.planting_date ?? cycle.planting_date;
     cycle.executor = req.body.executor ?? cycle.executor;
     cycle.notes = req.body.notes ?? cycle.notes;
-    cycle.status = req.body.status ?? cycle.status;
+    cycle.status = req.body.status ?? STAGE_REQ.planting.advanceTo;
     if (req.body.farm_master) cycle.farm_master = req.body.farm_master;
     if (req.body.block) cycle.block = req.body.block;
     await cycle.save();
@@ -220,6 +252,8 @@ const createActivity = async (req, res) => {
     if (errs) return errorResponse(res, errs);
     const cycle = await CropCycle.findById(req.body.crop_cycle_id);
     if (!cycle) return res.status(404).json({ success: false, message: 'Siklus tanam tidak ditemukan' });
+    const gateErr = eligibilityError(cycle, 'maintenance');
+    if (gateErr) return errorResponse(res, { stage: gateErr }, 400);
     const record = new Activity({
       ...req.body,
       crop_cycle_id: cycle._id,
@@ -227,9 +261,13 @@ const createActivity = async (req, res) => {
       farm_master: req.body.farm_master || cycle.farm_master || cycle.farm_id,
       block: req.body.block || cycle.block,
       cycle: req.body.cycle || cycle.cycle,
+      labor_hours: req.body.labor_hours ?? 0,
+      cost: req.body.cost ?? 0,
       createdBy: req.user.id,
     });
     await record.save();
+    cycle.status = STAGE_REQ.maintenance.advanceTo;
+    await cycle.save();
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -280,6 +318,8 @@ const createHarvest = async (req, res) => {
     if (errs) return errorResponse(res, errs);
     const cycle = await CropCycle.findById(req.body.crop_cycle_id);
     if (!cycle) return res.status(404).json({ success: false, message: 'Siklus tanam tidak ditemukan' });
+    const gateErr = eligibilityError(cycle, 'harvest');
+    if (gateErr) return errorResponse(res, { stage: gateErr }, 400);
     const record = new HarvestPeriod({
       ...req.body,
       crop_cycle_id: cycle._id,
@@ -290,6 +330,8 @@ const createHarvest = async (req, res) => {
       createdBy: req.user.id,
     });
     await record.save();
+    cycle.status = STAGE_REQ.harvest.advanceTo;
+    await cycle.save();
     res.status(201).json({ success: true, data: record });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -300,6 +342,10 @@ const updateHarvest = async (req, res) => {
   try {
     const record = await HarvestPeriod.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!record) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
+    // Closing/completing the harvest finalizes the cycle.
+    if (record.status === 'Closed' || record.status === 'Completed') {
+      await CropCycle.findByIdAndUpdate(record.crop_cycle_id, { status: 'Completed' });
+    }
     res.json({ success: true, data: record });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
