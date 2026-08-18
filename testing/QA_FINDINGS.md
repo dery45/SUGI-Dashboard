@@ -278,3 +278,31 @@
 **Detail:** frontend/src/pages/Login.jsx: handleLogin -> navigate('/management')
 
 ---
+
+## Finding — FE Task FE-9B-1 (2026-08-18T08:57:04.108Z)
+
+**Severity:** info
+
+**Title:** Sales save button only guards double-submission by closing the modal, backend has no idempotency
+
+**Expected:** A fast double-click on 'Simpan' in the sales form creates exactly one sale record.
+
+**Observed:** Two synchronous submit events created 2 identical sale records (invoice_ref 'QA_FE_DBL_1787043421022'). The guarded 'RecordSaleModal.jsx' (disabled={saving}) is unused dead code; SalesDistributionPage.jsx renders its own unguarded modal. In practice the modal closes when the first response resolves, so duplicate creation requires the two submits to race the server response.
+
+**Detail:** Backend /sales has no idempotency key; defense-in-depth would be a unique constraint or client-side disable-on-save on the live form.
+
+---
+
+## Finding — FE Task FE-9B-3 (2026-08-18T09:02:00.038Z)
+
+**Severity:** info
+
+**Title:** Password change via Settings UI leaves pre-change JWTs valid (stateless JWT)
+
+**Expected:** Rotating a password should invalidate already-issued sessions so a stolen pre-change token stops working.
+
+**Observed:** After changing qa_superadmin's password through the UI, a request with the pre-change JWT still returned 200 on /auth/me (server is stateless; the JWT secret is not rotated). Cross-referenced with backend 9B-01 (password change flow).
+
+**Detail:** Impact: sessions are not revoked on password rotation; acceptable if tokens are short-lived, but worth recording.
+
+---
