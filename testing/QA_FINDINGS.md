@@ -40,3 +40,45 @@
 **Detail:** backend/controller/lifecycleController.js updatePlanting (and updateActivity/updateLand share the raw findByIdAndUpdate pattern).
 
 ---
+
+## Finding — Task 5 (2026-08-18T07:35:42.028Z)
+
+**Severity:** critical
+
+**Title:** Any authenticated user can create a superadmin (role value not constrained)
+
+**Expected:** POST /farmers with role=superadmin from a farmer must be rejected (403/400).
+
+**Observed:** Observed farmer POST /farmers {role:"superadmin"} -> 201 role=superadmin. createUser validates name/email/password only; payload.role = role || 'farmer'.
+
+**Detail:** backend/controller/farmerManagementController.js createUser: role is taken verbatim from req.body for non-farmer_owner callers.
+
+---
+
+## Finding — Task 5 (2026-08-18T07:35:42.090Z)
+
+**Severity:** major
+
+**Title:** Any authenticated user can soft-delete any other user
+
+**Expected:** Only superadmin/government (or an owning farmer_owner) may deactivate a user.
+
+**Observed:** Observed farmer DELETE /farmers/:victim -> 200 ("User dinonaktifkan"). deleteUser has no role guard beyond the farmer_owner branch.
+
+**Detail:** backend/controller/farmerManagementController.js deleteUser.
+
+---
+
+## Finding — Task 5 (2026-08-18T07:35:42.141Z)
+
+**Severity:** major
+
+**Title:** getUserById leaks any user to any authenticated caller
+
+**Expected:** A farmer must not be able to read superadmin/government accounts.
+
+**Observed:** Observed farmer GET /farmers/:superadminId -> 200. getUserById has no ownership/role filter.
+
+**Detail:** backend/controller/farmerManagementController.js getUserById.
+
+---

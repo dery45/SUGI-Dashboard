@@ -30,13 +30,18 @@ test.describe("TASK 0 — seed idempotency", () => {
     const qaBlocks = (blocksJson.data || []).filter((b: any) => String(b.code).startsWith("QA-"));
     expect(qaBlocks.map((b: any) => b.code).sort()).toEqual(["QA-1A", "QA-1B", "QA-2A", "QA-2B"]);
 
-    // Users: exactly 8 QA users, 1 per role key.
+    // Users: every role fixture exists exactly once (throwaway TASK-5 users may
+    // accumulate from other specs, so assert on the canonical role emails).
     const usersRes = await request.get(`${API_BASE}/farmers?limit=500`, {
       headers: { Authorization: `Bearer ${admin.token}` },
     });
     const usersJson = await usersRes.json();
     const qaUsers = (usersJson.data || []).filter((u: any) => /^qa_[a-z0-9_]+@sugi\.test$/.test(u.email));
-    expect(qaUsers.length).toBe(8);
+    const roleEmails = Object.values(ROLES).map((r) => r.email);
+    for (const email of roleEmails) {
+      const matches = qaUsers.filter((u: any) => u.email === email);
+      expect(matches).toHaveLength(1);
+    }
 
     // Every role can still log in.
     for (const fixture of Object.values(ROLES)) {
