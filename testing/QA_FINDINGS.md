@@ -180,3 +180,73 @@
 **Detail:** backend/controller/expenseController.js listExpenses (Expense.aggregate $match) — same pattern in salesController.js listSales totals.aggregate.
 
 ---
+
+## Finding — Task 8 (2026-08-18T07:58:46.746Z)
+
+**Severity:** major
+
+**Title:** SEC-01 NoSQL operator injection in list filters (`farm_id[$ne]`) bypasses filter
+
+**Expected:** Requesting /sales?farm_id[$ne]=deadbeef must not return unrelated farm rows: the injected operator should be treated as a literal query string or rejected (4xx).
+
+**Observed:** Status 200: the $ne operator was passed straight into the Mongoose filter object, matching every document whose farm_id is not 'deadbeef' (i.e. ALL farms) instead of an empty result set. sales list endpoint returns unfiltered rows.
+
+**Detail:** GET /sales?farm_id[$ne]=deadbeef
+
+---
+
+## Finding — Task 8 (2026-08-18T07:58:46.870Z)
+
+**Severity:** major
+
+**Title:** SEC-02 unvalidated `search` regex reaches new RegExp() and crashes list handlers
+
+**Expected:** GET /master-data/blocks?search=(.* must be handled gracefully (matching none or 400), never a 500 from an unterminated-group exception.
+
+**Observed:** Status 500: the raw query string is interpolated into 'new RegExp(search, "i")', so an unterminated group like '(.*' throws 'Invalid regular expression' and the API returns 500. Same pattern exists in /farmers?search= and other list endpoints.
+
+**Detail:** Probe: GET /master-data/blocks?search=%28.*  -> 500 {"message":"Invalid regular expression: /(.*/i: Unterminated group"}
+
+---
+
+## Finding — Task 8 (2026-08-18T07:58:46.911Z)
+
+**Severity:** minor
+
+**Title:** SEC-03 invalid ObjectId path params return raw 500 CastError on several controllers
+
+**Expected:** GET /sales/not-an-object-id and DELETE /lifecycle/plantings/not-an-id should return 400 (invalid id) or 404, with a clean message.
+
+**Observed:** Status 500 with Mongoose's raw 'Cast to ObjectId failed ... path "_id"' error surfaced to the client. Routes missing the isObjectId guard: sales get/delete, expense patch/delete, lifecycle plantings delete, KPI farm_id filter.
+
+**Detail:** Probe: GET /sales/not-an-object-id -> 500 {error:'Cast to ObjectId failed for value ...'}
+
+---
+
+## Finding — Task 8 (2026-08-18T07:58:47.344Z)
+
+**Severity:** minor
+
+**Title:** SEC-04 no rate limiting / lockout on POST /auth/login
+
+**Expected:** Repeated failed logins should be throttled or locked out (e.g. 429 after several attempts) to slow brute-force credential attacks.
+
+**Observed:** 20 rapid bad logins all returned 2xx-401/400 responses — no 429, no backoff, no account lockout observed. Login endpoint is unbounded.
+
+**Detail:** Probe: 15 rapid bad logins -> all [401]
+
+---
+
+## Finding — Task 8 (2026-08-18T07:58:49.035Z)
+
+**Severity:** major
+
+**Title:** SEC-05 any authenticated farmer can create/update/delete master-data entities
+
+**Expected:** Farmers (role 'farmer') should not be able to mutate global master data (farms/blocks/crop-types/activity-types); only management or government roles should.
+
+**Observed:** Status 201: a plain farmer (qa_farmer_f1_all) successfully POSTed a farm via /master-data/farms (the create guard only blocks role 'farmer_owner', not 'farmer'). The same route family also allows update/delete.
+
+**Detail:** Probe: farmer POST /master-data/farms -> 201; DELETE -> 200
+
+---
