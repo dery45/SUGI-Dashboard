@@ -219,7 +219,8 @@ const createPlanting = async (req, res) => {
     cycle.planting_date = req.body.planting_date ?? cycle.planting_date;
     cycle.executor = req.body.executor ?? cycle.executor;
     cycle.notes = req.body.notes ?? cycle.notes;
-    cycle.status = req.body.status ?? STAGE_REQ.planting.advanceTo;
+    // Status is advanced by the stage, never regressed by a caller-supplied value.
+    cycle.status = STAGE_REQ.planting.advanceTo;
     if (req.body.farm_master) cycle.farm_master = req.body.farm_master;
     if (req.body.block) cycle.block = req.body.block;
     await cycle.save();
