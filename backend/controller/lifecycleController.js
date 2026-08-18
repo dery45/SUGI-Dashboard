@@ -66,7 +66,9 @@ const farmFilterWithMaster = async (user) => {
 const listLand = async (req, res) => {
   try {
     const filter = await farmFilterWithMaster(req.user);
-    const data = await LandRecord.find(filter).populate('farm_id farm_master block').sort({ createdAt: -1 });
+    const data = await LandRecord.find(filter)
+      .populate('farm_id farm_master block crop_cycle_id')
+      .sort({ createdAt: -1 });
     res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -83,9 +85,23 @@ const createLand = async (req, res) => {
       land_opening_date: [[required, 'Tanggal Buka Lahan']],
     });
     if (errs) return errorResponse(res, errs);
-    const record = new LandRecord({ ...req.body, createdBy: req.user.id });
+    // Single entry point: every Siklus Tanam (CropCycle) is created here,
+    // during the Persiapan Lahan (LandRecord) flow. Penanaman, Perawatan and
+    // Panen handlers only reference an existing cycle via crop_cycle_id.
+    const cycle = new CropCycle({
+      farm_id: req.body.farm_id,
+      farm_master: req.body.farm_master || req.body.farm_id,
+      block: req.body.block,
+      cycle: req.body.cycle,
+      crop_type: req.body.crop_type,
+      status: 'Land_Preparation',
+      land_opening_date: req.body.land_opening_date,
+      createdBy: req.user.id,
+    });
+    await cycle.save();
+    const record = new LandRecord({ ...req.body, crop_cycle_id: cycle._id, createdBy: req.user.id });
     await record.save();
-    res.status(201).json({ success: true, data: record });
+    res.status(201).json({ success: true, data: record, crop_cycle: cycle });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -131,16 +147,30 @@ const listPlantings = async (req, res) => {
 const createPlanting = async (req, res) => {
   try {
     const errs = validate(req.body, {
-      farm_id: [
-        [required, 'Farm'],
-        [isObjectId, 'Farm'],
+      crop_cycle_id: [
+        [required, 'Siklus Tanam'],
+        [isObjectId, 'Siklus Tanam'],
       ],
-      crop_type: [[required, 'Jenis Tanaman']],
     });
     if (errs) return errorResponse(res, errs);
-    const record = new CropCycle({ ...req.body, createdBy: req.user.id });
-    await record.save();
-    res.status(201).json({ success: true, data: record });
+    const cycle = await CropCycle.findById(req.body.crop_cycle_id);
+    if (!cycle) return res.status(404).json({ success: false, message: 'Siklus tanam tidak ditemukan' });
+    // Penanaman does not create the cycle — it records planting data onto the
+    // existing cycle that was created during Persiapan Lahan.
+    cycle.crop_type = req.body.crop_type ?? cycle.crop_type;
+    cycle.crop_type_ref = req.body.crop_type_ref ?? cycle.crop_type_ref;
+    cycle.variety = req.body.variety ?? cycle.variety;
+    cycle.planting_density = req.body.planting_density ?? cycle.planting_density;
+    cycle.area_ha = req.body.area_ha ?? cycle.area_ha;
+    cycle.seedling_count = req.body.seedling_count ?? cycle.seedling_count;
+    cycle.planting_date = req.body.planting_date ?? cycle.planting_date;
+    cycle.executor = req.body.executor ?? cycle.executor;
+    cycle.notes = req.body.notes ?? cycle.notes;
+    cycle.status = req.body.status ?? cycle.status;
+    if (req.body.farm_master) cycle.farm_master = req.body.farm_master;
+    if (req.body.block) cycle.block = req.body.block;
+    await cycle.save();
+    res.status(201).json({ success: true, data: cycle });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -181,14 +211,24 @@ const listActivities = async (req, res) => {
 const createActivity = async (req, res) => {
   try {
     const errs = validate(req.body, {
-      farm_id: [
-        [required, 'Farm'],
-        [isObjectId, 'Farm'],
+      crop_cycle_id: [
+        [required, 'Siklus Tanam'],
+        [isObjectId, 'Siklus Tanam'],
       ],
       date: [[required, 'Tanggal']],
     });
     if (errs) return errorResponse(res, errs);
-    const record = new Activity({ ...req.body, createdBy: req.user.id });
+    const cycle = await CropCycle.findById(req.body.crop_cycle_id);
+    if (!cycle) return res.status(404).json({ success: false, message: 'Siklus tanam tidak ditemukan' });
+    const record = new Activity({
+      ...req.body,
+      crop_cycle_id: cycle._id,
+      farm_id: req.body.farm_id || cycle.farm_id,
+      farm_master: req.body.farm_master || cycle.farm_master || cycle.farm_id,
+      block: req.body.block || cycle.block,
+      cycle: req.body.cycle || cycle.cycle,
+      createdBy: req.user.id,
+    });
     await record.save();
     res.status(201).json({ success: true, data: record });
   } catch (error) {
@@ -231,14 +271,24 @@ const listHarvests = async (req, res) => {
 const createHarvest = async (req, res) => {
   try {
     const errs = validate(req.body, {
-      farm_id: [
-        [required, 'Farm'],
-        [isObjectId, 'Farm'],
+      crop_cycle_id: [
+        [required, 'Siklus Tanam'],
+        [isObjectId, 'Siklus Tanam'],
       ],
       harvest_opening_date: [[required, 'Tanggal Buka Panen']],
     });
     if (errs) return errorResponse(res, errs);
-    const record = new HarvestPeriod({ ...req.body, createdBy: req.user.id });
+    const cycle = await CropCycle.findById(req.body.crop_cycle_id);
+    if (!cycle) return res.status(404).json({ success: false, message: 'Siklus tanam tidak ditemukan' });
+    const record = new HarvestPeriod({
+      ...req.body,
+      crop_cycle_id: cycle._id,
+      farm_id: req.body.farm_id || cycle.farm_id,
+      farm_master: req.body.farm_master || cycle.farm_master || cycle.farm_id,
+      block: req.body.block || cycle.block,
+      cycle: req.body.cycle || cycle.cycle,
+      createdBy: req.user.id,
+    });
     await record.save();
     res.status(201).json({ success: true, data: record });
   } catch (error) {
