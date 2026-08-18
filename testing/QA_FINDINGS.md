@@ -250,3 +250,31 @@
 **Detail:** Probe: farmer POST /master-data/farms -> 201; DELETE -> 200
 
 ---
+
+## Finding — FE Task FE-1 (2026-08-18T08:25:56.025Z)
+
+**Severity:** info
+
+**Title:** FE-REPLAY Logout is client-side only; the JWT remains valid if replayed
+
+**Expected:** (No hard requirement — JWTs are commonly stateless.) Record that a token captured before logout still satisfies /auth/me.
+
+**Observed:** role=superadmin: POST-logout replay of the same JWT returned 200 — the token is NOT invalidated server-side by logout.
+
+**Detail:** Observed via /auth/me with the pre-logout token after localStorage was cleared (no server logout call exists).
+
+---
+
+## Finding — FE Task FE-1 (2026-08-18T08:30:25.127Z)
+
+**Severity:** info
+
+**Title:** FE-REDIRECT post-login redirect is hard-coded to /management for every role
+
+**Expected:** (Informational — the app works, but the redirect is role-blind.) On login the SPA calls navigate('/management'); for non-management roles the protected route then bounces to '/' before the role home.
+
+**Observed:** farmer login: URL sequence went login -> /management (denied) -> / -> /farmer; the app recovered to the correct dashboard, but with an extra navigation round-trip for every non-management role.
+
+**Detail:** frontend/src/pages/Login.jsx: handleLogin -> navigate('/management')
+
+---
