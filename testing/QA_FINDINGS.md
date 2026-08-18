@@ -82,3 +82,73 @@
 **Detail:** backend/controller/farmerManagementController.js getUserById.
 
 ---
+
+## Finding — Task 6 (2026-08-18T07:42:07.089Z)
+
+**Severity:** critical
+
+**Title:** farmer_owner can create an assignment on a farm they do not own
+
+**Expected:** Owner of QA-1 must not be able to assign a farmer to QA-2 blocks.
+
+**Observed:** Observed owner_farm1 POST /assignments/farmer-assignments with farmer_f2 + block QA-2A -> 201. createFarmerAssignment only checks farmer/blocks presence, never the caller's farm scope.
+
+**Detail:** backend/controller/assignmentController.js createFarmerAssignment.
+
+---
+
+## Finding — Task 6 (2026-08-18T07:42:07.292Z)
+
+**Severity:** major
+
+**Title:** farmer_owner assignment list is always empty (wrong scope query)
+
+**Expected:** Owner of QA-1 who just assigned a farmer on QA-1 must see that assignment when listing.
+
+**Observed:** Observed owner_farm1 POST assignment on QA-1 -> 201, then GET /assignments/farmer-assignments -> 0 rows. listFarmerAssignments derives owned farms from FarmerAssignment.find({farmer: ownerId}).distinct('farm'), which is empty for an owner.
+
+**Detail:** backend/controller/assignmentController.js listFarmerAssignments lines 11-14.
+
+---
+
+## Finding — Task 6 (2026-08-18T07:42:07.357Z)
+
+**Severity:** critical
+
+**Title:** farmer_owner can create a land record / CropCycle on a farm they do not own
+
+**Expected:** Owner of QA-1 must not create land (start a cycle) on QA-2.
+
+**Observed:** Observed owner_farm1 POST /lifecycle/land {farm_id: QA-2} -> 201. createLand validates farm_id format only.
+
+**Detail:** backend/controller/lifecycleController.js createLand.
+
+---
+
+## Finding — Task 6 (2026-08-18T07:44:02.923Z)
+
+**Severity:** major
+
+**Title:** Farmers can read any farm (master-data scoping ignores farmer role)
+
+**Expected:** A farmer assigned to QA-1 must not read QA-2 farm data.
+
+**Observed:** Observed farmer GET /master-data/farms/:QA2 -> 200. masterDataController getById only scopes req.user.role === 'farmer_owner'.
+
+**Detail:** backend/controller/masterDataController.js scoping guards (getById/list/getAll).
+
+---
+
+## Finding — Task 6 (2026-08-18T07:44:03.001Z)
+
+**Severity:** major
+
+**Title:** Farmers can read blocks of any farm
+
+**Expected:** A farmer assigned to QA-1 must not list QA-2 blocks.
+
+**Observed:** Observed farmer GET /master-data/blocks?farm=:QA2 -> 200 with data. Block routes have no farmer scoping.
+
+**Detail:** backend/controller/masterDataController.js blocks list.
+
+---
