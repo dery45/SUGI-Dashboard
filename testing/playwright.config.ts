@@ -20,7 +20,7 @@ const rolesSpecs: Record<string, string[]> = {
     "**/security.spec.ts",
     "**/extra.spec.ts",
   ],
-  government: ["**/auth.spec.ts", "**/kpi.spec.ts", "**/lifecycle.spec.ts", "**/users.spec.ts", "**/security.spec.ts", "**/extra.spec.ts"],
+  government: ["**/auth.spec.ts", "**/kpi.spec.ts", "**/lifecycle.spec.ts", "**/sales.spec.ts", "**/users.spec.ts", "**/security.spec.ts", "**/extra.spec.ts"],
   owner_farm1: [
     "**/auth.spec.ts",
     "**/crud.spec.ts",
@@ -42,7 +42,7 @@ const rolesSpecs: Record<string, string[]> = {
     "**/users.spec.ts",
     "**/security.spec.ts",
   ],
-  farmer_f1_all: ["**/auth.spec.ts", "**/isolation.spec.ts", "**/lifecycle.spec.ts", "**/kpi.spec.ts", "**/security.spec.ts", "**/users.spec.ts"],
+  farmer_f1_all: ["**/auth.spec.ts", "**/isolation.spec.ts", "**/lifecycle.spec.ts", "**/kpi.spec.ts", "**/sales.spec.ts", "**/security.spec.ts", "**/users.spec.ts"],
   farmer_f1_partial: ["**/auth.spec.ts", "**/lifecycle.spec.ts", "**/security.spec.ts"],
   farmer_f2: ["**/auth.spec.ts", "**/isolation.spec.ts", "**/lifecycle.spec.ts", "**/security.spec.ts"],
   no_assignment: ["**/auth.spec.ts", "**/security.spec.ts"],

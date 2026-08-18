@@ -152,3 +152,31 @@
 **Detail:** backend/controller/masterDataController.js blocks list.
 
 ---
+
+## Finding — Task 7 (2026-08-18T07:46:37.244Z)
+
+**Severity:** major
+
+**Title:** farmer_owner can log sales/expenses against a farm they do not own
+
+**Expected:** Owner of QA-1 must not record sales/expenses on QA-2.
+
+**Observed:** Observed owner_farm1 POST /sales {farm_id: QA-2} -> 201. isManagement() checks role only; no farm-scope guard.
+
+**Detail:** backend/route/salesRoutes.js / expenseRoutes.js (isManagement) + controllers.
+
+---
+
+## Finding — Task 7 (2026-08-18T07:48:08.134Z)
+
+**Severity:** major
+
+**Title:** Expense breakdown (and sales totals) are empty when farm_id filter is used
+
+**Expected:** With farm_id=QA-1 filtering 300k of Pupuk expenses, breakdown must show Pupuk: 300000.
+
+**Observed:** Observed GET /expenses?farm_id=:QA1 -> data has 1 rows but breakdown=[] ($match on uncast string ObjectId).
+
+**Detail:** backend/controller/expenseController.js listExpenses (Expense.aggregate $match) — same pattern in salesController.js listSales totals.aggregate.
+
+---
