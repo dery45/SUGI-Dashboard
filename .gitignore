@@ -12,10 +12,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # Testing & docs
-testing/
+testing/.state/
+testing/.auth/
+testing/test-results/
+testing/playwright-report/
+testing/node_modules/
+testing/e2e/**/*.png
 docs/
 !backend/docs/
 
 # Generated structure maps
 BACKEND_STRUCTURE.md
 FRONTEND_STRUCTURE.md
+testing/playwright/
