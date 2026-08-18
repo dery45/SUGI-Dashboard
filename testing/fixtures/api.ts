@@ -202,7 +202,7 @@ export async function login(
   }
 }
 
-/** Append a findings entry (append-only). */
+/** Append a findings entry (append-only, deduped by title). */
 export function appendFinding(
   task: string,
   severity: "critical" | "major" | "minor" | "info",
@@ -211,6 +211,11 @@ export function appendFinding(
   observed: string,
   detail?: string
 ): void {
+  fs.mkdirSync(path.dirname(FINDINGS_FILE), { recursive: true });
+  if (fs.existsSync(FINDINGS_FILE) && fs.readFileSync(FINDINGS_FILE, "utf8").includes(`**Title:** ${title}`)) {
+    console.log(`[FAI] Task ${task} | ${severity} | ${title} (already logged)`);
+    return;
+  }
   const block = [
     "",
     `## Finding — Task ${task} (${new Date().toISOString()})`,

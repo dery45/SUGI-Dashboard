@@ -217,6 +217,28 @@ async function ensureCycleFlow(
   return { cycleId, harvestId };
 }
 
+async function ensureSale(ctx: SeedCtx, farmId: string, data: any, tag: string): Promise<string> {
+  const res = await ctx.super.get(`/sales?farm_id=${farmId}`);
+  const json = await res.json();
+  const existing = (json.data || []).find(
+    (s: any) => String(s.buyer_name || "").startsWith(S) && s.quantity_kg === data.quantity_kg
+  );
+  if (existing) return existing._id;
+  const created = await post(ctx.super, "/sales", { farm_id: farmId, ...data }, `sale ${tag}`);
+  return created._id;
+}
+
+async function ensureExpense(ctx: SeedCtx, farmId: string, data: any, tag: string): Promise<string> {
+  const res = await ctx.super.get(`/expenses?farm_id=${farmId}`);
+  const json = await res.json();
+  const existing = (json.data || []).find(
+    (e: any) => String(e.description || "").startsWith(S) && e.amount_idr === data.amount_idr
+  );
+  if (existing) return existing._id;
+  const created = await post(ctx.super, "/expenses", { farm_id: farmId, ...data }, `expense ${tag}`);
+  return created._id;
+}
+
 export async function runSeed(adminToken: string, log: (s: string) => void): Promise<QaState> {
   const superCtx = await apiWith(adminToken);
   const state: QaState = {
@@ -303,24 +325,24 @@ export async function runSeed(adminToken: string, log: (s: string) => void): Pro
   if (cB.harvestId) state.harvestPeriods.push(cB.harvestId);
 
   // ── Sales + expenses per farm ───────────────────────────────
-  const saleA = await post(superCtx, "/sales", {
-    farm_id: farmA, buyer_name: `${S}Buyer One`, buyer_type: "Mill",
+  const saleA = await ensureSale(ctx, farmA, {
+    buyer_name: `${S}Buyer One`, buyer_type: "Mill",
     quantity_kg: 100, price_per_kg: 5000, sale_date: "2026-03-05",
-  }, "sale QA-1");
-  const saleB = await post(superCtx, "/sales", {
-    farm_id: farmB, buyer_name: `${S}Buyer Two`, buyer_type: "Middleman",
+  }, "QA-1");
+  const saleB = await ensureSale(ctx, farmB, {
+    buyer_name: `${S}Buyer Two`, buyer_type: "Middleman",
     quantity_kg: 200, price_per_kg: 4000, sale_date: "2026-03-08",
-  }, "sale QA-2");
-  const expA = await post(superCtx, "/expenses", {
-    farm_id: farmA, category: "Pupuk", amount_idr: 300000, description: `${S}EXP`,
+  }, "QA-2");
+  const expA = await ensureExpense(ctx, farmA, {
+    category: "Pupuk", amount_idr: 300000, description: `${S}EXP`,
     expense_date: "2026-02-20",
-  }, "expense QA-1");
-  const expB = await post(superCtx, "/expenses", {
-    farm_id: farmB, category: "Tenaga Kerja", amount_idr: 200000, description: `${S}EXP`,
+  }, "QA-1");
+  const expB = await ensureExpense(ctx, farmB, {
+    category: "Tenaga Kerja", amount_idr: 200000, description: `${S}EXP`,
     expense_date: "2026-02-22",
-  }, "expense QA-2");
-  state.sales = [saleA._id, saleB._id];
-  state.expenses = [expA._id, expB._id];
+  }, "QA-2");
+  state.sales = [saleA, saleB];
+  state.expenses = [expA, expB];
 
   // Refresh login tokens for every QA role (also records them in state).
   for (const [key, email, password] of [

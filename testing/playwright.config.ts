@@ -40,7 +40,7 @@ const rolesSpecs: Record<string, string[]> = {
     "**/users.spec.ts",
     "**/security.spec.ts",
   ],
-  farmer_f1_all: ["**/auth.spec.ts", "**/lifecycle.spec.ts", "**/security.spec.ts"],
+  farmer_f1_all: ["**/auth.spec.ts", "**/lifecycle.spec.ts", "**/kpi.spec.ts", "**/security.spec.ts"],
   farmer_f1_partial: ["**/auth.spec.ts", "**/lifecycle.spec.ts", "**/security.spec.ts"],
   farmer_f2: ["**/auth.spec.ts", "**/lifecycle.spec.ts", "**/security.spec.ts"],
   no_assignment: ["**/auth.spec.ts", "**/security.spec.ts"],
