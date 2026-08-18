@@ -95,18 +95,17 @@ async function ensureUser(
 ): Promise<{ id: string }> {
   const existing = await findUserByEmail(ctx.super, email);
   if (existing) {
-    // The API soft-deletes users (status: Inactive); teardown leaves them in
-    // the DB, so a reused account must be re-activated before it can be used.
-    if (String(existing.status) === "Inactive") {
-      const upd = await ctx.super.put(`/farmers/${existing._id}`, {
-        data: { status: "Active" },
-      });
-      const updJson = await upd.json();
-      if (!upd.ok() || !updJson.success) {
-        throw new Error(`reactivate ${email} failed: ${upd.status()} ${JSON.stringify(updJson).slice(0, 200)}`);
-      }
-      ctx.log(`[seed] reactivated user ${email}`);
+    // Farms are re-created each run (new _id) while users persist via soft
+    // delete, so assigned_farms can hold stale ids. Refresh identity + scope.
+    const refresh: Record<string, unknown> = { name };
+    if (role === "farmer_owner") refresh.assigned_farms = farmIds || [];
+    if (String(existing.status) === "Inactive") refresh.status = "Active";
+    const upd = await ctx.super.put(`/farmers/${existing._id}`, { data: refresh });
+    const updJson = await upd.json();
+    if (!upd.ok() || !updJson.success) {
+      throw new Error(`refresh user ${email} failed: ${upd.status()} ${JSON.stringify(updJson).slice(0, 200)}`);
     }
+    if (refresh.status) ctx.log(`[seed] reactivated user ${email}`);
     return { id: existing._id };
   }
   const res = await ctx.super.post("/farmers", {
