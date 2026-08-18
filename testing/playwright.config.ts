@@ -20,7 +20,7 @@ const rolesSpecs: Record<string, string[]> = {
     "**/security.spec.ts",
     "**/extra.spec.ts",
   ],
-  government: ["**/auth.spec.ts", "**/kpi.spec.ts", "**/users.spec.ts", "**/security.spec.ts", "**/extra.spec.ts"],
+  government: ["**/auth.spec.ts", "**/kpi.spec.ts", "**/lifecycle.spec.ts", "**/users.spec.ts", "**/security.spec.ts", "**/extra.spec.ts"],
   owner_farm1: [
     "**/auth.spec.ts",
     "**/crud.spec.ts",

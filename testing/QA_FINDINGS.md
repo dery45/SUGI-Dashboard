@@ -26,3 +26,17 @@
 **Detail:** backend/controller/managementDashboardController.js: buildMatch({...}) is passed to both Sale.aggregate and Expense.aggregate, but Expense has expense_date.
 
 ---
+
+## Finding — Task 4 (2026-08-18T07:31:35.161Z)
+
+**Severity:** major
+
+**Title:** PUT /lifecycle/plantings/:id bypasses the stage gate (arbitrary status)
+
+**Expected:** A cycle in Land_Preparation must not become Completed without passing plant -> maintain -> harvest.
+
+**Observed:** Observed PUT {status:"Completed"} -> 200 with status=Completed. updatePlanting uses CropCycle.findByIdAndUpdate(req.body) with no eligibility check.
+
+**Detail:** backend/controller/lifecycleController.js updatePlanting (and updateActivity/updateLand share the raw findByIdAndUpdate pattern).
+
+---
