@@ -78,7 +78,7 @@ const MasterDataPage = () => {
       const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      setData(Array.isArray(json) ? json : []);
+      setData(Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []));
     } catch (e) {
       setError(e.message);
       setData([]);

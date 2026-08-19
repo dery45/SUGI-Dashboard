@@ -168,45 +168,42 @@ An end-to-end tracking tool covering land preparation, planting schedules, maint
 ```bash
 SUGI-Dashboard-DEMO/
 ├── backend/                          # Node.js + Express REST API
-│   ├── src/
-│   │   ├── controllers/              # Request handlers (auth, dashboards, CRUD, insights)
-│   │   ├── middlewares/              # Custom Express middlewares (RBAC, Auth)
-│   │   ├── models/                   # 35+ Mongoose schemas (master data, lifecycle, insights)
-│   │   │   └── sugi_insights/        # Separate MongoDB connection to sugi_insights database
-│   │   │       ├── index.js          # Mongoose createConnection to sugi_insights
-│   │   │       ├── SessionSummary.js # Raw session data model
-│   │   │       └── NlpResult.js      # NLP-processed results model
-│   │   ├── nlp/                      # NLP Engine (Phase 2 & 3)
-│   │   │   ├── preprocessor.js       # Text cleaning, tokenization, stopword removal, stemming
-│   │   │   ├── stemmer.js            # Custom Indonesian stemmer (rule-based)
-│   │   │   ├── stopwords.js          # 350+ Indonesian stopwords
-│   │   │   ├── entities.js           # NER for 11 entity types (70+ commodities, 38 provinces, 60+ cities, etc.)
-│   │   │   ├── intent.js             # Intent classifier (12 categories with keyword scoring)
-│   │   │   ├── sentiment.js          # Sentiment analyzer (Positive/Neutral/Negative + 8 emotions)
-│   │   │   ├── topics.js             # TF-IDF, LDA topic modeling, bigrams, trigrams, co-occurrence
-│   │   │   ├── relations.js          # Relation extraction (8 pattern types)
-│   │   │   ├── knowledgeGraph.js     # Knowledge graph builder (nodes, edges, stats, search, filter)
-│   │   │   ├── recommendations.js    # Recommendation mining (7 pattern types, 9 categories)
-│   │   │   ├── problems.js           # Problem mining (7 categories, severity scoring)
-│   │   │   ├── trends.js             # Trend analyzer (topic, commodity, entity, intent trends)
-│   │   │   ├── coverage.js           # Coverage analyzer (8 metrics, duplicate detection, recommendations)
-│   │   │   ├── insights.js           # AI Insight Engine (10 dynamic insight types in Bahasa)
-│   │   │   ├── semanticSearch.js     # TF-IDF semantic search with entity/intent/category filters
-│   │   │   ├── optimization.js       # Production: Cache (TTL), Worker Queue, Memoizer
-│   │   │   └── pipeline.js           # NLP pipeline orchestrator
-│   │   ├── repositories/             # Data access layer
-│   │   │   ├── chatbotInsightRepository.js   # Phase 1 KPIs, filter options (aggregation pipelines)
-│   │   │   └── chatbotNlpRepository.js       # Phase 2-3: 15+ aggregation pipelines for all analytics
-│   │   ├── routes/                   # 40+ modular API endpoint files
-│   │   ├── scripts/                  # Seed, reset, and maintenance scripts
-│   │   ├── services/                 # Business logic & complex aggregations
-│   │   │   ├── kpiService.js         # Farmer/Government KPI computation
-│   │   │   ├── chatbotInsightService.js     # Phase 1 dashboard data
-│   │   │   ├── chatbotNlpService.js         # Phase 2 NLP analytics (activity, topics, entities, intent)
-│   │   │   └── chatbotAdvancedService.js    # Phase 3 advanced: KG, recommendations, problems, trends, coverage, insights, semantic search
-│   │   └── utils/                    # Helper functions (cache, validation)
+│   ├── connection/                   # MongoDB connection setup (main DB + sugi_insights)
+│   │   └── db.js                     # Mongoose connections w/ fail-fast MONGO_URI check
+│   ├── controller/                   # Request handlers (auth, dashboards, CRUD, insights)
+│   ├── middleware/                   # Custom Express middlewares (RBAC, Auth, error handler)
+│   ├── model/                        # 30+ Mongoose schemas (master data, lifecycle, insights)
+│   │   ├── insights/                 # Separate MongoDB connection to sugi_insights database
+│   │   │   ├── index.js              # Mongoose createConnection to sugi_insights
+│   │   │   ├── SessionSummary.js     # Raw session data model
+│   │   │   └── NlpResult.js          # NLP-processed results model
+│   │   └── index.js                  # getModelMap() for bulk-import + dataset factory
+│   ├── nlp/                          # NLP Engine (Phase 2 & 3)
+│   │   ├── preprocessor.js           # Text cleaning, tokenization, stopword removal, stemming
+│   │   ├── stemmer.js                # Custom Indonesian stemmer (rule-based)
+│   │   ├── stopwords.js              # 350+ Indonesian stopwords
+│   │   ├── entities.js               # NER for 11 entity types (70+ commodities, 38 provinces, 60+ cities, etc.)
+│   │   ├── intent.js                 # Intent classifier (12 categories with keyword scoring)
+│   │   ├── sentiment.js              # Sentiment analyzer (Positive/Neutral/Negative + 8 emotions)
+│   │   ├── topics.js                 # TF-IDF, LDA topic modeling, bigrams, trigrams, co-occurrence
+│   │   ├── relations.js              # Relation extraction (8 pattern types)
+│   │   ├── knowledgeGraph.js         # Knowledge graph builder (nodes, edges, stats, search, filter)
+│   │   ├── recommendations.js        # Recommendation mining (7 pattern types, 9 categories)
+│   │   ├── problems.js               # Problem mining (7 categories, severity scoring)
+│   │   ├── trends.js                 # Trend analyzer (topic, commodity, entity, intent trends)
+│   │   ├── coverage.js               # Coverage analyzer (8 metrics, duplicate detection, recommendations)
+│   │   ├── insights.js               # AI Insight Engine (10 dynamic insight types in Bahasa)
+│   │   ├── semanticSearch.js         # TF-IDF semantic search with entity/intent/category filters
+│   │   ├── optimization.js           # Production: Cache (TTL), Worker Queue, Memoizer
+│   │   ├── pipeline.js               # NLP pipeline orchestrator
+│   │   ├── repository/               # Data access layer (chatbotInsightRepository, chatbotNlpRepository)
+│   │   └── service/                  # Business logic (chatbotInsightService, chatbotNlpService, chatbotAdvancedService)
+│   ├── route/                        # 30+ modular API endpoint files (incl. dataset CRUD factory)
+│   ├── scripts/                      # Seed, reset, and maintenance scripts
+│   ├── util/                         # Helper functions (cache, validation)
+│   ├── docs/                         # Swagger spec, Postman collection, NLP architecture docs
 │   ├── .env                          # Environment variables
-│   ├── server.js                     # Entry point (Express + MongoDB + static serving)
+│   ├── server.js                     # Entry point (Express + MongoDB + Swagger UI)
 │   └── package.json
 ├── frontend/                         # Vite + React 19 SPA
 │   ├── public/                       # Static assets (GeoJSON maps, icons)
@@ -233,7 +230,7 @@ SUGI-Dashboard-DEMO/
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
-├── docs/                             # Phase implementation documents (3 docs)
+├── docs/                             # Phase implementation & architecture documents (8 docs)
 ├── image/                            # Screenshot images for README
 ├── testing/                          # Playwright automated tests
 └── README.md
@@ -251,12 +248,12 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend/` directory:
+Create a `.env` file in the `backend/` directory (see `backend/.env.example`):
 ```env
 PORT=3000
 MONGO_URI=mongodb://localhost:27017/sugi-dashboard-demo
 JWT_SECRET=supersecret
-file_path="../../client/public/"
+NODE_ENV=development
 ```
 
 Seed default data (users, crop types, activity types):
@@ -275,7 +272,26 @@ npm start     # Production — http://localhost:3000
 npm run dev   # Development with nodemon hot-reload
 ```
 
-### 3. Import Food Security Data
+> **Important:** the server refuses to start (fail-fast `[FATAL]` log) if `MONGO_URI` or `JWT_SECRET` is missing — copy `.env.example` to `.env` and fill both in.
+
+### 3. API Testing
+
+Three ways to explore the API — all documented end-to-end.
+
+**Swagger UI (interactive):** open `http://localhost:3000/api/docs` (raw spec at `/api/docs.json`). All 88 endpoints are grouped by feature. `GET /api/auth/login` is the only public endpoint; everything else requires a click of the "Authorize" button with a bearer token.
+
+**Postman collection:** import `backend/docs/SUGIDash.postman_collection.json` (158 requests across 17 folders). Collection variables `baseUrl` and `token` are pre-configured; run `Auth → Login` first — its test script auto-saves the returned JWT into `token`, so the bearer auth on every other request just works. Regenerate it after changing routes with `node docs/generate-postman.js`.
+
+**Get a token manually:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"superadmin@sugi.id","password":"superadmin123"}'
+# {"success":true,"token":"<JWT>","user":{...}}
+```
+Pass it as `Authorization: Bearer <JWT>` on every other request. See section 5 for all seeded credentials.
+
+### 4. Import Food Security Data
 Price, projection, and consumption data is **not seeded** by default. Use the bulk import API:
 
 ```bash
@@ -289,7 +305,7 @@ Supported model names: `HargaProdusenNasional`, `HargaKonsumenNasional`, `HargaP
 
 Data sources: [SatuHarga Kemendag](https://satuharga.kemendag.go.id/), [PIKOB BPS](https://www.bps.go.id/), or your own aggregation pipeline.
 
-### 4. Setup Frontend
+### 5. Setup Frontend
 ```bash
 cd frontend
 npm install
@@ -298,7 +314,7 @@ npm run dev   # Dev server — http://localhost:5173
 
 The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 
-### 5. Credentials
+### 6. Credentials
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -306,7 +322,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | Government | `government@sugi.id` | `government123` |
 | Farmer Owner | `owner@sugi.id` | `owner123` |
 
-### 6. Key API Endpoints
+### 7. Key API Endpoints
 
 **Authentication:**
 | Method | Endpoint | Description |
@@ -363,13 +379,14 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | Method | Endpoint Example | Description |
 |--------|-----------------|-------------|
 | GET | `/api/master/harga-produsen-nasional` | List records |
+| GET | `/api/master/harga-produsen-nasional/:id` | Get single record |
 | POST | `/api/master/harga-produsen-nasional` | Create record |
 | PUT | `/api/master/harga-produsen-nasional/:id` | Update record |
 | DELETE | `/api/master/harga-produsen-nasional/:id` | Delete record |
 
 **30+ additional RESTful endpoints** for lifecycle management, sales, expenses, assignments, farmers, settings, and Unit Management.
 
-### 7. Frontend Routes
+### 8. Frontend Routes
 
 | Path | Page | Roles |
 |------|------|-------|

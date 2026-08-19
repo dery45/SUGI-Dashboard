@@ -95,6 +95,48 @@ function useBlocks(token, farmId) {
   return blocks;
 }
 
+// Cycles eligible for a given stage (Penanaman/Perawatan/Panen) — used to power
+// the dropdown-only Siklus Tanam selector. The cycle itself is created once in
+// Persiapan Lahan; the later stages only reference it.
+function useEligibleCycles(token, stage) {
+  const [cycles, setCycles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!stage) return;
+    fetch(`${BASE_URL}/lifecycle/cycles/eligible?stage=${stage}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(j => { if (j.success) setCycles(j.data || []); })
+      .catch(() => setCycles([]))
+      .finally(() => setLoading(false));
+  }, [token, stage]);
+  return { cycles, loading };
+}
+
+const cycleLabel = (c) => {
+  const farmName = c?.farm_master?.name || c?.farm_id?.name || c?.farm || '';
+  const blockName = c?.block?.name ? ` / ${c.block.name}` : '';
+  const status = String(c?.status || '').replace(/_/g, ' ');
+  return `${c?.cycle || '(tanpa siklus)'} — ${farmName}${blockName}${status ? ` (${status})` : ''}`;
+};
+
+// Dropdown-only Siklus Tanam selector. extra allows showing the currently
+// edited cycle even when it is no longer eligible for new entries.
+const CycleSelect = ({ label = 'Siklus Tanam', cycles, loading, value, onChange, extra, required = true }) => {
+  const options = [...cycles];
+  const hasVal = options.some(c => c._id === value || c.crop_cycle_id === value);
+  if (!hasVal && extra) {
+    const ext = extra.crop_cycle_id && typeof extra.crop_cycle_id === 'object' ? extra.crop_cycle_id : extra;
+    if (ext._id === value || ext.crop_cycle_id === value || ext._id === ext.crop_cycle_id) options.unshift(ext);
+  }
+  return (
+    <FF label={label} required={required}>
+      <Select name="crop_cycle_id" value={value || ''} onChange={onChange} required={required}>
+        <option value="">{loading ? 'Memuat siklus...' : '-- Pilih Siklus Tanam --'}</option>
+        {options.map(c => <option key={c._id || c.crop_cycle_id} value={c._id || c.crop_cycle_id}>{cycleLabel(c)}</option>)}
+      </Select>
+    </FF>
+  );
+};
+
 function FarmBlockSelects({ farms, farmLocked, form, onChange, blocks, includeBlok }) {
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -187,10 +229,10 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
   return (
     <div>
       <div className="flex justify-between items-center mb-5">
-        <div>
-          <h3 className="text-lg font-bold text-gray-800">Persiapan Lahan</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Kelola pembukaan dan penutupan lahan pertanian</p>
-        </div>
+<div>
+            <h3 className="text-lg font-bold text-gray-800">Persiapan Lahan</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Membuka lahan akan membuat Siklus Tanam baru — titik awal semua tahapan</p>
+          </div>
         <button onClick={openAdd} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 shadow-sm font-medium">+ Buka Lahan Baru</button>
       </div>
       <div className="overflow-x-auto rounded-lg border border-gray-100">
@@ -203,7 +245,10 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
             {records.map(r => (
               <tr key={r._id} className="hover:bg-gray-50 transition">
                 <td className="px-4 py-3 font-medium text-gray-900">{r.farm_master?.name || r.farm_id?.name || r.farm || '—'}{r.block?.name ? ` / ${r.block.name}` : ''}</td>
-                <td className="px-4 py-3 text-gray-500">{r.cycle}</td>
+                <td className="px-4 py-3">
+                  <span className="text-gray-700">{r.cycle || '—'}</span>
+                  {r.crop_cycle_id?._id && <span className="ml-1.5"><Badge status={r.crop_cycle_id.status} /></span>}
+                </td>
                 <td className="px-4 py-3">{r.land_opening_date ? new Date(r.land_opening_date).toLocaleDateString('id-ID') : '—'}</td>
                 <td className="px-4 py-3">{r.land_closing_date ? new Date(r.land_closing_date).toLocaleDateString('id-ID') : <span className="text-gray-300">—</span>}</td>
                 <td className="px-4 py-3">{r.clearing_cost ? `Rp ${Number(r.clearing_cost).toLocaleString('id-ID')}` : '—'}</td>
@@ -225,6 +270,10 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
             <div className="grid grid-cols-2 gap-4">
               <FF label="Siklus Tanam" required><Input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" /></FF>
               <FF label="Tgl Buka" required><Input type="date" name="opening_date" value={form.opening_date} onChange={fc} required /></FF>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800 font-semibold">Siklus Tanam baru akan dibuat otomatis</p>
+              <p className="text-xs text-blue-600 mt-0.5">Setelah dibuka, siklus ini tersedia untuk diisi pada tahap Penanaman, Perawatan, dan Panen.</p>
             </div>
             <FF label="Biaya Pembersihan (Rp)"><Input type="number" name="clearing_cost" value={form.clearing_cost} onChange={fc} min="0" placeholder="0" /></FF>
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
@@ -273,45 +322,39 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
 
 // ─── 2. PLANTING ──────────────────────────────────────────────────────────────
 
-const PLANTING_STATUSES = ['Planned', 'In_Progress', 'Completed', 'Cancelled'];
-
-const PlantingSection = ({ showToast, farms: propFarms, farmLocked = false }) => {
+const PlantingSection = ({ showToast }) => {
   const { token } = useAuth();
   const { records, fetchData, createData, updateData, deleteData } = useSection('lifecycle/plantings', token);
-  const farmsForFallback = propFarms && propFarms.length > 0 ? propFarms : [];
-  const [localFarms, setLocalFarms] = useState([]);
-  const farms = farmsForFallback.length > 0 ? farmsForFallback : localFarms;
+  const { cycles, loading } = useEligibleCycles(token, 'planting');
   const [cropTypes, setCropTypes] = useState([]);
   useEffect(() => { fetchData(); }, []);
   useEffect(() => {
     const h = { headers: { Authorization: `Bearer ${token}` } };
-    if (farmsForFallback.length === 0) {
-      fetch(`${BASE_URL}/master-data/farms`, h).then(r => r.json()).then(j => { if (j.success) setLocalFarms(j.data); }).catch(() => {});
-    }
     fetch(`${BASE_URL}/master-data/crop-types`, h).then(r => r.json()).then(j => { if (j.success) setCropTypes(j.data); }).catch(() => {});
-  }, [token, farmsForFallback.length]);
+  }, [token]);
 
-  const [form, setForm] = useState({ farm_id: '', block: '', cycle: '', crop_type: '', variety: '', planting_date: '', area_ha: '', seedling_count: '', executor: '', status: 'Planned', notes: '' });
+  const [form, setForm] = useState({ crop_cycle_id: '', crop_type: '', variety: '', planting_date: '', area_ha: '', seedling_count: '', executor: '', notes: '' });
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const blocks = useBlocks(token, form.farm_id);
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ farm_id: farmLocked && farms[0] ? farms[0]._id : '', block: '', cycle: '', crop_type: '', variety: '', planting_date: new Date().toISOString().split('T')[0], area_ha: '', seedling_count: '', executor: '', status: 'Planned', notes: '' });
+    setForm({ crop_cycle_id: '', crop_type: '', variety: '', planting_date: new Date().toISOString().split('T')[0], area_ha: '', seedling_count: '', executor: '', notes: '' });
     setModal('form');
   };
   const openEdit = (r) => {
     setEditTarget(r);
-    setForm({ farm_id: r.farm_id?._id || r.farm_id || '', block: r.block?._id || r.block || '', cycle: r.cycle || '', crop_type: r.crop_type || '', variety: r.variety || '', planting_date: r.planting_date ? r.planting_date.split('T')[0] : '', area_ha: r.area_ha || '', seedling_count: r.seedling_count || '', executor: r.executor || '', status: r.status || 'Planned', notes: r.notes || '' });
+    const cur = { ...(r.farm_master && { farm_master: r.farm_master }), ...(r.block && { block: r.block }), cycle: r.cycle };
+    setForm({ crop_cycle_id: r._id, crop_type: r.crop_type || '', variety: r.variety || '', planting_date: r.planting_date ? r.planting_date.split('T')[0] : '', area_ha: r.area_ha || '', seedling_count: r.seedling_count || '', executor: r.executor || '', notes: r.notes || '', ...cur });
     setModal('form');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const entry = { farm_id: form.farm_id, cycle: form.cycle, crop_type: form.crop_type, crop_type_ref: form.crop_type, variety: form.variety, planting_date: form.planting_date, area_ha: +form.area_ha || 0, seedling_count: +form.seedling_count || 0, executor: form.executor, status: form.status, notes: form.notes, farm_master: form.farm_id };
+    const entry = { crop_cycle_id: form.crop_cycle_id, crop_type: form.crop_type, crop_type_ref: form.crop_type, variety: form.variety, planting_date: form.planting_date, area_ha: +form.area_ha || 0, seedling_count: +form.seedling_count || 0, executor: form.executor, notes: form.notes };
+    if (form.farm_master) entry.farm_master = form.farm_master;
     if (form.block) entry.block = form.block;
     if (editTarget) {
       await updateData(editTarget._id, entry);
@@ -361,31 +404,26 @@ const PlantingSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
       {modal === 'form' && (
         <Modal title={editTarget ? 'Edit Data Penanaman' : 'Tambah Penanaman Baru'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FarmBlockSelects farms={farms} farmLocked={farmLocked} form={form} onChange={fc} blocks={blocks} />
+            <CycleSelect cycles={cycles} loading={loading} value={form.crop_cycle_id} onChange={fc} extra={editTarget} />
             <div className="grid grid-cols-2 gap-4">
-              <FF label="Siklus Tanam" required><Input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" /></FF>
               <FF label="Jenis Tanaman" required>
                 <Select name="crop_type" value={form.crop_type} onChange={fc} required>
                   <option value="">-- Pilih --</option>
                   {cropTypes.map(c => <option key={c._id} value={c._id}>{c.name} ({c.code})</option>)}
                 </Select>
               </FF>
+              <FF label="Tanggal Tanam" required><Input type="date" name="planting_date" value={form.planting_date} onChange={fc} required /></FF>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <FF label="Varietas"><Input name="variety" value={form.variety} onChange={fc} placeholder="DxP, Arabika, dll" /></FF>
-              <FF label="Tanggal Tanam" required><Input type="date" name="planting_date" value={form.planting_date} onChange={fc} required /></FF>
+              <FF label="Pelaksana"><Input name="executor" value={form.executor} onChange={fc} placeholder="Nama petani/UM" /></FF>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <FF label="Luas Area (Ha)" required><Input type="number" name="area_ha" value={form.area_ha} onChange={fc} required step="0.1" min="0" placeholder="5.0" /></FF>
               <FF label="Jumlah Bibit"><Input type="number" name="seedling_count" value={form.seedling_count} onChange={fc} min="0" placeholder="0" /></FF>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FF label="Pelaksana"><Input name="executor" value={form.executor} onChange={fc} placeholder="Nama petani/UM" /></FF>
-              <FF label="Status">
-                <Select name="status" value={form.status} onChange={fc}>
-                  {PLANTING_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
-                </Select>
-              </FF>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
+              Siklus Tanam dibuat saat Persiapan Lahan. Penanaman mencatat data tanam pada siklus yang sudah ada dan otomatis memajukan statusnya menjadi Planted — bukan membuat siklus baru.
             </div>
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
             <div className="flex justify-end gap-3 pt-2">
@@ -402,28 +440,22 @@ const PlantingSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
 
 // ─── 3. MAINTENANCE ────────────────────────────────────────────────────────────
 
-const MaintenanceSection = ({ showToast, farms: propFarms, farmLocked = false }) => {
+const MaintenanceSection = ({ showToast }) => {
   const { token } = useAuth();
   const { records, fetchData, createData, updateData, deleteData } = useSection('lifecycle/activities', token);
-  const farmsForFallback = propFarms && propFarms.length > 0 ? propFarms : [];
-  const [localFarms, setLocalFarms] = useState([]);
-  const farms = farmsForFallback.length > 0 ? farmsForFallback : localFarms;
+  const { cycles, loading } = useEligibleCycles(token, 'maintenance');
   const [activityTypes, setActivityTypes] = useState([]);
   useEffect(() => { fetchData(); }, []);
   useEffect(() => {
     const h = { headers: { Authorization: `Bearer ${token}` } };
-    if (farmsForFallback.length === 0) {
-      fetch(`${BASE_URL}/master-data/farms`, h).then(r => r.json()).then(j => { if (j.success) setLocalFarms(j.data); }).catch(() => {});
-    }
     fetch(`${BASE_URL}/master-data/activity-types`, h).then(r => r.json()).then(j => { if (j.success) setActivityTypes(j.data); }).catch(() => {});
-  }, [token, farmsForFallback.length]);
+  }, [token]);
 
-  const [form, setForm] = useState({ farm_id: '', block: '', cycle: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending' });
+  const [form, setForm] = useState({ crop_cycle_id: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending' });
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [filter, setFilter] = useState('');
-  const blocks = useBlocks(token, form.farm_id);
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const filtered = filter ? records.filter(r => (r.activity_type_ref?._id || r.activity_type) === filter) : records;
@@ -431,18 +463,20 @@ const MaintenanceSection = ({ showToast, farms: propFarms, farmLocked = false })
 
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ farm_id: farmLocked && farms[0] ? farms[0]._id : '', block: '', cycle: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending' });
+    setForm({ crop_cycle_id: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending' });
     setModal('form');
   };
   const openEdit = (r) => {
     setEditTarget(r);
-    setForm({ farm_id: r.farm_id?._id || r.farm_id || '', block: r.block?._id || r.block || '', cycle: r.cycle || '', activity_type: r.activity_type || '', description: r.description || '', date: r.date ? r.date.split('T')[0] : '', labor_hours: r.labor_hours || '', cost: r.cost || '', executor: r.executor || '', status: r.status || 'Pending' });
+    const cur = { ...(r.farm_master && { farm_master: r.farm_master }), ...(r.block && { block: r.block }), cycle: r.cycle };
+    setForm({ crop_cycle_id: r.crop_cycle_id?._id || r.crop_cycle_id || '', activity_type: r.activity_type || '', description: r.description || '', date: r.date ? r.date.split('T')[0] : '', labor_hours: r.labor_hours || '', cost: r.cost || '', executor: r.executor || '', status: r.status || 'Pending', ...cur });
     setModal('form');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const entry = { farm_id: form.farm_id, cycle: form.cycle, activity_type: form.activity_type, activity_type_ref: form.activity_type, description: form.description, date: form.date, labor_hours: +form.labor_hours || 0, cost: +form.cost || 0, executor: form.executor, status: form.status, farm_master: form.farm_id };
+    const entry = { crop_cycle_id: form.crop_cycle_id, activity_type: form.activity_type, activity_type_ref: form.activity_type, description: form.description, date: form.date, labor_hours: +form.labor_hours || 0, cost: +form.cost || 0, executor: form.executor, status: form.status };
+    if (form.farm_master) entry.farm_master = form.farm_master;
     if (form.block) entry.block = form.block;
     if (editTarget) {
       await updateData(editTarget._id, entry);
@@ -531,30 +565,29 @@ const MaintenanceSection = ({ showToast, farms: propFarms, farmLocked = false })
       {modal === 'form' && (
         <Modal title={editTarget ? 'Edit Aktivitas Perawatan' : 'Tambah Aktivitas Perawatan'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FarmBlockSelects farms={farms} farmLocked={farmLocked} form={form} onChange={fc} blocks={blocks} />
+            <CycleSelect cycles={cycles} loading={loading} value={form.crop_cycle_id} onChange={fc} extra={editTarget} />
             <div className="grid grid-cols-2 gap-4">
-              <FF label="Siklus Tanam"><Input name="cycle" value={form.cycle} onChange={fc} placeholder="Sawit 2026" /></FF>
               <FF label="Jenis Aktivitas" required>
                 <Select name="activity_type" value={form.activity_type} onChange={fc} required>
                   <option value="">-- Pilih --</option>
                   {activityTypes.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
                 </Select>
               </FF>
+              <FF label="Tanggal" required><Input type="date" name="date" value={form.date} onChange={fc} required /></FF>
             </div>
             <FF label="Deskripsi"><Input name="description" value={form.description} onChange={fc} placeholder="Detail kegiatan..." /></FF>
             <div className="grid grid-cols-2 gap-4">
-              <FF label="Tanggal" required><Input type="date" name="date" value={form.date} onChange={fc} required /></FF>
               <FF label="Jam Kerja"><Input type="number" name="labor_hours" value={form.labor_hours} onChange={fc} min="0" step="0.5" placeholder="0" /></FF>
+              <FF label="Biaya (Rp)"><Input type="number" name="cost" value={form.cost} onChange={fc} min="0" placeholder="0" /></FF>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <FF label="Biaya (Rp)"><Input type="number" name="cost" value={form.cost} onChange={fc} min="0" placeholder="0" /></FF>
               <FF label="Pelaksana"><Input name="executor" value={form.executor} onChange={fc} placeholder="Nama petani/UM" /></FF>
+              <FF label="Status">
+                <Select name="status" value={form.status} onChange={fc}>
+                  {['Pending', 'In_Progress', 'Completed', 'Cancelled'].map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+                </Select>
+              </FF>
             </div>
-            <FF label="Status">
-              <Select name="status" value={form.status} onChange={fc}>
-                {['Pending', 'In_Progress', 'Completed', 'Cancelled'].map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
-              </Select>
-            </FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
               <SaveBtn label={editTarget ? 'Simpan Perubahan' : 'Tambah Aktivitas'} color="yellow" />
@@ -569,35 +602,28 @@ const MaintenanceSection = ({ showToast, farms: propFarms, farmLocked = false })
 
 // ─── 4. HARVESTING ─────────────────────────────────────────────────────────────
 
-const HarvestingSection = ({ showToast, farms: propFarms, farmLocked = false }) => {
+const HarvestingSection = ({ showToast }) => {
   const { token } = useAuth();
   const { records, fetchData, createData, updateData, deleteData } = useSection('lifecycle/harvests', token);
-  const farmsForFallback = propFarms && propFarms.length > 0 ? propFarms : [];
-  const [localFarms, setLocalFarms] = useState([]);
-  const farms = farmsForFallback.length > 0 ? farmsForFallback : localFarms;
+  const { cycles, loading } = useEligibleCycles(token, 'harvest');
   useEffect(() => { fetchData(); }, []);
-  useEffect(() => {
-    if (farmsForFallback.length > 0) return;
-    fetch(`${BASE_URL}/master-data/farms`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(j => { if (j.success) setLocalFarms(j.data); }).catch(() => {});
-  }, [token, farmsForFallback.length]);
 
-  const [form, setForm] = useState({ farm_id: '', block: '', cycle: '', opening_date: '', expected_end: '', expected_yield_kg: '', notes: '' });
+  const [form, setForm] = useState({ crop_cycle_id: '', opening_date: '', expected_end: '', expected_yield_kg: '', notes: '' });
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [yieldInput, setYieldInput] = useState('');
-  const blocks = useBlocks(token, form.farm_id);
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ farm_id: farmLocked && farms[0] ? farms[0]._id : '', block: '', cycle: '', opening_date: new Date().toISOString().split('T')[0], expected_end: '', expected_yield_kg: '', notes: '' });
+    setForm({ crop_cycle_id: '', opening_date: new Date().toISOString().split('T')[0], expected_end: '', expected_yield_kg: '', notes: '' });
     setModal('form');
   };
   const openEdit = (r) => {
     setEditTarget(r);
-    setForm({ farm_id: r.farm_id?._id || r.farm_id || '', block: r.block?._id || r.block || '', cycle: r.cycle || '', opening_date: r.harvest_opening_date ? r.harvest_opening_date.split('T')[0] : '', expected_end: r.expected_end ? r.expected_end.split('T')[0] : '', expected_yield_kg: r.expected_yield_kg || '', notes: r.notes || '' });
+    const cur = { ...(r.farm_master && { farm_master: r.farm_master }), ...(r.block && { block: r.block }), cycle: r.cycle };
+    setForm({ crop_cycle_id: r.crop_cycle_id?._id || r.crop_cycle_id || '', opening_date: r.harvest_opening_date ? r.harvest_opening_date.split('T')[0] : '', expected_end: r.expected_end ? r.expected_end.split('T')[0] : '', expected_yield_kg: r.expected_yield_kg || '', notes: r.notes || '', ...cur });
     setModal('form');
   };
   const openClose = (r) => {
@@ -608,8 +634,9 @@ const HarvestingSection = ({ showToast, farms: propFarms, farmLocked = false }) 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const entry = { farm_id: form.farm_id, cycle: form.cycle, harvest_opening_date: form.opening_date, expected_end: form.expected_end, expected_yield_kg: +form.expected_yield_kg || 0, notes: form.notes };
-    if (form.block) { entry.block = form.block; entry.farm_master = form.farm_id; }
+    const entry = { crop_cycle_id: form.crop_cycle_id, harvest_opening_date: form.opening_date, expected_end: form.expected_end, expected_yield_kg: +form.expected_yield_kg || 0, notes: form.notes };
+    if (form.farm_master) entry.farm_master = form.farm_master;
+    if (form.block) entry.block = form.block;
     if (editTarget) {
       await updateData(editTarget._id, entry);
       showToast('Data panen diperbarui!');
@@ -669,15 +696,12 @@ const HarvestingSection = ({ showToast, farms: propFarms, farmLocked = false }) 
       {modal === 'form' && (
         <Modal title={editTarget ? 'Edit Data Panen' : 'Buka Masa Panen Baru'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FarmBlockSelects farms={farms} farmLocked={farmLocked} form={form} onChange={fc} blocks={blocks} />
+            <CycleSelect cycles={cycles} loading={loading} value={form.crop_cycle_id} onChange={fc} extra={editTarget} />
             <div className="grid grid-cols-2 gap-4">
-              <FF label="Siklus Tanam" required><Input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" /></FF>
               <FF label="Tgl Mulai Panen" required><Input type="date" name="opening_date" value={form.opening_date} onChange={fc} required /></FF>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <FF label="Estimasi Selesai" required><Input type="date" name="expected_end" value={form.expected_end} onChange={fc} required /></FF>
-              <FF label="Target Hasil (Kg)"><Input type="number" name="expected_yield_kg" value={form.expected_yield_kg} onChange={fc} min="0" placeholder="5000" /></FF>
             </div>
+            <FF label="Target Hasil (Kg)"><Input type="number" name="expected_yield_kg" value={form.expected_yield_kg} onChange={fc} min="0" placeholder="5000" /></FF>
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
@@ -751,9 +775,9 @@ const LifecycleTabs = ({ availableFarms, farmLocked }) => {
       </div>
       <div className="flex-1 min-w-0">
         {stage === 'Land_Prep' && <LandPrepSection showToast={showToast} farms={availableFarms} farmLocked={farmLocked} />}
-        {stage === 'Planting' && <PlantingSection showToast={showToast} farms={availableFarms} farmLocked={farmLocked} />}
-        {stage === 'Maintenance' && <MaintenanceSection showToast={showToast} farms={availableFarms} farmLocked={farmLocked} />}
-        {stage === 'Harvesting' && <HarvestingSection showToast={showToast} farms={availableFarms} farmLocked={farmLocked} />}
+        {stage === 'Planting' && <PlantingSection showToast={showToast} />}
+        {stage === 'Maintenance' && <MaintenanceSection showToast={showToast} />}
+        {stage === 'Harvesting' && <HarvestingSection showToast={showToast} />}
       </div>
     </div>
   );

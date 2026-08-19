@@ -10,5 +10,6 @@ const headers = () => ({
 export const fetchFilterOptions = async () => {
   const res = await fetch(`${BASE_URL}/filters`, { headers: headers() });
   if (!res.ok) throw new Error('Failed to load filter options');
-  return res.json();
+  const json = await res.json();
+  return json.data ?? json;
 };
