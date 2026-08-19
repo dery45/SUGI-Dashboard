@@ -11,17 +11,17 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Ignore all markdown files except readme.md at root and version.md in docs
+*.md
+!/readme.md
+!docs/version.md
+
+# Ignore .kilo directory
+.kilo/
+
+# Ignore all files inside testing folder
+testing/**
+
 # Testing & docs
-testing/.state/
-testing/.auth/
-testing/test-results/
-testing/playwright-report/
-testing/node_modules/
-testing/e2e/**/*.png
 docs/
 !backend/docs/
-
-# Generated structure maps
-BACKEND_STRUCTURE.md
-FRONTEND_STRUCTURE.md
-testing/playwright/
