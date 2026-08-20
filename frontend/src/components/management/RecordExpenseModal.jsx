@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 
-const CATEGORIES = ['Fertilizer', 'Labor', 'Transport', 'Equipment', 'Pesticide', 'Land_Rent', 'Other'];
-const CATEGORY_LABELS = {
-  Fertilizer: 'Pupuk', Labor: 'Tenaga Kerja', Transport: 'Transportasi',
-  Equipment: 'Peralatan', Pesticide: 'Pestisida', Land_Rent: 'Sewa Lahan', Other: 'Lainnya',
-};
+const CATEGORIES = ['Bibit', 'Pupuk', 'Pestisida', 'Tenaga Kerja', 'Transportasi', 'Peralatan', 'Sewa Lahan', 'Lainnya'];
 
 const RecordExpenseModal = ({ isOpen, onClose, onSave, farms = [] }) => {
   const [formData, setFormData] = useState({
-    farm_id: '', crop_cycle_id: '', category: 'Labor',
+    farm_id: '', crop_cycle_id: '', category: 'Bibit',
     amount_idr: '', description: '', expense_date: new Date().toISOString().split('T')[0], receipt_ref: ''
   });
   const [saving, setSaving] = useState(false);
@@ -41,7 +37,7 @@ const RecordExpenseModal = ({ isOpen, onClose, onSave, farms = [] }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
               <select required name="category" value={formData.category} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500">
-                {CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>

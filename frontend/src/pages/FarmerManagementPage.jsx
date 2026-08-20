@@ -21,6 +21,7 @@ const FarmerManagementPage = () => {
   const [notification, setNotification] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', address: '', role: 'farmer', assigned_farms: [] });
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
@@ -61,7 +62,8 @@ const FarmerManagementPage = () => {
   };
 
   const handleSave = async () => {
-    if (!validate()) return;
+    if (!validate() || saving) return;
+    setSaving(true);
     const url = editItem ? `${BASE_URL}/farmers/${editItem._id}` : `${BASE_URL}/farmers`;
     const method = editItem ? 'PUT' : 'POST';
     try {
@@ -81,6 +83,7 @@ const FarmerManagementPage = () => {
       showToast(editItem ? `Pengguna "${form.name}" berhasil diperbarui!` : `Pengguna "${form.name}" berhasil ditambahkan!`);
       fetchData();
     } catch (e) { alert(e.message); }
+    finally { setSaving(false); }
   };
 
   const handleEdit = (item) => {
@@ -211,7 +214,7 @@ const FarmerManagementPage = () => {
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl border border-border/40 text-sm font-bold hover:bg-surface/50 transition-all">Batal</button>
-              <button onClick={handleSave} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all">{editItem ? 'Perbarui' : 'Simpan'}</button>
+              <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all disabled:opacity-50">{saving ? 'Menyimpan...' : (editItem ? 'Perbarui' : 'Simpan')}</button>
             </div>
           </div>
         </div>

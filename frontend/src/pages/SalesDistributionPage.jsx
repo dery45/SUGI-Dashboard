@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/common/DataTable';
-import { Input, Select } from '../components/common/FormField';
-import { required, isNumber, minValue, validateForm } from '../utils/validation';
 import RecordSaleModal from '../components/management/RecordSaleModal';
+import RecordExpenseModal from '../components/management/RecordExpenseModal';
 import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const BUYER_LABELS = { Mill: 'Pabrik', Middleman: 'Tengkulak', Direct: 'Langsung', Government: 'Pemerintah' };
@@ -18,8 +17,6 @@ const SalesDistributionPage = () => {
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [farms, setFarms] = useState([]);
   const [notification, setNotification] = useState(null);
-  const [expenseForm, setExpenseForm] = useState({ expense_date: new Date().toISOString().split('T')[0], farm_id: '', category: 'Bibit', amount_idr: '', description: '', receipt_ref: '' });
-  const [expenseErrors, setExpenseErrors] = useState({});
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
@@ -45,16 +42,6 @@ const SalesDistributionPage = () => {
 
   const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
-  const validateExpense = () => {
-    const { errors, hasErrors } = validateForm(expenseForm, {
-      farm_id: [[required, 'Farm']],
-      category: [[required, 'Kategori']],
-      amount_idr: [[isNumber, 'Jumlah (Rp)'], [minValue, 0, 'Jumlah (Rp)']]
-    });
-    setExpenseErrors(errors);
-    return !hasErrors;
-  };
-
   const handleSaveSale = async (saleForm) => {
     try {
       const res = await fetch(`${BASE_URL}/sales`, { method: 'POST', headers, body: JSON.stringify(saleForm) });
@@ -66,16 +53,13 @@ const SalesDistributionPage = () => {
     } catch (e) { alert(e.message); }
   };
 
-  const handleSaveExpense = async () => {
-    if (!validateExpense()) return;
+  const handleSaveExpense = async (expenseForm) => {
     try {
       const res = await fetch(`${BASE_URL}/expenses`, { method: 'POST', headers, body: JSON.stringify(expenseForm) });
       const json = await res.json();
-      if (!json.success) { if (json.errors) setExpenseErrors(json.errors); else alert(json.message); return; }
+      if (!json.success) { if (json.errors) alert(Object.values(json.errors).join('\n')); else alert(json.message); return; }
       showToast('Pengeluaran berhasil dicatat!');
       setShowExpenseModal(false);
-      setExpenseForm({ expense_date: new Date().toISOString().split('T')[0], farm_id: '', category: 'Bibit', amount_idr: '', description: '', receipt_ref: '' });
-      setExpenseErrors({});
       fetchData();
     } catch (e) { alert(e.message); }
   };
@@ -130,7 +114,7 @@ const SalesDistributionPage = () => {
             <div><h1 className="text-2xl font-black text-foreground tracking-tight">Penjualan & Distribusi</h1><p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Catat dan pantau transaksi penjualan</p></div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => { setExpenseForm({ expense_date: new Date().toISOString().split('T')[0], farm_id: '', category: 'Bibit', amount_idr: '', description: '', receipt_ref: '' }); setExpenseErrors({}); setShowExpenseModal(true); }} className="px-4 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all font-bold text-xs uppercase tracking-wider">+ Catat Pengeluaran</button>
+            <button onClick={() => setShowExpenseModal(true)} className="px-4 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all font-bold text-xs uppercase tracking-wider">+ Catat Pengeluaran</button>
             <button onClick={() => { setShowSaleModal(true); }} className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider">+ Catat Penjualan</button>
           </div>
         </div>
@@ -182,29 +166,12 @@ const SalesDistributionPage = () => {
       )}
 
       {showExpenseModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowExpenseModal(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative w-full sm:max-w-md bg-surface border border-border/40 rounded-t-[2rem] rounded-b-none sm:rounded-[2rem] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-slide-up" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-black text-foreground mb-6">Catat Pengeluaran</h2>
-            <div className="flex flex-col gap-4">
-              <Select label="Farm" name="farm_id" required value={expenseForm.farm_id} onChange={e => setExpenseForm({ ...expenseForm, farm_id: e.target.value })} error={expenseErrors.farm_id}>
-                <option value="">Pilih Farm</option>
-                {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
-              </Select>
-              <Input label="Tanggal" name="expense_date" type="date" required value={expenseForm.expense_date} onChange={e => setExpenseForm({ ...expenseForm, expense_date: e.target.value })} />
-              <Select label="Kategori" name="category" required value={expenseForm.category} onChange={e => setExpenseForm({ ...expenseForm, category: e.target.value })} error={expenseErrors.category}>
-                {['Bibit', 'Pupuk', 'Pestisida', 'Tenaga Kerja', 'Transportasi', 'Peralatan', 'Sewa Lahan', 'Lainnya'].map(c => <option key={c} value={c}>{c}</option>)}
-              </Select>
-              <Input label="Jumlah (Rp)" name="amount_idr" type="number" required value={expenseForm.amount_idr} onChange={e => setExpenseForm({ ...expenseForm, amount_idr: e.target.value })} error={expenseErrors.amount_idr} />
-              <Input label="Deskripsi" name="description" value={expenseForm.description} optional onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })} />
-              <Input label="Referensi Nota" name="receipt_ref" value={expenseForm.receipt_ref} optional onChange={e => setExpenseForm({ ...expenseForm, receipt_ref: e.target.value })} />
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowExpenseModal(false)} className="px-4 py-2 rounded-xl border border-border/40 text-sm font-bold">Batal</button>
-              <button onClick={handleSaveExpense} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">Simpan</button>
-            </div>
-          </div>
-        </div>
+        <RecordExpenseModal
+          isOpen={showExpenseModal}
+          onClose={() => setShowExpenseModal(false)}
+          onSave={handleSaveExpense}
+          farms={farms}
+        />
       )}
     </div>
   );
