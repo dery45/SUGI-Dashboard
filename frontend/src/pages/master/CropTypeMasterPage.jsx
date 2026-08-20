@@ -5,8 +5,7 @@ import DataTable from '../../components/common/DataTable';
 import { Input, Select } from '../../components/common/FormField';
 import { useAuth } from '../../contexts/AuthContext';
 import { required, validateForm } from '../../utils/validation';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../../services/authService';
 
 const CropTypeMasterPage = () => {
   const { token } = useAuth();

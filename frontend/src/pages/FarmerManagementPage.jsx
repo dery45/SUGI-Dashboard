@@ -4,8 +4,7 @@ import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import { Input, Select } from '../components/common/FormField';
 import { required, isEmail, compose, validateForm } from '../utils/validation';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const ROLE_LABELS = { superadmin: 'Super Admin', government: 'Pemerintah', farmer_owner: 'Pemilik Petani', farmer: 'Petani' };
 const ROLE_COLORS = { superadmin: 'bg-red-100 text-red-700', government: 'bg-purple-100 text-purple-700', farmer_owner: 'bg-blue-100 text-blue-700', farmer: 'bg-green-100 text-green-700' };

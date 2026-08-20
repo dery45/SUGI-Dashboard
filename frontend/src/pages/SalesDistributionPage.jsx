@@ -4,8 +4,7 @@ import DataTable from '../components/common/DataTable';
 import { Input, Select } from '../components/common/FormField';
 import { required, isNumber, minValue, validateForm } from '../utils/validation';
 import RecordSaleModal from '../components/management/RecordSaleModal';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const BUYER_LABELS = { Mill: 'Pabrik', Middleman: 'Tengkulak', Direct: 'Langsung', Government: 'Pemerintah' };
 

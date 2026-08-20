@@ -3,8 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Card from '../components/common/Card';
 import { Input, Select } from '../components/common/FormField';
 import { required, isEmail, isPhone, minLength, validateForm } from '../utils/validation';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const SettingsPage = () => {
   const { token, user } = useAuth();

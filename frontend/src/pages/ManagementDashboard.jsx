@@ -4,8 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import KPISection from '../components/management/KPISection';
 import AlertsPanel from '../components/management/AlertsPanel';
 import ComparativeChart from '../components/management/ComparativeChart';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const STATUS_COLORS = {
   Planned: 'bg-gray-100 text-gray-700',

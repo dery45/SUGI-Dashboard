@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGenericResource } from '../../hooks/useGenericResource';
 import { useAuth } from '../../contexts/AuthContext';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL as BASE_URL } from '../../services/authService';
 
 const Badge = ({ status }) => {
   const map = {

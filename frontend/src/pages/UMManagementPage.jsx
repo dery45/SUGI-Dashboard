@@ -4,8 +4,7 @@ import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import { Select } from '../components/common/FormField';
 import { required, validateForm } from '../utils/validation';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const STAGE_OPTIONS = [
   { value: 'Land_Preparation', label: 'Persiapan Lahan' },

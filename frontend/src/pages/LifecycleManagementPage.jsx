@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import LifecycleTabs from '../components/management/LifecycleTabs';
 import Card from '../components/common/Card';
-
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const LifecycleManagementPage = () => {
   const { token, user } = useAuth();
