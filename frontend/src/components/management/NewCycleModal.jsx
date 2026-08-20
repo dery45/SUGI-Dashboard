@@ -6,7 +6,7 @@ const CROP_TYPES = [
   { value: 'Rice', label: 'Padi' },
 ];
 
-const NewCycleModal = ({ isOpen, onClose, onSave }) => {
+const NewCycleModal = ({ isOpen, onClose, onSave, farms = [] }) => {
   const [formData, setFormData] = useState({
     farm_id: '',
     crop_type: 'Oil_Palm',
@@ -38,9 +38,7 @@ const NewCycleModal = ({ isOpen, onClose, onSave }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Farm / Lahan *</label>
             <select required name="farm_id" value={formData.farm_id} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500">
               <option value="">-- Pilih Farm --</option>
-              <option value="farm_1">Blok A - Sumatra</option>
-              <option value="farm_2">Blok B - Kalimantan</option>
-              <option value="farm_3">Blok C - Sulawesi</option>
+              {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">

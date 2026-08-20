@@ -40,8 +40,6 @@ const HarvestOpeningModal = ({ isOpen, onClose, onSave, farms = [], cropCycles =
               className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-orange-500 outline-none"
             >
               <option value="">-- Pilih Farm --</option>
-              <option value="farm_1">Blok A - Sumatra</option>
-              <option value="farm_2">Blok B - Kalimantan</option>
               {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
             </select>
           </div>
@@ -56,7 +54,6 @@ const HarvestOpeningModal = ({ isOpen, onClose, onSave, farms = [], cropCycles =
               className="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-orange-500 outline-none"
             >
               <option value="">-- Pilih Siklus --</option>
-              <option value="cycle_1">Siklus Sawit 2026</option>
               {cropCycles.map(c => <option key={c._id} value={c._id}>{c.crop_type} - {c._id}</option>)}
             </select>
           </div>

@@ -6,7 +6,7 @@ const CATEGORY_LABELS = {
   Equipment: 'Peralatan', Pesticide: 'Pestisida', Land_Rent: 'Sewa Lahan', Other: 'Lainnya',
 };
 
-const RecordExpenseModal = ({ isOpen, onClose, onSave }) => {
+const RecordExpenseModal = ({ isOpen, onClose, onSave, farms = [] }) => {
   const [formData, setFormData] = useState({
     farm_id: '', crop_cycle_id: '', category: 'Labor',
     amount_idr: '', description: '', expense_date: new Date().toISOString().split('T')[0], receipt_ref: ''
@@ -35,8 +35,7 @@ const RecordExpenseModal = ({ isOpen, onClose, onSave }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Farm / Blok *</label>
               <select required name="farm_id" value={formData.farm_id} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500">
                 <option value="">-- Pilih Farm --</option>
-                <option value="farm_1">Blok A</option>
-                <option value="farm_2">Blok B</option>
+                {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
               </select>
             </div>
             <div>
