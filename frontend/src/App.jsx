@@ -5,6 +5,7 @@ import { FilterProvider } from './contexts/FilterContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardFilterProvider } from './contexts/DashboardFilterContext';
 import MainLayout from './components/layout/MainLayout';
+import { ProtectedRoute, AppRedirect, homePathFor } from './services/ProtectedRoutes.jsx';
 
 import FarmerDashboard from './pages/FarmerDashboard';
 import GovernmentDashboard from './pages/GovernmentDashboard';
@@ -36,22 +37,14 @@ import SkorPPHPage from './pages/master/SkorPPHPage';
 import PanganTerselamatkanPage from './pages/master/PanganTerselamatkanPage';
 import CadanganPanganProvinsiPage from './pages/master/CadanganPanganProvinsiPage';
 
-function ProtectedRoute({ children, roles }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
-  return children;
-}
-
 function AppContent() {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={<Navigate to={user ? `/${user.role === 'government' ? 'government' : user.role === 'farmer' || user.role === 'farmer_owner' ? 'farmer' : 'management'}` : '/login'} replace />} />
+      <Route path="/login" element={user ? <Navigate to={homePathFor(user.role)} replace /> : <Login />} />
+      <Route path="/" element={<AppRedirect />} />
 
       <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route path="farmer" element={<DashboardFilterProvider><FarmerDashboard /></DashboardFilterProvider>} />

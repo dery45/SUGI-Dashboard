@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { homePathFor } from '../services/ProtectedRoutes.jsx';
 import Card from '../components/common/Card';
 import { Input } from '../components/common/FormField';
 
@@ -29,7 +30,7 @@ const Login = () => {
     setError('');
     try {
       const userData = await login(email, password);
-      navigate('/management');
+      navigate(homePathFor(userData.role));
     } catch (err) {
       setError(err.message || 'Email atau password salah');
     } finally {
