@@ -1,10 +1,9 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL, authHeaders } from '../services/authService';
 
-const getToken = () => localStorage.getItem('token');
-const headers = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
+const BASE_URL = API_BASE_URL;
 
 const fetcher = async (url, signal) => {
-  const res = await fetch(url, { headers: headers(), signal });
+  const res = await fetch(url, { headers: authHeaders(), signal });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'Request failed'); }
   const j = await res.json();
   if (!j.success) throw new Error(j.message || 'Request failed');

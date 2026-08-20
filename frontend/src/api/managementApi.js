@@ -4,13 +4,16 @@
  * Throws an Error if the server responds with ok: false.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL, getToken } from '../services/authService';
+
+const BASE_URL = API_BASE_URL;
 
 async function apiFetch(path, token, options = {}) {
+  const authToken = token ?? getToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...options.headers,
     },
     ...options,

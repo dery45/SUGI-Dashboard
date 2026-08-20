@@ -19,8 +19,7 @@ import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
 import DataTable from '../components/common/DataTable';
 import { fetchFarmerDashboard } from '../api/farmerDashboardApi';
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const getToken = () => localStorage.getItem('token');
+import { API_BASE_URL as API_BASE, getToken } from '../services/authService';
 
 function safeNum(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function fmtNum(v) { const n = safeNum(v); return n.toLocaleString('id-ID'); }

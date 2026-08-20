@@ -1,8 +1,5 @@
 import { useState, useCallback } from 'react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const getToken = () => localStorage.getItem('token');
+import { API_BASE_URL, authHeaders } from '../services/authService';
 
 export const useMasterData = (endpointContext) => {
   const [data, setData] = useState([]);
@@ -16,7 +13,7 @@ export const useMasterData = (endpointContext) => {
     setError(null);
     try {
       const response = await fetch(fetchUrl, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        headers: authHeaders()
       });
       if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
@@ -34,7 +31,7 @@ export const useMasterData = (endpointContext) => {
     try {
       const response = await fetch(fetchUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        headers: authHeaders(),
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Failed to create data');
@@ -54,7 +51,7 @@ export const useMasterData = (endpointContext) => {
     try {
       const response = await fetch(`${fetchUrl}/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        headers: authHeaders(),
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Failed to update data');
@@ -74,7 +71,7 @@ export const useMasterData = (endpointContext) => {
     try {
       const response = await fetch(`${fetchUrl}/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` }
+        headers: authHeaders()
       });
       if (!response.ok) throw new Error('Failed to delete data');
       await fetchData();

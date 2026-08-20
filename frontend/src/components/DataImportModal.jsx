@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { Upload, X, AlertCircle, CheckCircle, FileSpreadsheet, Loader2 } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL, authHeaders } from '../services/authService';
 
 export default function DataImportModal({ isOpen, onClose, template, onImportSuccess }) {
   const [file, setFile] = useState(null);
@@ -166,10 +165,7 @@ export default function DataImportModal({ isOpen, onClose, template, onImportSuc
 
       const response = await fetch(`${API_BASE_URL}/bulk-import/${template.modelName}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers: authHeaders(),
         body: JSON.stringify(payload),
       });
 

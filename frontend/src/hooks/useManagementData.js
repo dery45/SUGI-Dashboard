@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchKPIs, fetchYieldTrend } from '../api/managementApi';
+import { getToken } from '../services/authService';
 
 export function useManagementData(filters = {}) {
   const [kpiData, setKpiData]       = useState(null);
@@ -7,7 +8,7 @@ export function useManagementData(filters = {}) {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const token = getToken();
 
   const fetchData = useCallback(async () => {
     setLoading(true);

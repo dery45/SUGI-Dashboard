@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL, authHeaders } from '../services/authService';
 
 export const useGenericResource = (endpoint, token) => {
   const [data, setData] = useState([]);
@@ -8,7 +7,7 @@ export const useGenericResource = (endpoint, token) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const requestHeaders = () => token ? { ...authHeaders(), Authorization: `Bearer ${token}` } : authHeaders();
 
   // If endpoint starts with '/', it's absolute from API_BASE_URL. Otherwise it's appended.
   const fetchUrl = endpoint.startsWith('/') ? `${API_BASE_URL}${endpoint}` : `${API_BASE_URL}/${endpoint}`;
@@ -18,7 +17,7 @@ export const useGenericResource = (endpoint, token) => {
     setError(null);
     try {
       const q = queryParams ? `?${new URLSearchParams(queryParams).toString()}` : '';
-      const response = await fetch(`${fetchUrl}${q}`, { headers: { ...authHeaders } });
+      const response = await fetch(`${fetchUrl}${q}`, { headers: { ...requestHeaders() } });
       if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
       
@@ -46,7 +45,7 @@ export const useGenericResource = (endpoint, token) => {
     try {
       const response = await fetch(fetchUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json', ...requestHeaders() },
         body: JSON.stringify(payload)
       });
       if (!response.ok) {
@@ -73,7 +72,7 @@ export const useGenericResource = (endpoint, token) => {
     try {
       const response = await fetch(`${fetchUrl}/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json', ...requestHeaders() },
         body: JSON.stringify(payload)
       });
       // some routes use PATCH (e.g. expenses), retry if 404/Method Not Allowed
@@ -81,7 +80,7 @@ export const useGenericResource = (endpoint, token) => {
          console.log(`[FE] PUT failed, trying PATCH ${fetchUrl}/${id}`);
          const patchResp = await fetch(`${fetchUrl}/${id}`, {
              method: 'PATCH',
-             headers: { 'Content-Type': 'application/json', ...authHeaders },
+             headers: { 'Content-Type': 'application/json', ...requestHeaders() },
              body: JSON.stringify(payload)
          });
          if (!patchResp.ok) {
@@ -113,7 +112,7 @@ export const useGenericResource = (endpoint, token) => {
     try {
       const response = await fetch(`${fetchUrl}/${id}`, {
         method: 'DELETE',
-        headers: { ...authHeaders }
+        headers: { ...requestHeaders() }
       });
       if (!response.ok) throw new Error('Failed to delete data');
       await fetchData();
