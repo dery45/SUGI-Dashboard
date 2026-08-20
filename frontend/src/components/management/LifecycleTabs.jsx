@@ -182,6 +182,7 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [closingDate, setClosingDate] = useState('');
   const blocks = useBlocks(token, form.farm_id);
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -204,25 +205,43 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    const payload = { farm_id: form.farm_id, cycle: form.cycle, land_opening_date: form.opening_date, clearing_cost: +form.clearing_cost || 0, notes: form.notes, status: 'Open' };
-    if (form.block) { payload.block = form.block; payload.farm_master = form.farm_id; }
-    await createData(payload);
-    showToast('Lahan baru berhasil dibuka!');
-    setModal(null);
+    if (saving) return;
+    setSaving(true);
+    try {
+      const payload = { farm_id: form.farm_id, cycle: form.cycle, land_opening_date: form.opening_date, clearing_cost: +form.clearing_cost || 0, notes: form.notes, status: 'Open' };
+      if (form.block) { payload.block = form.block; payload.farm_master = form.farm_id; }
+      await createData(payload);
+      showToast('Lahan baru berhasil dibuka!');
+      setModal(null);
+    } finally {
+      setSaving(false);
+    }
   };
   const handleEdit = async (e) => {
     e.preventDefault();
-    const payload = { cycle: form.cycle, land_opening_date: form.opening_date, clearing_cost: +form.clearing_cost || 0, notes: form.notes };
-    if (form.block) { payload.block = form.block; payload.farm_master = form.farm_id; }
-    await updateData(editTarget._id, payload);
-    showToast('Data lahan diperbarui!');
-    setModal(null);
+    if (saving) return;
+    setSaving(true);
+    try {
+      const payload = { cycle: form.cycle, land_opening_date: form.opening_date, clearing_cost: +form.clearing_cost || 0, notes: form.notes };
+      if (form.block) { payload.block = form.block; payload.farm_master = form.farm_id; }
+      await updateData(editTarget._id, payload);
+      showToast('Data lahan diperbarui!');
+      setModal(null);
+    } finally {
+      setSaving(false);
+    }
   };
   const handleClose = async (e) => {
     e.preventDefault();
-    await updateData(editTarget._id, { land_closing_date: closingDate, status: 'Closed' });
-    showToast('Lahan berhasil ditutup!');
-    setModal(null);
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateData(editTarget._id, { land_closing_date: closingDate, status: 'Closed' });
+      showToast('Lahan berhasil ditutup!');
+      setModal(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -278,7 +297,7 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <SaveBtn label="Buka Lahan" />
+              <SaveBtn saving={saving} label="Buka Lahan" />
             </div>
           </form>
         </Modal>
@@ -295,7 +314,7 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <SaveBtn label="Simpan Perubahan" />
+              <SaveBtn saving={saving} label="Simpan Perubahan" />
             </div>
           </form>
         </Modal>
@@ -309,7 +328,7 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
             <FF label="Tanggal Tutup" required><Input type="date" value={closingDate} onChange={e => setClosingDate(e.target.value)} required /></FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 text-sm">Konfirmasi Tutup</button>
+              <button type="submit" disabled={saving} className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 text-sm disabled:opacity-50">Konfirmasi Tutup</button>
             </div>
           </form>
         </Modal>
@@ -336,6 +355,7 @@ const PlantingSection = ({ showToast }) => {
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [saving, setSaving] = useState(false);
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const openAdd = () => {
@@ -352,17 +372,23 @@ const PlantingSection = ({ showToast }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const entry = { crop_cycle_id: form.crop_cycle_id, crop_type: form.crop_type, crop_type_ref: form.crop_type, variety: form.variety, planting_date: form.planting_date, area_ha: +form.area_ha || 0, seedling_count: +form.seedling_count || 0, executor: form.executor, notes: form.notes };
-    if (form.farm_master) entry.farm_master = form.farm_master;
-    if (form.block) entry.block = form.block;
-    if (editTarget) {
-      await updateData(editTarget._id, entry);
-      showToast('Data penanaman diperbarui!');
-    } else {
-      await createData(entry);
-      showToast('Aktivitas penanaman baru ditambahkan!');
+    if (saving) return;
+    setSaving(true);
+    try {
+      const entry = { crop_cycle_id: form.crop_cycle_id, crop_type: form.crop_type, crop_type_ref: form.crop_type, variety: form.variety, planting_date: form.planting_date, area_ha: +form.area_ha || 0, seedling_count: +form.seedling_count || 0, executor: form.executor, notes: form.notes };
+      if (form.farm_master) entry.farm_master = form.farm_master;
+      if (form.block) entry.block = form.block;
+      if (editTarget) {
+        await updateData(editTarget._id, entry);
+        showToast('Data penanaman diperbarui!');
+      } else {
+        await createData(entry);
+        showToast('Aktivitas penanaman baru ditambahkan!');
+      }
+      setModal(null);
+    } finally {
+      setSaving(false);
     }
-    setModal(null);
   };
 
   return (
@@ -427,7 +453,7 @@ const PlantingSection = ({ showToast }) => {
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <SaveBtn label={editTarget ? 'Simpan Perubahan' : 'Tambah Penanaman'} color="emerald" />
+              <SaveBtn saving={saving} label={editTarget ? 'Simpan Perubahan' : 'Tambah Penanaman'} color="emerald" />
             </div>
           </form>
         </Modal>
@@ -454,6 +480,7 @@ const MaintenanceSection = ({ showToast }) => {
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState('');
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -474,17 +501,23 @@ const MaintenanceSection = ({ showToast }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const entry = { crop_cycle_id: form.crop_cycle_id, activity_type: form.activity_type, activity_type_ref: form.activity_type, description: form.description, date: form.date, labor_hours: +form.labor_hours || 0, cost: +form.cost || 0, executor: form.executor, status: form.status };
-    if (form.farm_master) entry.farm_master = form.farm_master;
-    if (form.block) entry.block = form.block;
-    if (editTarget) {
-      await updateData(editTarget._id, entry);
-      showToast('Data perawatan diperbarui!');
-    } else {
-      await createData(entry);
-      showToast('Aktivitas perawatan baru ditambahkan!');
+    if (saving) return;
+    setSaving(true);
+    try {
+      const entry = { crop_cycle_id: form.crop_cycle_id, activity_type: form.activity_type, activity_type_ref: form.activity_type, description: form.description, date: form.date, labor_hours: +form.labor_hours || 0, cost: +form.cost || 0, executor: form.executor, status: form.status };
+      if (form.farm_master) entry.farm_master = form.farm_master;
+      if (form.block) entry.block = form.block;
+      if (editTarget) {
+        await updateData(editTarget._id, entry);
+        showToast('Data perawatan diperbarui!');
+      } else {
+        await createData(entry);
+        showToast('Aktivitas perawatan baru ditambahkan!');
+      }
+      setModal(null);
+    } finally {
+      setSaving(false);
     }
-    setModal(null);
   };
 
   const handleStatusChange = async (id, status) => {
@@ -589,7 +622,7 @@ const MaintenanceSection = ({ showToast }) => {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <SaveBtn label={editTarget ? 'Simpan Perubahan' : 'Tambah Aktivitas'} color="yellow" />
+              <SaveBtn saving={saving} label={editTarget ? 'Simpan Perubahan' : 'Tambah Aktivitas'} color="yellow" />
             </div>
           </form>
         </Modal>
@@ -611,6 +644,7 @@ const HarvestingSection = ({ showToast }) => {
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [yieldInput, setYieldInput] = useState('');
   const fc = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -633,23 +667,35 @@ const HarvestingSection = ({ showToast }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const entry = { crop_cycle_id: form.crop_cycle_id, harvest_opening_date: form.opening_date, expected_end: form.expected_end, expected_yield_kg: +form.expected_yield_kg || 0, notes: form.notes };
-    if (form.farm_master) entry.farm_master = form.farm_master;
-    if (form.block) entry.block = form.block;
-    if (editTarget) {
-      await updateData(editTarget._id, entry);
-      showToast('Data panen diperbarui!');
-    } else {
-      await createData(entry);
-      showToast('Masa panen baru dibuka!');
+    if (saving) return;
+    setSaving(true);
+    try {
+      const entry = { crop_cycle_id: form.crop_cycle_id, harvest_opening_date: form.opening_date, expected_end: form.expected_end, expected_yield_kg: +form.expected_yield_kg || 0, notes: form.notes };
+      if (form.farm_master) entry.farm_master = form.farm_master;
+      if (form.block) entry.block = form.block;
+      if (editTarget) {
+        await updateData(editTarget._id, entry);
+        showToast('Data panen diperbarui!');
+      } else {
+        await createData(entry);
+        showToast('Masa panen baru dibuka!');
+      }
+      setModal(null);
+    } finally {
+      setSaving(false);
     }
-    setModal(null);
   };
   const handleClose = async (e) => {
     e.preventDefault();
-    await updateData(editTarget._id, { actual_yield_kg: +yieldInput || 0, status: 'Closed' });
-    showToast('Masa panen ditutup!');
-    setModal(null);
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateData(editTarget._id, { actual_yield_kg: +yieldInput || 0, status: 'Closed' });
+      showToast('Masa panen ditutup!');
+      setModal(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -704,7 +750,7 @@ const HarvestingSection = ({ showToast }) => {
             <FF label="Catatan"><textarea name="notes" value={form.notes} onChange={fc} rows={2} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Catatan tambahan..." /></FF>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <SaveBtn label={editTarget ? 'Simpan Perubahan' : 'Konfirmasi Buka Panen'} color="orange" />
+              <SaveBtn saving={saving} label={editTarget ? 'Simpan Perubahan' : 'Konfirmasi Buka Panen'} color="orange" />
             </div>
           </form>
         </Modal>
@@ -728,7 +774,7 @@ const HarvestingSection = ({ showToast }) => {
             )}
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setModal(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">Batal</button>
-              <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 text-sm">Konfirmasi Tutup Panen</button>
+              <button type="submit" disabled={saving} className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 text-sm disabled:opacity-50">Konfirmasi Tutup Panen</button>
             </div>
           </form>
         </Modal>
