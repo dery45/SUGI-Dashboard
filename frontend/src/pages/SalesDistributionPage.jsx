@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/common/DataTable';
 import { Input, Select } from '../components/common/FormField';
 import { required, isNumber, minValue, validateForm } from '../utils/validation';
+import RecordSaleModal from '../components/management/RecordSaleModal';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -18,8 +19,6 @@ const SalesDistributionPage = () => {
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [farms, setFarms] = useState([]);
   const [notification, setNotification] = useState(null);
-  const [saleForm, setSaleForm] = useState({ sale_date: new Date().toISOString().split('T')[0], farm_id: '', buyer_name: '', buyer_type: 'Direct', quantity_kg: '', price_per_kg: '', invoice_ref: '' });
-  const [saleErrors, setSaleErrors] = useState({});
   const [expenseForm, setExpenseForm] = useState({ expense_date: new Date().toISOString().split('T')[0], farm_id: '', category: 'Bibit', amount_idr: '', description: '', receipt_ref: '' });
   const [expenseErrors, setExpenseErrors] = useState({});
 
@@ -47,17 +46,6 @@ const SalesDistributionPage = () => {
 
   const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
-  const validateSale = () => {
-    const { errors, hasErrors } = validateForm(saleForm, {
-      farm_id: [[required, 'Farm']],
-      buyer_name: [[required, 'Nama Pembeli']],
-      quantity_kg: [[isNumber, 'Jumlah (Kg)'], [minValue, 0, 'Jumlah (Kg)']],
-      price_per_kg: [[isNumber, 'Harga/Kg'], [minValue, 0, 'Harga/Kg']]
-    });
-    setSaleErrors(errors);
-    return !hasErrors;
-  };
-
   const validateExpense = () => {
     const { errors, hasErrors } = validateForm(expenseForm, {
       farm_id: [[required, 'Farm']],
@@ -68,16 +56,13 @@ const SalesDistributionPage = () => {
     return !hasErrors;
   };
 
-  const handleSaveSale = async () => {
-    if (!validateSale()) return;
+  const handleSaveSale = async (saleForm) => {
     try {
       const res = await fetch(`${BASE_URL}/sales`, { method: 'POST', headers, body: JSON.stringify(saleForm) });
       const json = await res.json();
-      if (!json.success) { if (json.errors) setSaleErrors(json.errors); else alert(json.message); return; }
+      if (!json.success) { if (json.errors) alert(Object.values(json.errors).join('\n')); else alert(json.message); return; }
       showToast('Penjualan berhasil dicatat!');
       setShowSaleModal(false);
-      setSaleForm({ sale_date: new Date().toISOString().split('T')[0], farm_id: '', buyer_name: '', buyer_type: 'Direct', quantity_kg: '', price_per_kg: '', invoice_ref: '' });
-      setSaleErrors({});
       fetchData();
     } catch (e) { alert(e.message); }
   };
@@ -147,7 +132,7 @@ const SalesDistributionPage = () => {
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setExpenseForm({ expense_date: new Date().toISOString().split('T')[0], farm_id: '', category: 'Bibit', amount_idr: '', description: '', receipt_ref: '' }); setExpenseErrors({}); setShowExpenseModal(true); }} className="px-4 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all font-bold text-xs uppercase tracking-wider">+ Catat Pengeluaran</button>
-            <button onClick={() => { setSaleForm({ sale_date: new Date().toISOString().split('T')[0], farm_id: '', buyer_name: '', buyer_type: 'Direct', quantity_kg: '', price_per_kg: '', invoice_ref: '' }); setSaleErrors({}); setShowSaleModal(true); }} className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider">+ Catat Penjualan</button>
+            <button onClick={() => { setShowSaleModal(true); }} className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider">+ Catat Penjualan</button>
           </div>
         </div>
       </div>
@@ -189,30 +174,12 @@ const SalesDistributionPage = () => {
       </div>
 
       {showSaleModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowSaleModal(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative w-full sm:max-w-md bg-surface border border-border/40 rounded-t-[2rem] rounded-b-none sm:rounded-[2rem] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-slide-up" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-black text-foreground mb-6">Catat Penjualan</h2>
-            <div className="flex flex-col gap-4">
-              <Select label="Farm" name="farm_id" required value={saleForm.farm_id} onChange={e => setSaleForm({ ...saleForm, farm_id: e.target.value })} error={saleErrors.farm_id}>
-                <option value="">Pilih Farm</option>
-                {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
-              </Select>
-              <Input label="Nama Pembeli" name="buyer_name" required value={saleForm.buyer_name} onChange={e => setSaleForm({ ...saleForm, buyer_name: e.target.value })} error={saleErrors.buyer_name} />
-              <Input label="Tanggal" name="sale_date" type="date" required value={saleForm.sale_date} onChange={e => setSaleForm({ ...saleForm, sale_date: e.target.value })} />
-              <Input label="Jumlah (Kg)" name="quantity_kg" type="number" required value={saleForm.quantity_kg} onChange={e => setSaleForm({ ...saleForm, quantity_kg: e.target.value })} error={saleErrors.quantity_kg} />
-              <Input label="Harga/Kg" name="price_per_kg" type="number" required value={saleForm.price_per_kg} onChange={e => setSaleForm({ ...saleForm, price_per_kg: e.target.value })} error={saleErrors.price_per_kg} />
-              <Input label="Invoice" name="invoice_ref" value={saleForm.invoice_ref} optional onChange={e => setSaleForm({ ...saleForm, invoice_ref: e.target.value })} />
-              <Select label="Tipe Pembeli" name="buyer_type" value={saleForm.buyer_type} onChange={e => setSaleForm({ ...saleForm, buyer_type: e.target.value })}>
-                {Object.entries(BUYER_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </Select>
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowSaleModal(false)} className="px-4 py-2 rounded-xl border border-border/40 text-sm font-bold">Batal</button>
-              <button onClick={handleSaveSale} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">Simpan</button>
-            </div>
-          </div>
-        </div>
+        <RecordSaleModal
+          isOpen={showSaleModal}
+          onClose={() => setShowSaleModal(false)}
+          onSave={handleSaveSale}
+          farms={farms}
+        />
       )}
 
       {showExpenseModal && (
