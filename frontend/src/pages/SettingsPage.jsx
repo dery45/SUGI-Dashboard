@@ -6,7 +6,7 @@ import { required, isEmail, isPhone, minLength, validateForm } from '../utils/va
 import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const SettingsPage = () => {
-  const { token, user } = useAuth();
+  const { token, user, forceReauth } = useAuth();
   const [profile, setProfile] = useState(null);
   const [farms, setFarms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +93,8 @@ const SettingsPage = () => {
       const json = await res.json();
       if (json.success) {
         setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
-        showToast('Password berhasil diubah');
+        forceReauth();
+        showToast('Kata sandi berhasil diubah. Silakan masuk kembali.');
       } else {
         setPasswordErrors(json.errors || {});
         showToast(json.message || 'Gagal mengubah password', 'error');

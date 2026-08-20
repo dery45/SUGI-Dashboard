@@ -44,8 +44,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const forceReauth = () => {
+    clearToken();
+    setTokenState(null);
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, forceReauth }}>
       {children}
     </AuthContext.Provider>
   );
