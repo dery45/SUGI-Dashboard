@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import DataTable from '../components/common/DataTable';
-import RecordSaleModal from '../components/management/RecordSaleModal';
-import RecordExpenseModal from '../components/management/RecordExpenseModal';
+import DataTable from '../component/common/DataTable';
+import RecordSaleModal from '../component/management/RecordSaleModal';
+import RecordExpenseModal from '../component/management/RecordExpenseModal';
 import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const BUYER_LABELS = { Mill: 'Pabrik', Middleman: 'Tengkulak', Direct: 'Langsung', Government: 'Pemerintah' };

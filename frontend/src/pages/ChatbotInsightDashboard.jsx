@@ -23,13 +23,13 @@ import {
   fetchTrends, fetchCoverage, fetchInsights,
   semanticSearch
 } from '../api/chatbotInsightApi';
-import KpiCard from '../components/dashboard/KpiCard';
-import DashboardSection from '../components/dashboard/DashboardSection';
-import EmptyState from '../components/dashboard/EmptyState';
-import ErrorState from '../components/dashboard/ErrorState';
-import KnowledgeGraph from '../components/chatbot/KnowledgeGraph';
-import InsightPanel from '../components/chatbot/InsightPanel';
-import ExportModal from '../components/chatbot/ExportModal';
+import KpiCard from '../component/dashboard/KpiCard';
+import DashboardSection from '../component/dashboard/DashboardSection';
+import EmptyState from '../component/dashboard/EmptyState';
+import ErrorState from '../component/dashboard/ErrorState';
+import KnowledgeGraph from '../component/chatbot/KnowledgeGraph';
+import InsightPanel from '../component/chatbot/InsightPanel';
+import ExportModal from '../component/chatbot/ExportModal';
 
 const TABS = [
   { id: 'overview', label: 'Ringkasan', icon: LayoutDashboard },

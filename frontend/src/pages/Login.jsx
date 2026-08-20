@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { homePathFor } from '../services/ProtectedRoutes.jsx';
-import Card from '../components/common/Card';
-import { Input } from '../components/common/FormField';
+import Card from '../component/common/Card';
+import { Input } from '../component/common/FormField';
 
 const Login = () => {
   const [email, setEmail] = useState('');

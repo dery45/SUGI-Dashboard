@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import Card from '../components/common/Card';
-import DataTable from '../components/common/DataTable';
-import { Input, Select } from '../components/common/FormField';
+import Card from '../component/common/Card';
+import DataTable from '../component/common/DataTable';
+import { Input, Select } from '../component/common/FormField';
 import { required, isEmail, compose, validateForm } from '../utils/validation';
 import { API_BASE_URL as BASE_URL } from '../services/authService';
 

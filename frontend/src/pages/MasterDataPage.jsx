@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import DataPageTemplate from '../components/common/DataPageTemplate';
+import DataPageTemplate from '../component/common/DataPageTemplate';
 import * as allCols from '../data/dataColumns';
 
 const INSIGHT_SOURCE_MAP = {

@@ -1,5 +1,5 @@
 import React from 'react';
-import LiveDataPage from '../../components/common/LiveDataPage';
+import LiveDataPage from '../../component/common/LiveDataPage';
 import { columns6 } from '../../data/dataColumns';
 import { importTemplates } from '../../utils/importTemplates';
 

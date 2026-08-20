@@ -11,13 +11,13 @@ import {
   KpiCard, ChartCard, DashboardSection, ResponsiveGrid,
   ChartContainer, TableContainer, LoadingSkeleton,
   ExportButton, RefreshButton, ErrorState
-} from '../components/dashboard';
-import ChartDetailModal from '../components/common/ChartDetailModal';
-import ErrorBoundary from '../components/common/ErrorBoundary';
-import IndonesiaMap from '../components/map/IndonesiaMap';
-import LineChart from '../components/charts/LineChart';
-import BarChart from '../components/charts/BarChart';
-import PieChart from '../components/charts/PieChart';
+} from '../component/dashboard';
+import ChartDetailModal from '../component/common/ChartDetailModal';
+import ErrorBoundary from '../component/common/ErrorBoundary';
+import IndonesiaMap from '../component/map/IndonesiaMap';
+import LineChart from '../component/charts/LineChart';
+import BarChart from '../component/charts/BarChart';
+import PieChart from '../component/charts/PieChart';
 import { fetchGovtDashboard } from '../api/govtDashboardApi';
 import { API_BASE_URL as API_BASE, getToken } from '../services/authService';
 

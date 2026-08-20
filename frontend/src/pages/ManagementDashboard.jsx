@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useManagementData } from '../hooks/useManagementData';
 import { useAuth } from '../contexts/AuthContext';
-import KPISection from '../components/management/KPISection';
-import AlertsPanel from '../components/management/AlertsPanel';
-import ComparativeChart from '../components/management/ComparativeChart';
+import KPISection from '../component/management/KPISection';
+import AlertsPanel from '../component/management/AlertsPanel';
+import ComparativeChart from '../component/management/ComparativeChart';
 import { API_BASE_URL as BASE_URL } from '../services/authService';
 
 const STATUS_COLORS = {

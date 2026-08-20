@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardFilterProvider } from './contexts/DashboardFilterContext';
-import MainLayout from './components/layout/MainLayout';
+import MainLayout from './component/layout/MainLayout';
 import { ProtectedRoute, AppRedirect, homePathFor } from './services/ProtectedRoutes.jsx';
 
 import FarmerDashboard from './pages/FarmerDashboard';
