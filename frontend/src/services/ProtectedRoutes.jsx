@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const homePathFor = (role) => {
   if (role === 'government') return '/government';
-  if (role === 'farmer' || role === 'farmer_owner') return '/farmer';
+  if (role === 'farmer') return '/farmer';
   return '/management';
 };
 
