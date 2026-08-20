@@ -2,8 +2,8 @@
 
 > **Methodology.** The repository has **no official git tags or GitHub releases**. All
 > versions below are **derived milestones** — logical clusters of commits grouped by
-> date and scope, reconstructed from the 80-commit history between `1af4021`
-> (2026-03-22) and `a0e1bad` (2026-08-18). Versions are labeled `vX.Y.Z` only to give
+> date and scope, reconstructed from the commit history between `1af4021`
+> (2026-03-22) and `7d7bc1b` (2026-08-20). Versions are labeled `vX.Y.Z` only to give
 > readers a stable reference; they are not published releases.
 >
 > `frontend/package.json` never bumped past `0.0.0` (unreleased placeholder) and
@@ -14,8 +14,8 @@
 
 | Field | Value |
 |---|---|
-| **Version** | v0.11.0 (unreleased, on `dev` only) |
-| **HEAD commit** | `a0e1bad` (2026-08-18) |
+| **Version** | v0.12.0 (unreleased, on `dev` only) |
+| **HEAD commit** | `7d7bc1b` (2026-08-20) |
 | **Branch** | `dev` (active) — `main` frozen at `ee4faf7` (2026-03-22) |
 | **Remote** | `origin` → `https://github.com/dery45/SUGI-Dashboard.git` |
 | **Backend** | Express 5.2.1, Mongoose 9.3.1, natural 8.1.1 (NLP) — 88 documented endpoints |
@@ -36,6 +36,7 @@
 | v0.9.0 | 2026-08-14 | Backend restructure + API docs | Phase-2 restructure, response envelope, Swagger + Postman (Phase 3) | `792b84e` … `8e52237` |
 | v0.10.0 | 2026-08-18 | Lifecycle UX | Single-entry "Persiapan Lahan" flow, per-stage eligibility validation | `19f8ef6` `30f0c13` `5962b77` `943c435` `8cd73f5` |
 | v0.11.0 | 2026-08-18 | QA & test infrastructure | Playwright suites (TASK 0–9, FE-1..FE-5, TASK 9b), findings & reports | `a248a4d` … `a0e1bad` |
+| v0.12.0 | 2026-08-20 | Frontend bug-fixing phase | Role-aware redirects, centralized authService, sale modal guard, hardcoded-dropdown fixes, orphan cleanup, `/api` base-URL standardization, forceReauth on password change | `e32128b` `0319769` `6bce2a6` `a443887` `a08bbb3` `0325623` `7d7bc1b` |
 
 ## Current Implementation Snapshot
 
@@ -72,10 +73,17 @@
   MainLayout), management (LifecycleTabs, RecordSaleModal, RecordExpenseModal,
   NewCycleModal, …), chatbot (KnowledgeGraph, InsightPanel, ExportModal), common
   (DataTable, DataPageTemplate, ErrorBoundary, ExportButton, …).
-- **Contexts:** AuthContext, DashboardFilterContext, FilterContext, ThemeContext.
+- **Services (v0.12.0):** `services/authService.js` (single source of truth for token
+  storage, auth headers, base URL, login/me/logout) + `services/ProtectedRoutes.jsx`
+  (role-aware `homePathFor`/`ProtectedRoute`/`AppRedirect`).
+- **Contexts (v0.12.0):** AuthContext, DashboardFilterContext, ThemeContext
+  (FilterContext removed as dead code).
 - **PWA:** `public/manifest.json` + `public/sw.js` (added v0.5.0).
 - **Discovery table (`src/data/`):** `allData.js` + `dataColumns.js` drive the generated
   master pages.
+- **API clients (6, v0.12.0):** managementApi, filterApi, insightApi, farmerDashboardApi,
+  govtDashboardApi, chatbotInsightApi — all route through `authService`;
+  legacy `dashboardApi.js` deleted (v0.12.0).
 
 ## Versioning Conventions Going Forward
 

@@ -3,12 +3,83 @@
 All notable changes to the SUGI Dashboard project are documented here.
 
 > **Versioning note:** The repository has no official git tags or releases. Milestones
-> below are **derived** from logical clusters of the 80-commit history
-> (`1af4021` 2026-03-22 → `a0e1bad` 2026-08-18), reconstructed from actual diffs. See
+> below are **derived** from logical clusters of the commit history
+> (`1af4021` 2026-03-22 → `7d7bc1b` 2026-08-20), reconstructed from actual diffs. See
 > [`VERSION.md`](./VERSION.md) for the methodology.
 >
 > New changes are added to the top of this file. Latest commit at time of writing:
-> `a0e1bad` (2026-08-18).
+> `7d7bc1b` (2026-08-20).
+
+---
+
+## [v0.12.0] — 2026-08-20 — Frontend Bug-Fixing Phase
+
+Frontend-focused fix phase (TASK 0–9) closing QA findings FE-REDIRECT, FE-9B-1, and
+FE-9B-3 (frontend side), centralizing frontend auth, standardizing the API base URL,
+and deleting orphaned files ahead of the Phase-2 folder restructure. Completion report:
+`docs/PHASE1_COMPLETION_REPORT.md`.
+
+### Added
+- **`frontend/src/services/authService.js`** — single source of truth for frontend auth
+  and API access: `API_BASE_URL` (`VITE_API_URL || '/api'`), `getToken`/`setToken`/
+  `clearToken` (sole `localStorage` auth access), `authHeaders` (Bearer added only when
+  a token exists), `apiFetch` (errors carry `err.status`), `login`/`fetchMe`/`logout`.
+- **`frontend/src/services/ProtectedRoutes.jsx`** — `homePathFor(role)` role→home map,
+  `ProtectedRoute` (roles allow-list + `LoadingScreen`), `AppRedirect` at `/`.
+- **`AuthContext.forceReauth()`** — clears token + user so `ProtectedRoute` redirects to
+  `/login`; used by SettingsPage after a successful password change (Indonesian message
+  "Kata sandi berhasil diubah. Silakan masuk kembali.").
+
+### Fixed
+- **FE-REDIRECT** — `Login.jsx` redirected every role to `/management`; now calls
+  `homePathFor(userData.role)` (government→`/government`, farmer/owner→`/farmer`,
+  superadmin→`/management`). Zero intermediate bounces verified live per role.
+- **FE-9B-1 (sales double-submit)** — `RecordSaleModal.jsx` rewritten as a guarded
+  component (`disabled={saving}`, validation via `utils/validation`, real farm dropdown
+  from props, `buyer_type` defaults to Direct) and wired into `SalesDistributionPage.jsx`;
+  the unguarded inline modal and its `saleForm`/`saleErrors` state were removed.
+  Double-click now creates exactly one `POST /api/sales`.
+- **Hardcoded dropdown placeholders** — `LandOpeningModal`, `HarvestOpeningModal`,
+  `NewCycleModal`, `RecordExpenseModal` no longer render `farm_1/farm_2/farm_3/cycle_1`
+  placeholder options; all render real `farms`/`cropCycles` from props.
+
+### Refactored
+- **Auth centralization** — AuthContext, all 6 API clients (`managementApi`, `filterApi`,
+  `insightApi`, `farmerDashboardApi`, `govtDashboardApi`, `chatbotInsightApi`), all 3 hooks
+  (`useMasterData`, `useGenericResource`, `useManagementData`), and the pages/components
+  that fetch now route through `authService` instead of ad-hoc `localStorage` access.
+  `/auth/me` semantics preserved (HTTP rejection clears session; network error nulls user).
+- **API base URL** — every file imports `API_BASE_URL` from `authService`; the stale
+  `http://localhost:5000/api` fallback in `LifecycleTabs.jsx` removed. Cross-checked:
+  `VITE_API_URL=/api`, Vite proxy `/api`→`:3000`, backend serves under `/api`.
+
+### Removed (dead code / orphans, grep-verified)
+- `frontend/src/api/dashboardApi.js` — imported nowhere; hit legacy
+  `/dashboard/farmer|government` endpoints.
+- `frontend/src/contexts/FilterContext.jsx` — `useFilter`/`dateRange` never consumed;
+  `FilterProvider` unwrapped from App.jsx.
+- `frontend/src/App.css` (unimported), `frontend/src/assets/vite.svg` (unreferenced).
+- `frontend/rewrite_lifecycletabs.cjs` (one-off generator).
+- `frontend/generate_pages.js` (CJS twin broke under `"type": "module"`; kept
+  `generate_pages.mjs`).
+
+### Verified
+- 51/51 AUTH OK across 17 master pages × 3 roles (`testing/e2e/verify-auth.js`),
+  re-run after the authService refactor with zero regressions.
+- Role-aware redirects tested live per role; sales double-submit guarded; password
+  change forces re-login. `npm run build` passes (chunk-size warnings only).
+- FRONTEND_STRUCTURE.md corrections recorded in the report: the "useMasterData sends no
+  auth header" claim and the "duplicate DataImportModal" claim are both false; the
+  dashboardApi "live" entry was stale.
+
+### Related Commits
+- `e32128b` — role-aware redirect + ProtectedRoutes (TASK 2)
+- `0319769` — authService centralization (TASK 3)
+- `6bce2a6` — RecordSaleModal wiring (TASK 4, FE-9B-1)
+- `a443887` — hardcoded dropdown fixes (TASK 5)
+- `a08bbb3` — orphan deletions (TASK 6)
+- `0325623` — base-URL standardization (TASK 7)
+- `7d7bc1b` — forceReauth after password change (TASK 8, FE-REPLAY/FE-9B-3 frontend)
 
 ---
 

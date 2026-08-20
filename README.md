@@ -215,7 +215,7 @@ SUGI-Dashboard-DEMO/
 ├── frontend/                         # Vite + React 19 SPA
 │   ├── public/                       # Static assets (GeoJSON maps, icons)
 │   ├── src/
-│   │   ├── api/                      # 7 API client modules
+│   │   ├── api/                      # 6 API client modules (all via services/authService)
 │   │   ├── assets/                   # Images, fonts, brand assets
 │   │   ├── components/
 │   │   │   ├── charts/               # Recharts wrappers (BarChart, LineChart, PieChart)
@@ -228,10 +228,11 @@ SUGI-Dashboard-DEMO/
 │   │   │   ├── layout/               # Sidebar, TopBar, MainLayout, BottomNav
 │   │   │   ├── management/           # 10 management module components
 │   │   │   └── map/                  # IndonesiaMap (Leaflet)
-│   │   ├── contexts/                 # 4 React Contexts (Auth, Theme, Filter, DashboardFilter)
+│   │   ├── contexts/                 # 3 React Contexts (Auth, Theme, DashboardFilter)
 │   │   ├── hooks/                    # 3 custom hooks
 │   │   ├── pages/                    # 28 page views (11 main + 17 master)
 │   │   │   └── master/               # 17 master data CRUD pages
+│   │   ├── services/                 # authService.js (auth/API single source) + ProtectedRoutes.jsx
 │   │   ├── App.jsx                   # Root component with routing
 │   │   └── main.jsx                  # React DOM entry point
 │   ├── index.html
@@ -399,9 +400,14 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 
 ### 8. Frontend Routes
 
+Role-aware routing via `services/ProtectedRoutes.jsx`: after login every role is sent to
+its own home (`homePathFor`: government→`/government`, farmer & farmer_owner→`/farmer`,
+superadmin→`/management`), and each route enforces its allowed roles.
+
 | Path | Page | Roles |
 |------|------|-------|
 | `/login` | Login | Public |
+| `/` | AppRedirect → role home | Public |
 | `/farmer` | Farmer Dashboard | All authenticated |
 | `/government` | Government Dashboard | superadmin, government |
 | `/chatbot-insight` | Chatbot Insight Dashboard | superadmin, government |
