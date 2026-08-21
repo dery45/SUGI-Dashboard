@@ -6,7 +6,7 @@ import { DashboardFilterProvider } from './contexts/DashboardFilterContext';
 import MainLayout from './component/layout/MainLayout';
 import { ProtectedRoute, AppRedirect, homePathFor } from './services/ProtectedRoutes.jsx';
 
-import FarmerDashboard from './pages/FarmerDashboard';
+import FarmerDashboard from './pages/FarmerDashboard/FarmerDashboard';
 import GovernmentDashboard from './pages/GovernmentDashboard';
 import ManagementDashboard from './pages/ManagementDashboard';
 import LifecycleManagementPage from './pages/LifecycleManagementPage';

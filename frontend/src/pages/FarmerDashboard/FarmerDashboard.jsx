@@ -5,21 +5,21 @@ import {
   Shield, AlertTriangle, Info, Truck, Warehouse, Package,
   Sun, Moon, ChevronRight, Home
 } from 'lucide-react';
-import { useDashboardFilters } from '../contexts/DashboardFilterContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useDashboardFilters } from '@/contexts/DashboardFilterContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   KpiCard, ChartCard, DashboardSection, ResponsiveGrid,
   ChartContainer, TableContainer, LoadingSkeleton,
   ExportButton, RefreshButton, ErrorState
-} from '../component/dashboard';
-import ChartDetailModal from '../component/common/ChartDetailModal';
-import ErrorBoundary from '../component/common/ErrorBoundary';
-import IndonesiaMap from '../component/map/IndonesiaMap';
-import LineChart from '../component/charts/LineChart';
-import BarChart from '../component/charts/BarChart';
-import DataTable from '../component/common/DataTable';
-import { fetchFarmerDashboard } from '../api/farmerDashboardApi';
-import { API_BASE_URL as API_BASE, getToken } from '../services/authService';
+} from '@/component/dashboard';
+import ChartDetailModal from '@/component/common/ChartDetailModal';
+import ErrorBoundary from '@/component/common/ErrorBoundary';
+import IndonesiaMap from '@/component/map/IndonesiaMap';
+import LineChart from '@/component/charts/LineChart';
+import BarChart from '@/component/charts/BarChart';
+import DataTable from '@/component/common/DataTable';
+import { fetchFarmerDashboard } from './api/farmerDashboardApi';
+import { API_BASE_URL as API_BASE, getToken } from '@/services/authService';
 
 function safeNum(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function fmtNum(v) { const n = safeNum(v); return n.toLocaleString('id-ID'); }
@@ -98,7 +98,7 @@ const FarmerDashboard = () => {
     7: { title: 'Belum ada data ketersediaan', desc: 'Data neraca pangan nasional per bulan dari database Proyeksi Neraca belum tersedia untuk filter saat ini.' },
     8: { title: 'Belum ada neraca per komoditas', desc: 'Data surplus/defisit per komoditas dari database Proyeksi Neraca belum tersedia.' },
     9: { title: 'Belum ada peluang pasar', desc: 'Data provinsi dengan harga produsen tertinggi belum tersedia untuk filter saat ini.' },
-    10: { title: 'Belum ada cadangan pangan', desc: 'Data cadangan pangan per provinsi dari database Cadangan Pangan Provinsi belum tersedia.' },
+    10: { title: 'Belum ada cadangan pangan', desc: 'Data cadangan pangan per provinsi dari database Cadangan Pangan Provinsi belum tersedia untuk filter saat ini.' },
   };
   const TABLE_EMPTY = {
     prices: { title: 'Belum ada data harga produsen', desc: 'Data harga produsen per komoditas, tahun, dan bulan dari database Harga Produsen Nasional belum tersedia.' },
