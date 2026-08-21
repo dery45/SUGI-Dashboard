@@ -10,7 +10,7 @@ import FarmerDashboard from './pages/FarmerDashboard/FarmerDashboard';
 import GovernmentDashboard from './pages/GovernmentDashboard/GovernmentDashboard';
 import ManagementDashboard from './pages/ManagementDashboard/ManagementDashboard';
 import LifecycleManagementPage from './pages/Lifecycle/LifecycleManagementPage';
-import UMManagementPage from './pages/UMManagementPage';
+import UMManagementPage from './pages/UMManagement/UMManagementPage';
 import FarmerManagementPage from './pages/FarmerManagementPage';
 import SalesDistributionPage from './pages/SalesDistributionPage';
 import SettingsPage from './pages/SettingsPage';
