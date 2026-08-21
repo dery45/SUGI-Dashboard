@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useManagementData } from '../hooks/useManagementData';
+import { useManagementData } from '@/pages/ManagementDashboard/hooks/useManagementData';
 import { useAuth } from '../contexts/AuthContext';
 import KPISection from '../component/management/KPISection';
 import AlertsPanel from '../component/management/AlertsPanel';

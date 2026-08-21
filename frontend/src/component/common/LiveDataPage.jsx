@@ -5,7 +5,7 @@ import MasterDataModal from './MasterDataModal';
 import DataImportModal from '../DataImportModal';
 import { useMasterData } from '../../hooks/useMasterData';
 import { PlusCircle, Lightbulb, RefreshCw, Upload, CheckCircle, Sparkles } from 'lucide-react';
-import { fetchInsights } from '../../api/insightApi';
+import { fetchInsights } from '../../services/insightService';
 
 const COLLECTION_MAP = {
   'ketidakcukupan-nasional': 'ketidakcukupannasionals',

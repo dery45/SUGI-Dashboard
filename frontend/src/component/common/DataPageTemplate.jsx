@@ -3,7 +3,7 @@ import * as xlsx from 'xlsx';
 import { Download, Upload, Plus, RefreshCw, X, Sparkles } from 'lucide-react';
 import DataTable from './DataTable';
 import Card from './Card';
-import { fetchInsights } from '../../api/insightApi';
+import { fetchInsights } from '../../services/insightService';
 
 const fieldType = (accessor) => {
   const s = accessor.toLowerCase();

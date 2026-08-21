@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { API_BASE_URL, authHeaders } from '../services/authService';
+import { API_BASE_URL, authHeaders } from '@/services/authService';
 
 export const useGenericResource = (endpoint, token) => {
   const [data, setData] = useState([]);

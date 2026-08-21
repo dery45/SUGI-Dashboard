@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { fetchFilterOptions } from '../api/filterApi';
+import { fetchFilterOptions } from '../services/filterService';
 
 const DashboardFilterContext = createContext(null);
 

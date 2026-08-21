@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGenericResource } from '../../hooks/useGenericResource';
+import { useGenericResource } from '@/pages/Lifecycle/hooks/useGenericResource';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '../../services/authService';
 

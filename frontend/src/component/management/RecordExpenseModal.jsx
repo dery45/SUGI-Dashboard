@@ -4,7 +4,7 @@ const CATEGORIES = ['Bibit', 'Pupuk', 'Pestisida', 'Tenaga Kerja', 'Transportasi
 
 const RecordExpenseModal = ({ isOpen, onClose, onSave, farms = [] }) => {
   const [formData, setFormData] = useState({
-    farm_id: '', crop_cycle_id: '', category: 'Bibit',
+    farm_id: '', crop_cycle_id: '', category: 'Tenaga Kerja',
     amount_idr: '', description: '', expense_date: new Date().toISOString().split('T')[0], receipt_ref: ''
   });
   const [saving, setSaving] = useState(false);
