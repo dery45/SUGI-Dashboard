@@ -15,7 +15,7 @@ import FarmerManagementPage from './pages/FarmerManagementPage';
 import SalesDistributionPage from './pages/SalesDistributionPage';
 import SettingsPage from './pages/SettingsPage';
 import ChatbotInsightDashboard from './pages/ChatbotInsightDashboard';
-import Login from './pages/Login';
+import Login from './pages/Login/Login';
 
 import FarmMasterPage from './pages/master/FarmMasterPage';
 import BlockMasterPage from './pages/master/BlockMasterPage';
