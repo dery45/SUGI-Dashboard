@@ -12,7 +12,7 @@ import ManagementDashboard from './pages/ManagementDashboard/ManagementDashboard
 import LifecycleManagementPage from './pages/Lifecycle/LifecycleManagementPage';
 import UMManagementPage from './pages/UMManagement/UMManagementPage';
 import FarmerManagementPage from './pages/FarmerManagement/FarmerManagementPage';
-import SalesDistributionPage from './pages/SalesDistributionPage';
+import SalesDistributionPage from './pages/Sales/SalesDistributionPage';
 import SettingsPage from './pages/SettingsPage';
 import ChatbotInsightDashboard from './pages/ChatbotInsightDashboard';
 import Login from './pages/Login/Login';

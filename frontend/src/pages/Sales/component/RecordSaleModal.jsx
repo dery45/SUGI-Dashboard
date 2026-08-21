@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { required, isNumber, minValue, validateForm } from '../../utils/validation';
+import { required, isNumber, minValue, validateForm } from '@/utils/validation';
 
 const BUYER_LABELS = { Mill: 'Pabrik', Middleman: 'Tengkulak', Direct: 'Langsung', Government: 'Pemerintah' };
 
