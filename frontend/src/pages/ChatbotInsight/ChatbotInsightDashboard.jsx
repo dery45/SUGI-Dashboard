@@ -12,7 +12,7 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   fetchChatbotDashboard,
   fetchChatbotActivity, fetchChatbotTopics,
@@ -22,14 +22,14 @@ import {
   fetchRecommendations, fetchProblems,
   fetchTrends, fetchCoverage, fetchInsights,
   semanticSearch
-} from '../api/chatbotInsightApi';
-import KpiCard from '../component/dashboard/KpiCard';
-import DashboardSection from '../component/dashboard/DashboardSection';
-import EmptyState from '../component/dashboard/EmptyState';
-import ErrorState from '../component/dashboard/ErrorState';
-import KnowledgeGraph from '../component/chatbot/KnowledgeGraph';
-import InsightPanel from '../component/chatbot/InsightPanel';
-import ExportModal from '../component/chatbot/ExportModal';
+} from './api/chatbotInsightApi';
+import KpiCard from '@/component/dashboard/KpiCard';
+import DashboardSection from '@/component/dashboard/DashboardSection';
+import EmptyState from '@/component/dashboard/EmptyState';
+import ErrorState from '@/component/dashboard/ErrorState';
+import KnowledgeGraph from './component/KnowledgeGraph';
+import InsightPanel from './component/InsightPanel';
+import ExportModal from './component/ExportModal';
 
 const TABS = [
   { id: 'overview', label: 'Ringkasan', icon: LayoutDashboard },

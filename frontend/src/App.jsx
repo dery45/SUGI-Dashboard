@@ -14,7 +14,7 @@ import UMManagementPage from './pages/UMManagement/UMManagementPage';
 import FarmerManagementPage from './pages/FarmerManagement/FarmerManagementPage';
 import SalesDistributionPage from './pages/Sales/SalesDistributionPage';
 import SettingsPage from './pages/Settings/SettingsPage';
-import ChatbotInsightDashboard from './pages/ChatbotInsightDashboard';
+import ChatbotInsightDashboard from './pages/ChatbotInsight/ChatbotInsightDashboard';
 import Login from './pages/Login/Login';
 
 import FarmMasterPage from './pages/master/FarmMasterPage';

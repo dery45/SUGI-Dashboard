@@ -1,4 +1,4 @@
-import { API_BASE_URL, authHeaders } from '../services/authService';
+import { API_BASE_URL, authHeaders } from '@/services/authService';
 
 const BASE_URL = API_BASE_URL;
 
