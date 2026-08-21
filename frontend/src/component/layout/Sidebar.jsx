@@ -39,10 +39,14 @@ const Sidebar = ({ isOpen, user, onToggle }) => {
     { name: 'Jenis Aktivitas', path: '/master/activity-types', icon: <Activity className="w-4 h-4" /> },
   ];
 
-  const dataLinks = Object.keys(dataRegistry).map(slug => ({
-    name: dataRegistry[slug].title,
-    path: `/data/${slug}`
+  const dataLinks = Object.entries(dataRegistry).map(([slug, config]) => ({
+    name: config.title,
+    path: `/data/${slug}`,
+    group: config.group
   }));
+
+  const masterDataDataLinks = dataLinks.filter(d => d.group === 'master');
+  const governmentDataLinks = dataLinks.filter(d => d.group === 'government');
 
   return (
     <>
@@ -155,17 +159,40 @@ const Sidebar = ({ isOpen, user, onToggle }) => {
                 </button>
 
                 <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isDataMenuOpen ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                  <div className="flex flex-col gap-1 pl-4 border-l-2 border-border/40 ml-8 py-2">
-                    {dataLinks.map(link => (
-                      <NavLink
-                        key={link.path}
-                        to={link.path}
-                        className={({ isActive }) => `block px-4 py-3 rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
-                        title={link.name}
-                      >
-                        <span className="line-clamp-2">{link.name}</span>
-                      </NavLink>
-                    ))}
+                  <div className="flex flex-col gap-4 pl-4 border-l-2 border-border/40 ml-8 py-2">
+                    {/* Master Data Section */}
+                    {masterDataDataLinks.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="px-2 text-[9px] font-bold text-muted/60 uppercase tracking-wider mb-1">Master Data</p>
+                        {masterDataDataLinks.map(link => (
+                          <NavLink
+                            key={link.path}
+                            to={link.path}
+                            className={({ isActive }) => `block px-4 py-3 rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
+                            title={link.name}
+                          >
+                            <span className="line-clamp-2">{link.name}</span>
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Government Data Section */}
+                    {governmentDataLinks.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="px-2 text-[9px] font-bold text-muted/60 uppercase tracking-wider mb-1">Government Data</p>
+                        {governmentDataLinks.map(link => (
+                          <NavLink
+                            key={link.path}
+                            to={link.path}
+                            className={({ isActive }) => `block px-4 py-3 rounded-xl text-[11px] font-bold transition-all duration-300 leading-snug ${isActive ? 'bg-primary/10 text-primary translate-x-1' : 'text-muted hover:text-primary hover:bg-primary/5 hover:translate-x-1'}`}
+                            title={link.name}
+                          >
+                            <span className="line-clamp-2">{link.name}</span>
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
