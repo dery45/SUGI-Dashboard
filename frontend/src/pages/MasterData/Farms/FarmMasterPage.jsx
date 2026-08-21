@@ -130,8 +130,8 @@ const FarmMasterPage = () => {
               <Input label="Penanggung Jawab" name="responsible_person" value={form.responsible_person} optional onChange={e => setForm({ ...form, responsible_person: e.target.value })} />
               <Input label="Kontak" name="contact" value={form.contact} optional onChange={e => setForm({ ...form, contact: e.target.value })} />
               <Select label="Status" name="status" required value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="Active">Aktif</option>
+                <option value="Inactive">Tidak Aktif</option>
               </Select>
               <div className="flex flex-col gap-1.5 col-span-2">
                 <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Deskripsi <span className="text-muted/50 font-normal normal-case">(Optional)</span></label>

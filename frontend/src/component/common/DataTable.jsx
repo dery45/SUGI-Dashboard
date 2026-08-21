@@ -131,7 +131,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/10">
+            <tbody className="divide-y divide-border/10 stagger-enter">
               {currentItems.map((row, rowIndex) => (
                 <tr key={rowIndex} className="group hover:bg-primary/[0.01] transition-colors">
                   {columns.map((col, colIndex) => {

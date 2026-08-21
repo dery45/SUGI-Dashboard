@@ -29,7 +29,7 @@ const KPISection = ({ data, loading }) => {
   }
 
   return (
-    <section className="grid grid-cols-2 md:grid-cols-4 gap-4" aria-label="Ringkasan KPI">
+    <section className="grid grid-cols-2 md:grid-cols-4 gap-4 kpi-stagger" aria-label="Ringkasan KPI">
       {KPI_CONFIGS.map((kpi) => {
         let rawValue = data?.[kpi.key] ?? 0;
         let displayValue;

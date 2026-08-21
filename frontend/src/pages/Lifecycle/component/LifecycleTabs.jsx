@@ -577,12 +577,12 @@ const MaintenanceSection = ({ showToast }) => {
                 <td className="px-4 py-3">Rp {Number(r.cost).toLocaleString('id-ID')}</td>
                 <td className="px-4 py-3 text-gray-500">{r.executor}</td>
                 <td className="px-4 py-3">
-                  <select value={r.status} onChange={e => handleStatusChange(r._id, e.target.value)}
-                    className="text-xs border border-gray-200 rounded px-2 py-1 outline-none">
-                    <option value="Pending">Pending</option>
-                    <option value="In_Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+<select value={r.status} onChange={e => handleStatusChange(r._id, e.target.value)}
+                      className="text-xs border border-gray-200 rounded px-2 py-1 outline-none">
+                    <option value="Pending">Tertunda</option>
+                    <option value="In_Progress">Sedang Berlangsung</option>
+                    <option value="Completed">Selesai</option>
+                    <option value="Cancelled">Dibatalkan</option>
                   </select>
                 </td>
                 <td className="px-4 py-3 flex gap-2">

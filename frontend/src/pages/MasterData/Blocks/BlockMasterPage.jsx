@@ -138,8 +138,8 @@ const BlockMasterPage = () => {
               </Select>
               <Input label="Sumber Air" name="water_source" value={form.water_source} optional onChange={e => setForm({ ...form, water_source: e.target.value })} />
               <Select label="Status" name="status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="Active">Aktif</option>
+                <option value="Inactive">Tidak Aktif</option>
               </Select>
               <div className="flex flex-col gap-1.5 col-span-2">
                 <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Deskripsi <span className="text-muted/50 font-normal normal-case">(Optional)</span></label>

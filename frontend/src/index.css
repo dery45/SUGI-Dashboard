@@ -117,4 +117,58 @@
   .p-grid {
     @apply p-2;
   }
+
+  /* Page/route transition */
+  .page-enter {
+    animation: fade-in 0.4s var(--ease-premium);
+  }
+
+  .page-exit {
+    animation: fade-in 0.3s reverse;
+  }
+
+  /* Modal animations - consistent scale-in pattern */
+  .modal-overlay-enter {
+    animation: fade-in 0.2s var(--ease-soft);
+  }
+
+  .modal-content-enter {
+    animation: scale-in 0.3s var(--ease-premium);
+  }
+
+  .modal-overlay-exit {
+    animation: fade-in 0.15s reverse;
+  }
+
+  .modal-content-exit {
+    animation: scale-in 0.2s reverse;
+  }
+
+  /* Staggered list/table entrance */
+  .stagger-enter > * {
+    opacity: 0;
+    animation: fade-in 0.4s var(--ease-premium) forwards;
+  }
+
+  .stagger-enter > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-enter > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger-enter > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger-enter > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger-enter > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger-enter > *:nth-child(6) { animation-delay: 200ms; }
+  .stagger-enter > *:nth-child(7) { animation-delay: 240ms; }
+  .stagger-enter > *:nth-child(8) { animation-delay: 280ms; }
+  .stagger-enter > *:nth-child(9) { animation-delay: 320ms; }
+  .stagger-enter > *:nth-child(10) { animation-delay: 360ms; }
+
+  /* KPI cards staggered entrance */
+  .kpi-stagger > * {
+    opacity: 0;
+    animation: slide-up 0.5s var(--ease-premium) forwards;
+  }
+
+  .kpi-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .kpi-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.kpi-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.kpi-stagger > *:nth-child(4) { animation-delay: 180ms; }
 }

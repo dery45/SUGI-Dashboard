@@ -1,5 +1,14 @@
 const CACHE_NAME = 'sugi-dash-v1';
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/favicon.svg', '/icons.svg'];
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/favicon.svg',
+  '/icons.svg',
+  // Note: JS/CSS bundles are hashed at build time.
+  // They are cached via HTTP headers (Cache-Control) rather than precache.
+  // For full precache, use vite-plugin-pwa to generate a precache manifest.
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
