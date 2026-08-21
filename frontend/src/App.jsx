@@ -7,7 +7,7 @@ import MainLayout from './component/layout/MainLayout';
 import { ProtectedRoute, AppRedirect, homePathFor } from './services/ProtectedRoutes.jsx';
 
 import FarmerDashboard from './pages/FarmerDashboard/FarmerDashboard';
-import GovernmentDashboard from './pages/GovernmentDashboard';
+import GovernmentDashboard from './pages/GovernmentDashboard/GovernmentDashboard';
 import ManagementDashboard from './pages/ManagementDashboard';
 import LifecycleManagementPage from './pages/LifecycleManagementPage';
 import UMManagementPage from './pages/UMManagementPage';

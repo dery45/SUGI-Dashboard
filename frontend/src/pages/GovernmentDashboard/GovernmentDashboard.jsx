@@ -5,21 +5,21 @@ import {
   DollarSign, Target, Truck, Shield,
   Sun, Moon, ChevronRight, Home
 } from 'lucide-react';
-import { useDashboardFilters } from '../contexts/DashboardFilterContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useDashboardFilters } from '@/contexts/DashboardFilterContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   KpiCard, ChartCard, DashboardSection, ResponsiveGrid,
   ChartContainer, TableContainer, LoadingSkeleton,
   ExportButton, RefreshButton, ErrorState
-} from '../component/dashboard';
-import ChartDetailModal from '../component/common/ChartDetailModal';
-import ErrorBoundary from '../component/common/ErrorBoundary';
-import IndonesiaMap from '../component/map/IndonesiaMap';
-import LineChart from '../component/charts/LineChart';
-import BarChart from '../component/charts/BarChart';
-import PieChart from '../component/charts/PieChart';
-import { fetchGovtDashboard } from '../api/govtDashboardApi';
-import { API_BASE_URL as API_BASE, getToken } from '../services/authService';
+} from '@/component/dashboard';
+import ChartDetailModal from '@/component/common/ChartDetailModal';
+import ErrorBoundary from '@/component/common/ErrorBoundary';
+import IndonesiaMap from '@/component/map/IndonesiaMap';
+import LineChart from '@/component/charts/LineChart';
+import BarChart from '@/component/charts/BarChart';
+import PieChart from '@/component/charts/PieChart';
+import { fetchGovtDashboard } from './api/govtDashboardApi';
+import { API_BASE_URL as API_BASE, getToken } from '@/services/authService';
 
 function safeNum(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function fmtNum(v) { const n = safeNum(v); return n.toLocaleString('id-ID'); }
