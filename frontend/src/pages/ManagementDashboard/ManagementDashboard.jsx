@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useManagementData } from '@/pages/ManagementDashboard/hooks/useManagementData';
-import { useAuth } from '../contexts/AuthContext';
-import KPISection from '../component/management/KPISection';
-import AlertsPanel from '../component/management/AlertsPanel';
-import ComparativeChart from '../component/management/ComparativeChart';
-import { API_BASE_URL as BASE_URL } from '../services/authService';
+import { useAuth } from '@/contexts/AuthContext';
+import KPISection from './component/KPISection';
+import AlertsPanel from './component/AlertsPanel';
+import ComparativeChart from './component/ComparativeChart';
+import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
 const STATUS_COLORS = {
   Planned: 'bg-gray-100 text-gray-700',

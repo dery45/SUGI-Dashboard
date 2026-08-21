@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchKPIs, fetchYieldTrend } from '@/api/managementApi';
+import { fetchKPIs, fetchYieldTrend } from '../api/managementApi';
 import { getToken } from '../../../services/authService';
 
 export function useManagementData(filters = {}) {

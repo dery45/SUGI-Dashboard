@@ -4,7 +4,7 @@
  * Throws an Error if the server responds with ok: false.
  */
 
-import { API_BASE_URL, getToken } from '../services/authService';
+import { API_BASE_URL, getToken } from '@/services/authService';
 
 const BASE_URL = API_BASE_URL;
 
