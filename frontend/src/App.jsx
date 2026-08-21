@@ -17,10 +17,10 @@ import SettingsPage from './pages/Settings/SettingsPage';
 import ChatbotInsightDashboard from './pages/ChatbotInsight/ChatbotInsightDashboard';
 import Login from './pages/Login/Login';
 
-import FarmMasterPage from './pages/master/FarmMasterPage';
-import BlockMasterPage from './pages/master/BlockMasterPage';
-import CropTypeMasterPage from './pages/master/CropTypeMasterPage';
-import ActivityTypeMasterPage from './pages/master/ActivityTypeMasterPage';
+import FarmMasterPage from './pages/MasterData/Farms/FarmMasterPage';
+import BlockMasterPage from './pages/MasterData/Blocks/BlockMasterPage';
+import CropTypeMasterPage from './pages/MasterData/CropTypes/CropTypeMasterPage';
+import ActivityTypeMasterPage from './pages/MasterData/ActivityTypes/ActivityTypeMasterPage';
 
 import KetidakcukupanNasionalPage from './pages/master/KetidakcukupanNasionalPage';
 import KetidakcukupanProvinsiPage from './pages/master/KetidakcukupanProvinsiPage';

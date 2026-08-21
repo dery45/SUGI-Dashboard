@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
-import Card from '../../component/common/Card';
-import DataTable from '../../component/common/DataTable';
-import { Input, Select } from '../../component/common/FormField';
-import { useAuth } from '../../contexts/AuthContext';
-import { required, validateForm } from '../../utils/validation';
-import { API_BASE_URL as BASE_URL } from '../../services/authService';
+import Card from '@/component/common/Card';
+import DataTable from '@/component/common/DataTable';
+import { Input, Select } from '@/component/common/FormField';
+import { useAuth } from '@/contexts/AuthContext';
+import { required, validateForm } from '@/utils/validation';
+import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
 const CropTypeMasterPage = () => {
   const { token } = useAuth();
