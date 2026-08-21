@@ -22,19 +22,19 @@ import BlockMasterPage from './pages/MasterData/Blocks/BlockMasterPage';
 import CropTypeMasterPage from './pages/MasterData/CropTypes/CropTypeMasterPage';
 import ActivityTypeMasterPage from './pages/MasterData/ActivityTypes/ActivityTypeMasterPage';
 
-import KetidakcukupanNasionalPage from './pages/master/KetidakcukupanNasionalPage';
-import KetidakcukupanProvinsiPage from './pages/master/KetidakcukupanProvinsiPage';
-import KonsumsiPerJenisPage from './pages/master/KonsumsiPerJenisPage';
-import PenyaluranDonasiPage from './pages/master/PenyaluranDonasiPage';
-import ProyeksiNeracaPage from './pages/master/ProyeksiNeracaPage';
-import GerakanPanganMurahPage from './pages/master/GerakanPanganMurahPage';
-import HargaKonsumenProvinsiPage from './pages/master/HargaKonsumenProvinsiPage';
-import HargaKonsumenNasionalPage from './pages/master/HargaKonsumenNasionalPage';
-import HargaProdusenNasionalPage from './pages/master/HargaProdusenNasionalPage';
-import HargaProdusenProvinsiPage from './pages/master/HargaProdusenProvinsiPage';
-import SkorPPHPage from './pages/master/SkorPPHPage';
-import PanganTerselamatkanPage from './pages/master/PanganTerselamatkanPage';
-import CadanganPanganProvinsiPage from './pages/master/CadanganPanganProvinsiPage';
+import KetidakcukupanNasionalPage from './pages/MasterData/KetidakcukupanNasional/KetidakcukupanNasionalPage';
+import KetidakcukupanProvinsiPage from './pages/MasterData/KetidakcukupanProvinsi/KetidakcukupanProvinsiPage';
+import KonsumsiPerJenisPage from './pages/MasterData/KonsumsiPerJenis/KonsumsiPerJenisPage';
+import PenyaluranDonasiPage from './pages/MasterData/PenyaluranDonasi/PenyaluranDonasiPage';
+import ProyeksiNeracaPage from './pages/MasterData/ProyeksiNeraca/ProyeksiNeracaPage';
+import GerakanPanganMurahPage from './pages/MasterData/GerakanPanganMurah/GerakanPanganMurahPage';
+import HargaKonsumenProvinsiPage from './pages/MasterData/HargaKonsumenProvinsi/HargaKonsumenProvinsiPage';
+import HargaKonsumenNasionalPage from './pages/MasterData/HargaKonsumenNasional/HargaKonsumenNasionalPage';
+import HargaProdusenNasionalPage from './pages/MasterData/HargaProdusenNasional/HargaProdusenNasionalPage';
+import HargaProdusenProvinsiPage from './pages/MasterData/HargaProdusenProvinsi/HargaProdusenProvinsiPage';
+import SkorPPHPage from './pages/MasterData/SkorPPH/SkorPPHPage';
+import PanganTerselamatkanPage from './pages/MasterData/PanganTerselamatkan/PanganTerselamatkanPage';
+import CadanganPanganProvinsiPage from './pages/MasterData/CadanganPanganProvinsi/CadanganPanganProvinsiPage';
 
 function AppContent() {
   const { user, loading } = useAuth();
