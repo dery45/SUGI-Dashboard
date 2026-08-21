@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import LifecycleTabs from '../component/management/LifecycleTabs';
-import Card from '../component/common/Card';
-import { API_BASE_URL as BASE_URL } from '../services/authService';
+import { useAuth } from '@/contexts/AuthContext';
+import LifecycleTabs from './component/LifecycleTabs';
+import Card from '@/component/common/Card';
+import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
 const LifecycleManagementPage = () => {
   const { token, user } = useAuth();

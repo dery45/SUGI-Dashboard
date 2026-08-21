@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGenericResource } from '@/pages/Lifecycle/hooks/useGenericResource';
-import { useAuth } from '../../contexts/AuthContext';
-import { API_BASE_URL as BASE_URL } from '../../services/authService';
+import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
 const Badge = ({ status }) => {
   const map = {
