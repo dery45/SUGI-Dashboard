@@ -6,7 +6,7 @@ import { Input, Select } from '@/component/common/FormField';
 import { required, isEmail, compose, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
-const ROLE_LABELS = { superadmin: 'Super Admin', government: 'Pemerintah', farmer_owner: 'Pemilik Petani', farmer: 'Petani' };
+const ROLE_LABELS = { superadmin: 'Super Admin', government: 'Pemerintah', farmer_owner: 'Owner', farmer: 'Petani' };
 const ROLE_COLORS = { superadmin: 'bg-red-100 text-red-700', government: 'bg-purple-100 text-purple-700', farmer_owner: 'bg-blue-100 text-blue-700', farmer: 'bg-green-100 text-green-700' };
 
 const FarmerManagementPage = () => {
@@ -110,7 +110,7 @@ const FarmerManagementPage = () => {
 
   const roleOptions = user?.role === 'farmer_owner'
     ? [{ value: 'farmer', label: 'Petani' }]
-    : [{ value: 'farmer', label: 'Petani' }, { value: 'farmer_owner', label: 'Pemilik Petani' }, { value: 'government', label: 'Pemerintah' }];
+    : [{ value: 'farmer', label: 'Petani' }, { value: 'farmer_owner', label: 'Owner' }, { value: 'government', label: 'Pemerintah' }];
 
   const toggleFarm = (farmId) => {
     setForm(prev => ({

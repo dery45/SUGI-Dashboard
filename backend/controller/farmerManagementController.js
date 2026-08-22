@@ -70,7 +70,7 @@ const createUser = async (req, res) => {
 
     if (role === 'farmer_owner') {
       if (!assigned_farms || !Array.isArray(assigned_farms) || assigned_farms.length === 0) {
-        return errorResponse(res, { assigned_farms: 'Minimal satu farm harus ditugaskan untuk Pemilik Petani' });
+        return errorResponse(res, { assigned_farms: 'Minimal satu farm harus ditugaskan untuk Owner' });
       }
       for (const farmId of assigned_farms) {
         if (!mongoose.Types.ObjectId.isValid(farmId)) {
