@@ -1,16 +1,30 @@
 const FarmerAssignment = require('../model/FarmerAssignment');
 const TaskAssignment = require('../model/TaskAssignment');
+const User = require('../model/User');
+
+// Owner farm scope from their USER record (lean raw ids). Owners never have
+// FarmerAssignment rows *as farmers*, so deriving scope from that table always
+// yielded an empty list — the root cause of Penugasan/Pelaksana appearing empty.
+const getOwnerFarmIds = async (userId) => {
+  const u = await User.findById(userId).select('assigned_farms').lean();
+  return (u?.assigned_farms || []).map(f =>
+    f && typeof f === 'object' ? (f._id || f).toString() : String(f)
+  );
+};
 
 const listFarmerAssignments = async (req, res) => {
   try {
     const { farmer, farm, block, page = 1, limit = 20 } = req.query;
     const query = {};
     if (farmer) query.farmer = farmer;
-    if (farm) query.farm = farm;
     if (block) query.block = block;
     if (req.user.role === 'farmer_owner') {
-      const owned = await FarmerAssignment.find({ farmer: req.user.id }).distinct('farm');
-      query.farm = { $in: owned };
+      const ownerFarmIds = await getOwnerFarmIds(req.user.id);
+      query.farm = { $in: ownerFarmIds };
+      // explicit ?farm= filter is intersected only if it is within scope
+      if (farm && ownerFarmIds.includes(String(farm))) query.farm = String(farm);
+    } else if (farm) {
+      query.farm = farm;
     }
     if (req.user.role === 'farmer') query.farmer = req.user.id;
 
@@ -47,7 +61,7 @@ const listFarmerAssignments = async (req, res) => {
 
 const createFarmerAssignment = async (req, res) => {
   try {
-    let { farmer, block, blocks, farm, access_stages } = req.body;
+    let { farmer, block, blocks, farm, access_stages, sales_access } = req.body;
 
     // Accept single block or array of blocks
     if (block && !blocks) {
@@ -67,6 +81,17 @@ const createFarmerAssignment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Farmer dan block wajib diisi' });
     }
 
+    // Owner may only assign farmers on their own farms (Phase 4c hardening)
+    if (req.user.role === 'farmer_owner') {
+      const ownedFarms = await getOwnerFarmIds(req.user.id);
+      const BlockModel = require('../model/Block');
+      const blockDocs = await BlockModel.find({ _id: { $in: blocks } }).select('farm').lean();
+      const foreign = blockDocs.filter(d => !ownedFarms.includes(d.farm?.toString()));
+      if (foreign.length || !blockDocs.length) {
+        return res.status(403).json({ success: false, message: 'Anda hanya dapat menugaskan petani pada farm Anda sendiri' });
+      }
+    }
+
     const validatedStages = Array.isArray(access_stages)
       ? access_stages.filter((s) => ['Land_Preparation', 'Planting', 'Maintenance', 'Harvesting'].includes(s))
       : [];
@@ -76,6 +101,7 @@ const createFarmerAssignment = async (req, res) => {
       block: b,
       farm,
       access_stages: validatedStages,
+      sales_access: sales_access || false,
       assigned_by: req.user.id,
     }));
 
@@ -101,7 +127,7 @@ const createFarmerAssignment = async (req, res) => {
 
 const updateFarmerAssignment = async (req, res) => {
   try {
-    const { access_stages, status } = req.body;
+    const { access_stages, status, sales_access } = req.body;
     const update = {};
     if (access_stages !== undefined) {
       update.access_stages = Array.isArray(access_stages)
@@ -109,6 +135,17 @@ const updateFarmerAssignment = async (req, res) => {
         : [];
     }
     if (status !== undefined) update.status = status;
+    if (sales_access !== undefined) update.sales_access = sales_access;
+
+    // Owner may only update assignments on their own farms (Phase 4c hardening)
+    if (req.user.role === 'farmer_owner') {
+      const ownedFarms = await getOwnerFarmIds(req.user.id);
+      const target = await FarmerAssignment.findById(req.params.id).select('farm').lean();
+      if (!target) return res.status(404).json({ success: false, message: 'Assignment tidak ditemukan' });
+      if (!ownedFarms.includes(target.farm?.toString())) {
+        return res.status(403).json({ success: false, message: 'Anda hanya dapat mengelola penugasan pada farm Anda sendiri' });
+      }
+    }
 
     const data = await FarmerAssignment.findByIdAndUpdate(req.params.id, update, { new: true })
       .populate('farmer', 'name email')
@@ -134,6 +171,15 @@ const updateFarmerAssignment = async (req, res) => {
 
 const removeFarmerAssignment = async (req, res) => {
   try {
+    // Owner may only delete assignments on their own farms (Phase 4c hardening)
+    if (req.user.role === 'farmer_owner') {
+      const ownedFarms = await getOwnerFarmIds(req.user.id);
+      const target = await FarmerAssignment.findById(req.params.id).select('farm').lean();
+      if (!target) return res.status(404).json({ success: false, message: 'Assignment tidak ditemukan' });
+      if (!ownedFarms.includes(target.farm?.toString())) {
+        return res.status(403).json({ success: false, message: 'Anda hanya dapat mengelola penugasan pada farm Anda sendiri' });
+      }
+    }
     const data = await FarmerAssignment.findByIdAndDelete(req.params.id);
     if (!data) return res.status(404).json({ success: false, message: 'Assignment tidak ditemukan' });
     res.json({ success: true, message: 'Assignment dihapus' });

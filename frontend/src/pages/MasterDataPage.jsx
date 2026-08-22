@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import DataPageTemplate from '../components/common/DataPageTemplate';
+import DataPageTemplate from '../component/common/DataPageTemplate';
 import * as allCols from '../data/dataColumns';
 
 const INSIGHT_SOURCE_MAP = {
+  // Master Data - no insights
+  'farm': null,
+  'block': null,
+  'crop-type': null,
+  'activity-type': null,
+
+  // Government Data
   'ketidakcukupan-nasional': 'ketidakcukupannasionals',
   'ketidakcukupan-provinsi': 'ketidakcukupanprovinsis',
   'konsumsi-per-jenis': 'konsumsiperjeniss',
@@ -21,22 +28,36 @@ const INSIGHT_SOURCE_MAP = {
 };
 
 const slugs = [
-  { slug: 'ketidakcukupan-nasional', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Nasional' },
-  { slug: 'ketidakcukupan-provinsi', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Provinsi' },
-  { slug: 'konsumsi-per-jenis', title: 'Rata-rata Konsumsi per Jenis Pangan Penduduk Indonesia Nasional' },
-  { slug: 'penyaluran-donasi', title: 'Jumlah Pangan yang Disalurkan ke Penerima Manfaat' },
-  { slug: 'proyeksi-neraca', title: 'Proyeksi Neraca Pangan Nasional' },
-  { slug: 'gerakan-pangan-murah', title: 'Jumlah Pelaksanaan Gerakan Pangan Murah' },
-  { slug: 'harga-konsumen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Provinsi' },
-  { slug: 'harga-konsumen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Nasional' },
-  { slug: 'harga-produsen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Nasional' },
-  { slug: 'harga-produsen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Provinsi' },
-  { slug: 'skor-pph', title: 'Skor Pola Pangan Harapan Ketersediaan Nasional' },
-  { slug: 'pangan-terselamatkan', title: 'Jumlah Total Pangan yang Terselamatkan' },
-  { slug: 'cadangan-pangan-provinsi', title: 'Jumlah Cadangan Pangan Pemerintah Daerah Provinsi' },
+  // Master Data (operational catalogs - 4)
+  { slug: 'farm', title: 'Farm', group: 'master' },
+  { slug: 'block', title: 'Block', group: 'master' },
+  { slug: 'crop-type', title: 'Jenis Tanaman', group: 'master' },
+  { slug: 'activity-type', title: 'Jenis Aktivitas', group: 'master' },
+
+  // Government Data (government-facing catalogs - 13)
+  { slug: 'ketidakcukupan-nasional', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Nasional', group: 'government' },
+  { slug: 'ketidakcukupan-provinsi', title: 'Jumlah Penduduk yang Mengalami Ketidakcukupan Konsumsi Pangan Provinsi', group: 'government' },
+  { slug: 'konsumsi-per-jenis', title: 'Rata-rata Konsumsi per Jenis Pangan Penduduk Indonesia Nasional', group: 'government' },
+  { slug: 'penyaluran-donasi', title: 'Jumlah Pangan yang Disalurkan ke Penerima Manfaat', group: 'government' },
+  { slug: 'proyeksi-neraca', title: 'Proyeksi Neraca Pangan Nasional', group: 'government' },
+  { slug: 'gerakan-pangan-murah', title: 'Jumlah Pelaksanaan Gerakan Pangan Murah', group: 'government' },
+  { slug: 'harga-konsumen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Provinsi', group: 'government' },
+  { slug: 'harga-konsumen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Konsumen Nasional', group: 'government' },
+  { slug: 'harga-produsen-nasional', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Nasional', group: 'government' },
+  { slug: 'harga-produsen-provinsi', title: 'Rata-rata Harga Pangan Bulanan Tingkat Produsen Provinsi', group: 'government' },
+  { slug: 'skor-pph', title: 'Skor Pola Pangan Harapan Ketersediaan Nasional', group: 'government' },
+  { slug: 'pangan-terselamatkan', title: 'Jumlah Total Pangan yang Terselamatkan', group: 'government' },
+  { slug: 'cadangan-pangan-provinsi', title: 'Jumlah Cadangan Pangan Pemerintah Daerah Provinsi', group: 'government' },
 ];
 
 const columnMap = {
+  // Master Data
+  'farm': allCols.columns1,  // reuse columns1 for farm (adjust as needed)
+  'block': allCols.columns2,  // reuse columns2 for block
+  'crop-type': allCols.columns3,  // reuse columns3 for crop-type
+  'activity-type': allCols.columns4,  // reuse columns4 for activity-type
+
+  // Government Data
   'ketidakcukupan-nasional': allCols.columns1,
   'ketidakcukupan-provinsi': allCols.columns2,
   'konsumsi-per-jenis': allCols.columns3,
@@ -53,9 +74,9 @@ const columnMap = {
 };
 
 export const dataRegistry = Object.fromEntries(
-  slugs.map(({ slug, title, insight }) => [
+  slugs.map(({ slug, title, group, insight }) => [
     slug,
-    { title, columns: columnMap[slug], insight }
+    { title, columns: columnMap[slug], insight, group }
   ])
 );
 
@@ -68,7 +89,10 @@ const MasterDataPage = () => {
   const [notification, setNotification] = useState(null);
 
   const config = dataRegistry[slug];
-  const apiUrl = `/api/master/${slug}`;
+  // Master Data (farm, block, crop-type, activity-type) use /api/master-data/*
+  // Government Data uses /api/master/*
+  const isMasterData = config.group === 'master';
+  const apiUrl = isMasterData ? `/api/master-data/${slug}` : `/api/master/${slug}`;
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   const fetchData = useCallback(async () => {

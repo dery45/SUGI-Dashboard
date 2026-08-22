@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { fetchFilterOptions } from '../api/filterApi';
+import { fetchFilterOptions } from '../services/filterService';
 
 const DashboardFilterContext = createContext(null);
 
@@ -32,7 +32,7 @@ function updateURLParams(filters) {
 export const DashboardFilterProvider = ({ children }) => {
   const urlParams = parseURLParams();
   const [filters, setFilters] = useState({
-    year: urlParams.year, month: urlParams.month, commodity: urlParams.commodity, province: urlParams.province
+    year: urlParams.year || 'all', month: urlParams.month, commodity: urlParams.commodity, province: urlParams.province
   });
   const [options, setOptions] = useState({
     years: [], months: MONTHS, commodities: [], provinces: []

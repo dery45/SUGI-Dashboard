@@ -151,7 +151,7 @@ const create = (type) => async (req, res) => {
   try {
     // Farmer owner cannot create farms
     if (type === 'farms' && req.user && req.user.role === 'farmer_owner') {
-      return res.status(403).json({ success: false, message: 'Pemilik Petani tidak dapat membuat farm baru' });
+      return res.status(403).json({ success: false, message: 'Owner tidak dapat membuat farm baru' });
     }
 
     const validation = getValidation(type);
@@ -211,7 +211,7 @@ const remove = (type) => async (req, res) => {
 
     // Farmer owner cannot delete farms
     if (type === 'farms' && req.user && req.user.role === 'farmer_owner') {
-      return res.status(403).json({ success: false, message: 'Pemilik Petani tidak dapat menghapus farm' });
+      return res.status(403).json({ success: false, message: 'Owner tidak dapat menghapus farm' });
     }
 
     const data = await Model.findByIdAndDelete(req.params.id);

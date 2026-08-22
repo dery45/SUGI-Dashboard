@@ -11,17 +11,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Ignore all markdown files except readme.md at root and version.md in docs
-*.md
-!/readme.md
-!docs/version.md
-
 # Ignore .kilo directory
 .kilo/
 
-# Ignore all files inside testing folder
-testing/**
+# Ignore the testing folder (Playwright suites, reports, artifacts)
+testing/
 
-# Testing & docs
-docs/
+# Ignore all markdown files except README.md at root and docs/CHANGELOG.md + docs/VERSION.md
+*.md
+!/README.md
+!/docs/CHANGELOG.md
+!/docs/VERSION.md
+
+# Ignore the rest of docs/ (phase & architecture documents, HTML guides), keep backend/docs
+docs/*
+!docs/CHANGELOG.md
+!docs/VERSION.md
 !backend/docs/
+
+# Generated structure maps
+BACKEND_STRUCTURE.md
+FRONTEND_STRUCTURE.md

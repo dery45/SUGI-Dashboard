@@ -166,31 +166,39 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authenticate, isManagement } = require('../middleware/auth');
+const { authenticate, isFarmerScoped } = require('../middleware/auth');
 const ctrl = require('../controller/lifecycleController');
 
 router.use(authenticate);
 
-router.get('/cycles/eligible', isManagement, ctrl.listEligibleCycles);
+// Single combined guard — role-direct, no response side-effects from sub-call
+const lifecycleAccess = async (req, res, next) => {
+  if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  if (['superadmin', 'farmer_owner'].includes(req.user.role)) return next();
+  if (req.user.role === 'farmer') return isFarmerScoped(req, res, next);
+  return res.status(403).json({ success: false, message: 'Akses ditolak. Lifecycle hanya untuk Owner dan Petani yang ditugaskan' });
+};
 
-router.get('/land', isManagement, ctrl.listLand);
-router.post('/land', isManagement, ctrl.createLand);
-router.put('/land/:id', isManagement, ctrl.updateLand);
-router.delete('/land/:id', isManagement, ctrl.deleteLand);
+router.get('/cycles/eligible', lifecycleAccess, ctrl.listEligibleCycles);
 
-router.get('/plantings', isManagement, ctrl.listPlantings);
-router.post('/plantings', isManagement, ctrl.createPlanting);
-router.put('/plantings/:id', isManagement, ctrl.updatePlanting);
-router.delete('/plantings/:id', isManagement, ctrl.deletePlanting);
+router.get('/land', lifecycleAccess, ctrl.listLand);
+router.post('/land', lifecycleAccess, ctrl.createLand);
+router.put('/land/:id', lifecycleAccess, ctrl.updateLand);
+router.delete('/land/:id', lifecycleAccess, ctrl.deleteLand);
 
-router.get('/activities', isManagement, ctrl.listActivities);
-router.post('/activities', isManagement, ctrl.createActivity);
-router.put('/activities/:id', isManagement, ctrl.updateActivity);
-router.delete('/activities/:id', isManagement, ctrl.deleteActivity);
+router.get('/plantings', lifecycleAccess, ctrl.listPlantings);
+router.post('/plantings', lifecycleAccess, ctrl.createPlanting);
+router.put('/plantings/:id', lifecycleAccess, ctrl.updatePlanting);
+router.delete('/plantings/:id', lifecycleAccess, ctrl.deletePlanting);
 
-router.get('/harvests', isManagement, ctrl.listHarvests);
-router.post('/harvests', isManagement, ctrl.createHarvest);
-router.put('/harvests/:id', isManagement, ctrl.updateHarvest);
-router.delete('/harvests/:id', isManagement, ctrl.deleteHarvest);
+router.get('/activities', lifecycleAccess, ctrl.listActivities);
+router.post('/activities', lifecycleAccess, ctrl.createActivity);
+router.put('/activities/:id', lifecycleAccess, ctrl.updateActivity);
+router.delete('/activities/:id', lifecycleAccess, ctrl.deleteActivity);
+
+router.get('/harvests', lifecycleAccess, ctrl.listHarvests);
+router.post('/harvests', lifecycleAccess, ctrl.createHarvest);
+router.put('/harvests/:id', lifecycleAccess, ctrl.updateHarvest);
+router.delete('/harvests/:id', lifecycleAccess, ctrl.deleteHarvest);
 
 module.exports = router;

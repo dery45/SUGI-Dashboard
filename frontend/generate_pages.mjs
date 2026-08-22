@@ -29,7 +29,7 @@ if (!fs.existsSync(masterDir)) {
 
 pages.forEach(p => {
   const content = `import React from 'react';
-import LiveDataPage from '../../components/common/LiveDataPage';
+import LiveDataPage from '../../component/common/LiveDataPage';
 import { ${p.cols} } from '../../data/dataColumns';
 
 const ${p.name} = () => {

@@ -6,8 +6,12 @@
 
 ### Authentication & Role-Based Access
 - JWT-based authentication with bcrypt password hashing
-- Four roles: `superadmin`, `government`, `farmer_owner`, `farmer`
-- Role-based route guarding and sidebar visibility
+- Four roles: `superadmin`, `government`, `farmer_owner` (Owner), `farmer` (Petani)
+- Exact 10-item sidebar with per-item role gating; Petani items derive from their live
+  penugasan (per-stage lifecycle access + optional Penjualan access via `sales_access`)
+- Petani lands on their first accessible lifecycle stage; Owner/superadmin on Analitik &
+  KPI; Pemerintah on Government Dashboard
+- Login rejected for farmer/farmer_owner accounts with zero farm assignments
 
 ### Farmer Dashboard (Market Intelligence)
 - **10 AI-Powered Insights**: Skor PPH Nasional, Cadangan Pangan Daerah, Komoditas Terbaik, Margin Produsen–Konsumen, Surplus/Defisit Pangan, Peringkat Surplus Komoditas, Peluang Pasar Bulanan, Provinsi Terbaik, Rekomendasi Tanam, Rekomendasi Jual
@@ -31,25 +35,32 @@
 - **Alert System**: Automated tracking of closing harvest windows and unassigned tasks
 
 ### Agricultural Lifecycle Management
+- **Four per-stage pages** (`/management/lifecycle/persiapan-lahan|penanaman|perawatan|panen`) individually guarded — Owner/superadmin get all stages; Petani only the stages their penugasan grants
+- **Single-Entry Crop Cycle Flow**: a crop cycle is created once through the "Persiapan Lahan" (land preparation) step; later stages reference the cycle via a dropdown
+- **Per-Stage Eligibility Validation**: each lifecycle transition validates the current cycle status before allowing the next stage (`GET /api/lifecycle/cycles/eligible` returns only eligible cycles)
 - **Land Preparation**: Full CRUD for land opening/closing with cost tracking
 - **Planting Log**: Crop variety, density (seeds/ha), area coverage
 - **Maintenance Tracking**: Fertilization, spraying, pruning with labor hour and cost aggregation
 - **Harvest Management**: Open/Close harvest windows with expected vs. actual yield comparison and overdue alerts
 
-### Farmer & User Management
-- Role-based Access Control (RBAC) with 4 roles
-- Organization-specific user filtering, search, and deactivation
-- Farmer-to-Block assignment system (Unit Management)
+### Farmer & User Management (Kelola User)
+- Role-based Access Control (RBAC) with 4 roles and per-item CRUD scoping:
+  Government manages Pemerintah users only; Owner manages own-farm farmers;
+  farmer accounts with zero farm assignments are rejected at login
+- **Penugasan** (Owner): farmer→block assignments with per-stage access and a
+  Penjualan (`sales_access`) toggle — Owners see and manage only penugasan on
+  their own assigned farms
+- **User Manajemen** (Owner + Pemerintah): user CRUD scoped by role and farm-sharing
 
 ### Sales & Distribution
 - Record sales to Mills, Middlemen, or Direct markets
 - Expense tracking with auto-computed revenue and invoice reference tracking
 
-### Master Data Management (15 Datasets)
+### Master Data Management (13 Datasets)
 Full CRUD pages for all national food security datasets:
 
-| Dataset | Model |
-|---------|-------|
+| Dataset | Slug |
+|---------|------|
 | Ketidakcukupan Konsumsi Pangan (Nasional) | `ketidakcukupan-nasional` |
 | Ketidakcukupan Konsumsi Pangan (Provinsi) | `ketidakcukupan-provinsi` |
 | Konsumsi Pangan per Jenis | `konsumsi-per-jenis` |
@@ -63,12 +74,12 @@ Full CRUD pages for all national food security datasets:
 | Skor Pola Pangan Harapan (PPH) | `skor-pph` |
 | Pangan Terselamatkan (Food Rescue) | `pangan-terselamatkan` |
 | Cadangan Pangan Provinsi | `cadangan-pangan-provinsi` |
-| Variasi Harga Produsen | `variasi-harga-produsen` |
 
 ### Bulk Data Import
-- **Upsert-based import** via `POST /api/bulk-import/:modelName` for all 14 food security datasets
+- **Upsert-based import** via `POST /api/bulk-import/:modelName` for all 13 food security datasets
 - Auto-detects unique keys per model for safe re-import
 - Accepts JSON arrays directly in request body
+- Protected by `authenticate` + `isGovernment` guards (superadmin, government)
 
 ### Insight Generation System
 - **Farmer Insights**: 10 generated market intelligence items stored in `farmerinsights` collection
@@ -171,14 +182,17 @@ SUGI-Dashboard-DEMO/
 │   ├── connection/                   # MongoDB connection setup (main DB + sugi_insights)
 │   │   └── db.js                     # Mongoose connections w/ fail-fast MONGO_URI check
 │   ├── controller/                   # Request handlers (auth, dashboards, CRUD, insights)
-│   ├── middleware/                   # Custom Express middlewares (RBAC, Auth, error handler)
+│   │   └── _datasetCrud.factory.js   # Generic dataset CRUD factory (13 datasets × 5 verbs)
+│   ├── middleware/                   # Custom Express middlewares (auth, RBAC, error handler)
+│   │   ├── auth.js                   # Single source of truth (JWT, role guards)
+│   │   └── errorHandler.js           # Centralized error + 404 handlers
 │   ├── model/                        # 30+ Mongoose schemas (master data, lifecycle, insights)
 │   │   ├── insights/                 # Separate MongoDB connection to sugi_insights database
 │   │   │   ├── index.js              # Mongoose createConnection to sugi_insights
 │   │   │   ├── SessionSummary.js     # Raw session data model
 │   │   │   └── NlpResult.js          # NLP-processed results model
-│   │   └── index.js                  # getModelMap() for bulk-import + dataset factory
-│   ├── nlp/                          # NLP Engine (Phase 2 & 3)
+│   │   └── ...                       # Dataset + operational models (13 datasets, farms, blocks...)
+│   ├── nlp/                          # NLP Engine
 │   │   ├── preprocessor.js           # Text cleaning, tokenization, stopword removal, stemming
 │   │   ├── stemmer.js                # Custom Indonesian stemmer (rule-based)
 │   │   ├── stopwords.js              # 350+ Indonesian stopwords
@@ -192,13 +206,15 @@ SUGI-Dashboard-DEMO/
 │   │   ├── problems.js               # Problem mining (7 categories, severity scoring)
 │   │   ├── trends.js                 # Trend analyzer (topic, commodity, entity, intent trends)
 │   │   ├── coverage.js               # Coverage analyzer (8 metrics, duplicate detection, recommendations)
-│   │   ├── insights.js               # AI Insight Engine (10 dynamic insight types in Bahasa)
+│   │   ├── insights.js               # AI Insight Engine (dynamic insight types in Bahasa)
 │   │   ├── semanticSearch.js         # TF-IDF semantic search with entity/intent/category filters
 │   │   ├── optimization.js           # Production: Cache (TTL), Worker Queue, Memoizer
 │   │   ├── pipeline.js               # NLP pipeline orchestrator
 │   │   ├── repository/               # Data access layer (chatbotInsightRepository, chatbotNlpRepository)
 │   │   └── service/                  # Business logic (chatbotInsightService, chatbotNlpService, chatbotAdvancedService)
 │   ├── route/                        # 30+ modular API endpoint files (incl. dataset CRUD factory)
+│   │   ├── index.js                  # Single mount point for all feature routes
+│   │   └── foodSecurityDatasetsRoutes.js # 13 dataset route aggregators under /api/master
 │   ├── scripts/                      # Seed, reset, and maintenance scripts
 │   ├── util/                         # Helper functions (cache, validation)
 │   ├── docs/                         # Swagger spec, Postman collection, NLP architecture docs
@@ -208,35 +224,38 @@ SUGI-Dashboard-DEMO/
 ├── frontend/                         # Vite + React 19 SPA
 │   ├── public/                       # Static assets (GeoJSON maps, icons)
 │   ├── src/
-│   │   ├── api/                      # 12 API client modules
-│   │   ├── assets/                   # Images, fonts, brand assets
-│   │   ├── components/
-│   │   │   ├── charts/               # Recharts wrappers (BarChart, LineChart, PieChart)
-│   │   │   ├── chatbot/              # Chatbot Insight components
-│   │   │   │   ├── KnowledgeGraph.jsx # Interactive cytoscape graph
-│   │   │   │   ├── InsightPanel.jsx   # AI-generated insight cards
-│   │   │   │   └── ExportModal.jsx    # Export to PNG/PDF/CSV/JSON
-│   │   │   ├── common/               # Shared UI (Card, DataTable, Modal, ErrorBoundary)
-│   │   │   ├── dashboard/            # 15 dashboard-specific components (KpiCard, ChartCard)
-│   │   │   ├── layout/               # Sidebar, TopBar, MainLayout, BottomNav
-│   │   │   ├── management/           # 12 management module components
-│   │   │   └── map/                  # IndonesiaMap (Leaflet)
-│   │   ├── contexts/                 # 4 React Contexts (Auth, Theme, Filter, DashboardFilter)
-│   │   ├── hooks/                    # 3 custom hooks
-│   │   ├── pages/                    # 27 page views
-│   │   │   └── master/               # 17 master data CRUD pages
-│   │   ├── App.jsx                   # Root component with routing
+│   │   ├── api/                      # shared API clients (via services/authService)
+│   │   ├── assets/                   # hero.png (login brand panel)
+│   │   ├── component/                # SHARED: charts/ common/ dashboard/ layout/ map/
+│   │   ├── contexts/                 # AuthContext, ThemeContext, DashboardFilterContext
+│   │   ├── data/                     # dataColumns.js + dataset discovery tables
+│   │   ├── hooks/                    # useMasterData (shared)
+│   │   ├── pages/
+│   │   │   ├── <Feature>/            # feature folder w/ local api/ component/ hooks/
+│   │   │   │   ├── Login, FarmerDashboard, GovernmentDashboard,
+│   │   │   │   ├── ManagementDashboard (+component/hooks/api),
+│   │   │   │   ├── Lifecycle        # 4 per-stage pages + LifecycleTabs ("Semua Tahapan")
+│   │   │   │   ├── Sales, Settings, UMManagement (Penugasan),
+│   │   │   │   ├── FarmerManagement (User Manajemen), ChatbotInsight
+│   │   │   ├── MasterData/           # 4 operational catalogs (Farms superadmin-only …)
+│   │   │   └── GovernmentData/       # 13 government-facing dataset catalogs
+│   │   ├── services/                 # authService, filterService, insightService, ProtectedRoutes
+│   │   ├── utils/                    # validation.js, importTemplates.js
+│   │   ├── App.jsx                   # Root component with routing (lazy + role guards)
 │   │   └── main.jsx                  # React DOM entry point
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
-├── docs/                             # Phase implementation & architecture documents (8 docs)
+├── docs/                             # VERSION.md + CHANGELOG.md (tracked) — other phase/architecture docs (untracked)
 ├── image/                            # Screenshot images for README
-├── testing/                          # Playwright automated tests
 └── README.md
 ```
 
 ## ⚙️ Getting Started
+
+> **Project history & versioning:** see [`docs/VERSION.md`](docs/VERSION.md) (derived
+> milestone timeline) and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) (detailed commit-level
+> history). Both are the single source of truth for how the project evolved.
 
 ### 1. Prerequisites
 - Node.js (v18+)
@@ -301,7 +320,7 @@ curl -X POST http://localhost:3000/api/bulk-import/HargaProdusenNasional \
   -d '[{"komoditas":"Beras","tahun":"2025","bulan":"Januari","harga":12000}]'
 ```
 
-Supported model names: `HargaProdusenNasional`, `HargaKonsumenNasional`, `HargaProdusenProvinsi`, `HargaKonsumenProvinsi`, `ProyeksiNeraca`, `KetidakcukupanNasional`, `KetidakcukupanProvinsi`, `KonsumsiPerJenis`, `PenyaluranDonasi`, `GerakanPanganMurah`, `SkorPPH`, `PanganTerselamatkan`, `CadanganPanganProvinsi`, `VariasiHargaProdusen`.
+Supported model names: `HargaProdusenNasional`, `HargaKonsumenNasional`, `HargaProdusenProvinsi`, `HargaKonsumenProvinsi`, `ProyeksiNeraca`, `KetidakcukupanNasional`, `KetidakcukupanProvinsi`, `KonsumsiPerJenis`, `PenyaluranDonasi`, `GerakanPanganMurah`, `SkorPPH`, `PanganTerselamatkan`, `CadanganPanganProvinsi`.
 
 Data sources: [SatuHarga Kemendag](https://satuharga.kemendag.go.id/), [PIKOB BPS](https://www.bps.go.id/), or your own aggregation pipeline.
 
@@ -320,7 +339,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 |------|-------|----------|
 | Super Admin | `superadmin@sugi.id` | `superadmin123` |
 | Government | `government@sugi.id` | `government123` |
-| Farmer Owner | `owner@sugi.id` | `owner123` |
+| Farmer Owner | `owner@sugi.id` | `owner1234` |
 
 ### 7. Key API Endpoints
 
@@ -363,6 +382,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | GET | `/api/chatbot-insight/problems` | Mined problems with 7 types, severity scoring, timeline |
 | GET | `/api/chatbot-insight/trends` | Topic/commodity/intent trends with growth analytics |
 | GET | `/api/chatbot-insight/coverage` | 8 coverage metrics with radar data and improvement recommendations |
+| GET | `/api/chatbot-insight/insights` | Dynamically generated analytical insights (Bahasa Indonesia) |
 | GET | `/api/chatbot-insight/semantic-search?q=...` | TF-IDF semantic search with entity/intent/category filters |
 
 **Filters & Metadata:**
@@ -388,9 +408,14 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 
 ### 8. Frontend Routes
 
+Role-aware routing via `services/ProtectedRoutes.jsx`: after login every role is sent to
+its own home (`homePathFor`: government→`/government`, farmer & farmer_owner→`/farmer`,
+superadmin→`/management`), and each route enforces its allowed roles.
+
 | Path | Page | Roles |
 |------|------|-------|
 | `/login` | Login | Public |
+| `/` | AppRedirect → role home | Public |
 | `/farmer` | Farmer Dashboard | All authenticated |
 | `/government` | Government Dashboard | superadmin, government |
 | `/chatbot-insight` | Chatbot Insight Dashboard | superadmin, government |
@@ -404,7 +429,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 | `/master/blocks` | Block Master Data | superadmin, farmer_owner |
 | `/master/crop-types` | Crop Type Master | superadmin, farmer_owner |
 | `/master/activity-types` | Activity Type Master | superadmin, farmer_owner |
-| `/data/*` | 15 Food Security Datasets | superadmin, government |
+| `/data/*` | 13 Food Security Datasets | superadmin, government |
 
 ## 🧠 Architectural Notes
 

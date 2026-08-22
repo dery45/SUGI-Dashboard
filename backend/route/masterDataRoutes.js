@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate, isManagement } = require('../middleware/auth');
 const ctrl = require('../controller/masterDataController');
 
 /**
@@ -295,7 +295,7 @@ const ctrl = require('../controller/masterDataController');
  *       '404': { $ref: '#/components/schemas/Error' }
  */
 
-router.use(authenticate);
+router.use(authenticate, isManagement);
 
 router.get('/farms/all', ctrl.getAllFarms);
 router.get('/farms', ctrl.listFarms);

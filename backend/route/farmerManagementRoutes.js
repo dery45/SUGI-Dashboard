@@ -97,6 +97,14 @@ const {
 
 router.use(authenticate);
 
+// User Manajemen: Owner + Government + superadmin — NOT Petani (Phase 4b Task 4)
+const isUserManajemen = (req, res, next) => {
+  if (['superadmin', 'farmer_owner', 'government'].includes(req.user?.role)) return next();
+  return res.status(403).json({ success: false, message: 'Akses ditolak. User Manajemen hanya untuk Owner dan Pemerintah' });
+};
+
+router.use(isUserManajemen);
+
 router.get('/', listUsers);
 router.get('/:id', getUserById);
 router.post('/', createUser);
