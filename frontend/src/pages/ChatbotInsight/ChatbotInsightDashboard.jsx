@@ -217,12 +217,12 @@ const ChatbotInsightDashboard = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Sesi per Hari"><ResponsiveContainer width="100%" height={260}>
+          <ChartCard title="Sesi per Hari"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={260}>
             <BarChart data={dayData.slice(-30)}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
               <Tooltip content={<CustomTooltip />} /><Bar dataKey="count" name="Sesi" fill="#6366f1" radius={[4, 4, 0, 0]} />
             </BarChart></ResponsiveContainer></ChartCard>
-          <ChartCard title="Sesi per Jam"><ResponsiveContainer width="100%" height={260}>
+          <ChartCard title="Sesi per Jam"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={260}>
             <BarChart data={hourData}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="hour" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
               <Tooltip content={<CustomTooltip />} /><Bar dataKey="count" name="Sesi" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
@@ -245,7 +245,7 @@ const ChatbotInsightDashboard = () => {
             </div>
           </div>
         </ChartCard>
-        <ChartCard title="Timeline"><ResponsiveContainer width="100%" height={260}>
+        <ChartCard title="Timeline"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={260}>
           <AreaChart data={dayData}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
             <Tooltip content={<CustomTooltip />} />
@@ -264,7 +264,7 @@ const ChatbotInsightDashboard = () => {
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartCard title="Distribusi Topik" subtitle={`${topicDist.length} topik`}>
-            <ResponsiveContainer width="100%" height={280}><PieChart>
+            <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={280}><PieChart>
               <Pie data={topicDist} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={100} label={({ label, percent }) => `${label}(${(percent * 100).toFixed(0)}%)`}>
                 {topicDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Pie><Tooltip content={<CustomTooltip />} />
@@ -278,7 +278,7 @@ const ChatbotInsightDashboard = () => {
               ))}
             </div></ChartCard>
         </div>
-        <ChartCard title="TF-IDF"><ResponsiveContainer width="100%" height={Math.min(tfidfRanking.length * 20, 400)}>
+        <ChartCard title="TF-IDF"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={Math.min(tfidfRanking.length * 20, 400)}>
           <BarChart data={tfidfRanking.slice(0, 30)} layout="vertical" margin={{ left: 100 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis type="category" dataKey="term" tick={{ fontSize: 10 }} stroke="var(--muted)" width={90} />
@@ -298,13 +298,13 @@ const ChatbotInsightDashboard = () => {
     const commodities = ner.commodities || [];
     return (
       <div className="space-y-6">
-        <ChartCard title="Distribusi Komoditas"><ResponsiveContainer width="100%" height={Math.max(commodities.length * 30, 300)}>
+        <ChartCard title="Distribusi Komoditas"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={Math.max(commodities.length * 30, 300)}>
           <BarChart data={commodities.slice(0, 20)} layout="vertical" margin={{ left: 100 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis type="category" dataKey="value" tick={{ fontSize: 10 }} stroke="var(--muted)" width={90} />
             <Tooltip content={<CustomTooltip />} /><Bar dataKey="count" name="Sebutan" fill="#f59e0b" radius={[0, 4, 4, 0]} />
           </BarChart></ResponsiveContainer></ChartCard>
-        <ChartCard title="Treemap"><ResponsiveContainer width="100%" height={350}><Treemap data={commodities.slice(0, 30)} dataKey="count" aspectRatio={4 / 3} stroke="var(--background)" fill="#f59e0b"><Tooltip content={<CustomTooltip />} /></Treemap></ResponsiveContainer></ChartCard>
+        <ChartCard title="Treemap"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={350}><Treemap data={commodities.slice(0, 30)} dataKey="count" aspectRatio={4 / 3} stroke="var(--background)" fill="#f59e0b"><Tooltip content={<CustomTooltip />} /></Treemap></ResponsiveContainer></ChartCard>
       </div>
     );
   };
@@ -314,7 +314,7 @@ const ChatbotInsightDashboard = () => {
     const locations = ner.locations || [];
     return (
       <div className="space-y-6">
-        <ChartCard title="Peringkat Lokasi"><ResponsiveContainer width="100%" height={Math.max(locations.length * 30, 300)}>
+        <ChartCard title="Peringkat Lokasi"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={Math.max(locations.length * 30, 300)}>
           <BarChart data={locations.slice(0, 20)} layout="vertical" margin={{ left: 100 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis type="category" dataKey="value" tick={{ fontSize: 10 }} stroke="var(--muted)" width={90} />
@@ -335,23 +335,23 @@ const ChatbotInsightDashboard = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Distribusi Intent"><ResponsiveContainer width="100%" height={280}><PieChart>
+          <ChartCard title="Distribusi Intent"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={280}><PieChart>
             <Pie data={intentDist} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={100} label={({ _id, percent }) => `${_id}(${(percent * 100).toFixed(0)}%)`}>
               {intentDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} />
           </PieChart></ResponsiveContainer></ChartCard>
-          <ChartCard title="Distribusi Sentimen"><ResponsiveContainer width="100%" height={280}><PieChart>
+          <ChartCard title="Distribusi Sentimen"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={280}><PieChart>
             <Pie data={sentDist.map(s => ({ ...s, name: s._id }))} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name}(${(percent * 100).toFixed(0)}%)`}>
               {sentDist.map(s => <Cell key={s._id} fill={SENTIMENT_COLORS[s._id] || '#6b7280'} />)}</Pie><Tooltip content={<CustomTooltip />} />
           </PieChart></ResponsiveContainer></ChartCard>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Distribusi Emosi"><ResponsiveContainer width="100%" height={240}>
+          <ChartCard title="Distribusi Emosi"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={240}>
             <BarChart data={emotionDist.map(e => ({ name: e._id, value: e.count }))} layout="vertical" margin={{ left: 80 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted)" width={70} />
               <Tooltip content={<CustomTooltip />} /><Bar dataKey="value" name="Kemunculan" fill="#d946ef" radius={[0, 4, 4, 0]} />
             </BarChart></ResponsiveContainer></ChartCard>
-          <ChartCard title="Timeline Sentimen"><ResponsiveContainer width="100%" height={240}>
+          <ChartCard title="Timeline Sentimen"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={240}>
             <LineChart data={(intent.sentimentTimeline || []).slice(-30)}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="_id" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" domain={[-1, 1]} />
@@ -411,7 +411,7 @@ const ChatbotInsightDashboard = () => {
             </div>
           )}
         </ChartCard>
-        <ChartCard title="Distribusi Tipe Entitas"><ResponsiveContainer width="100%" height={280}>
+        <ChartCard title="Distribusi Tipe Entitas"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={280}>
           <BarChart data={typeDist.map(e => ({ name: e._id, count: e.count, total: e.totalOccurrences }))} layout="vertical" margin={{ left: 120 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted)" width={110} />
@@ -434,7 +434,7 @@ const ChatbotInsightDashboard = () => {
             {relations.slice(0, 100).map((r, i) => <tr key={i} className="border-t border-border/20"><td className="py-1.5 font-bold text-foreground">{r.source}</td><td className="py-1.5"><span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">{r.label}</span></td><td className="py-1.5 font-bold text-foreground">{r.target}</td><td className="py-1.5 text-right font-bold text-muted">{r.count}</td></tr>)}
           </tbody></table></div></ChartCard>
         <ChartCard title="Frekuensi Entitas dalam Relasi">
-          <ResponsiveContainer width="100%" height={Math.max(entityFreq.length * 30, 300)}>
+          <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={Math.max(entityFreq.length * 30, 300)}>
             <BarChart data={entityFreq.slice(0, 20)} layout="vertical" margin={{ left: 100 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis type="number" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis type="category" dataKey="value" tick={{ fontSize: 10 }} stroke="var(--muted)" width={90} />
@@ -456,7 +456,7 @@ const ChatbotInsightDashboard = () => {
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartCard title={`${recommendations.total} Rekomendasi Ditemukan`} subtitle="Berdasarkan analisis NLP">
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={220}>
               <PieChart><Pie data={cats} dataKey="count" nameKey="category" cx="50%" cy="50%" outerRadius={80} label={({ category, percent }) => `${category}(${(percent * 100).toFixed(0)}%)`}>
                 {cats.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} />
               </PieChart></ResponsiveContainer></ChartCard>
@@ -480,7 +480,7 @@ const ChatbotInsightDashboard = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Distribusi Tipe Masalah"><ResponsiveContainer width="100%" height={250}>
+          <ChartCard title="Distribusi Tipe Masalah"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={250}>
             <PieChart><Pie data={typeDist} dataKey="count" nameKey="type" cx="50%" cy="50%" outerRadius={80} label={({ type, percent }) => `${type}(${(percent * 100).toFixed(0)}%)`}>
               {typeDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} />
             </PieChart></ResponsiveContainer></ChartCard>
@@ -488,7 +488,7 @@ const ChatbotInsightDashboard = () => {
             <div className="space-y-1.5">{topProbs.slice(0, 10).map((p, i) => (<div key={i} className="flex items-center justify-between py-1 border-b border-border/10"><span className="text-[10px] font-medium text-foreground truncate max-w-[200px]">{p.insight}</span><span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ backgroundColor: SEVERITY_COLORS[p.severity] + '20', color: SEVERITY_COLORS[p.severity] }}>{p.severity}/10</span></div>))}</div></ChartCard>
         </div>
         <ChartCard title="Timeline Masalah">
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={220}>
             <BarChart data={(problems.timeline || [])}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
               <Tooltip content={<CustomTooltip />} /><Bar dataKey="total" name="Masalah" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -514,20 +514,20 @@ const ChatbotInsightDashboard = () => {
         </div>}
         <ChartCard title="Tren Topik" subtitle="Perubahan distribusi topik per hari">
           <div className="overflow-x-auto"><div className="min-w-[600px]">
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={250}>
               <BarChart data={topicTrend.map(t => ({ date: t.date, ...t.values }))}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
                 <Tooltip content={<CustomTooltip />} />
                 {Object.keys(topicTrend[0]?.values || {}).slice(0, 5).map((key, i) => <Bar key={key} dataKey={key} name={key} fill={COLORS[i % COLORS.length]} stackId="a" />)}
               </BarChart></ResponsiveContainer></div></div></ChartCard>
         <ChartCard title="Tren Komoditas" subtitle="Per frekuensi kemunculan">
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={250}>
             <BarChart data={commodityTrend.map(t => ({ date: t.date, ...t.values }))}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
               <Tooltip content={<CustomTooltip />} />
               {Object.keys(commodityTrend[0]?.values || {}).slice(0, 5).map((key, i) => <Bar key={key} dataKey={key} name={key} fill={COLORS[i % COLORS.length]} stackId="a" />)}
             </BarChart></ResponsiveContainer></ChartCard>
-        <ChartCard title="Tren Intent"><ResponsiveContainer width="100%" height={250}>
+        <ChartCard title="Tren Intent"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={250}>
           <BarChart data={intentTrend.map(t => ({ date: t.date, ...t.values }))}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
             <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="var(--muted)" /><YAxis tick={{ fontSize: 10 }} stroke="var(--muted)" />
             <Tooltip content={<CustomTooltip />} />
@@ -549,7 +549,7 @@ const ChatbotInsightDashboard = () => {
           </div>))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Radar Coverage"><ResponsiveContainer width="100%" height={300}>
+          <ChartCard title="Radar Coverage"><ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={300}>
             <RadarChart data={radarData}><PolarGrid stroke="var(--border)" opacity={0.3} /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: 'var(--muted)' }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--muted)' }} />
               <Radar name="Coverage" dataKey="value" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
               <Tooltip content={<CustomTooltip />} />

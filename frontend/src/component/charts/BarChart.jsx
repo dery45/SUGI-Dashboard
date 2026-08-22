@@ -13,8 +13,9 @@ const BarChart = ({ data, xKey, barKeys, colors = ['#0ea5e9', '#8b5cf6', '#ec489
   const needsRotation = itemCount > LONG_LABEL_THRESHOLD;
 
   return (
-    <div className="w-full h-full min-h-[300px] animate-chart-fade-in">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-full min-w-0 min-h-[300px] animate-chart-fade-in">
+      {/* width/height 99% + debounce avoids transient width(-1)/height(-1) warning (recharts#220) */}
+      <ResponsiveContainer width="99%" height="99%" minWidth={1} minHeight={1} debounce={20}>
         <RechartsBarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: needsRotation ? 50 : 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis

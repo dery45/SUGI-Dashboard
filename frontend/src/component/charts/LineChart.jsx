@@ -13,8 +13,11 @@ const LineChart = ({ data, xKey, lineKeys, colors = ['#0ea5e9', '#10b981', '#f59
   const needsRotation = itemCount > LONG_LABEL_THRESHOLD;
 
   return (
-    <div className="w-full h-full min-h-[300px] animate-chart-fade-in">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-full min-w-0 min-h-[300px] animate-chart-fade-in">
+      {/* width/height 99% + debounce avoids the transient width(-1)/height(-1)
+          measurement warning when the container mounts inside animated/lazy
+          parents (recharts#220) */}
+      <ResponsiveContainer width="99%" height="99%" minWidth={1} minHeight={1} debounce={20}>
         <RechartsLineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: needsRotation ? 50 : 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis

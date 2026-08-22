@@ -5,8 +5,9 @@ const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#f43f5e'
 
 const PieChart = ({ data, nameKey, dataKey, showLegend }) => {
   return (
-    <div className="w-full h-full min-h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-full min-w-0 min-h-[300px]">
+      {/* width/height 99% + debounce avoids transient width(-1)/height(-1) warning (recharts#220) */}
+      <ResponsiveContainer width="99%" height="99%" minWidth={1} minHeight={1} debounce={20}>
         <RechartsPieChart>
           <Pie
             data={data}

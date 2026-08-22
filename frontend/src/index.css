@@ -118,15 +118,6 @@
     @apply p-2;
   }
 
-  /* Page/route transition */
-  .page-enter {
-    animation: fade-in 0.4s var(--ease-premium);
-  }
-
-  .page-exit {
-    animation: fade-in 0.3s reverse;
-  }
-
   /* Modal animations - consistent scale-in pattern */
   .modal-overlay-enter {
     animation: fade-in 0.2s var(--ease-soft);
@@ -134,14 +125,6 @@
 
   .modal-content-enter {
     animation: scale-in 0.3s var(--ease-premium);
-  }
-
-  .modal-overlay-exit {
-    animation: fade-in 0.15s reverse;
-  }
-
-  .modal-content-exit {
-    animation: scale-in 0.2s reverse;
   }
 
   /* Staggered list/table entrance */

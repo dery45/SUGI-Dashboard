@@ -42,7 +42,7 @@ const ComparativeChart = ({ data = [] }) => {
       <h2 className="text-lg font-bold text-gray-800 mb-1">📊 Tren Hasil Panen Komparatif</h2>
       <p className="text-gray-400 text-xs mb-5">Perusahaan vs Kelompok Tani vs Petani Mandiri (kg/bulan)</p>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="99%" minWidth={1} minHeight={1} debounce={20} height={300}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} />
