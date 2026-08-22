@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGenericResource } from './hooks/useGenericResource';
+import { useEligibleCycles, usePelaksanaOptions, pelaksanaForCycle, buildPelaksanaChoices } from './pelaksana';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 import Card from '@/component/common/Card';
@@ -22,16 +23,6 @@ const Modal = ({ title, onClose, children }) => (
 const FF = ({ label, children }) => (<div className="flex flex-col gap-1.5"><label className="text-[10px] font-bold text-muted uppercase tracking-wider">{label}</label>{children}</div>);
 const inputCls = "w-full px-4 py-3 bg-background/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
 
-function useEligibleCycles(token) {
-  const [cycles, setCycles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    fetch(`${BASE_URL}/lifecycle/cycles/eligible?stage=maintenance`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(j => { if (j.success) setCycles(j.data || []); }).catch(() => setCycles([]))
-      .finally(() => setLoading(false));
-  }, [token]);
-  return { cycles, loading };
-}
 const cycleLabel = c => {
   const farmName = c?.farm_master?.name || c?.farm_id?.name || '';
   const blockName = c?.block?.name ? ` / ${c.block.name}` : '';
@@ -51,6 +42,9 @@ const PerawatanPage = () => {
   }, [token]);
   const [filterType, setFilterType] = useState('');
   const [form, setForm] = useState({ crop_cycle_id: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending' });
+  const assignments = usePelaksanaOptions(token);
+  const selectedCycle = cycles.find(c => c._id === form.crop_cycle_id);
+  const pelaksanaOptions = pelaksanaForCycle(assignments, selectedCycle);
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -191,7 +185,20 @@ const PerawatanPage = () => {
               <FF label="Jam Kerja"><input type="number" name="labor_hours" value={form.labor_hours} onChange={fc} min="0" step="0.5" placeholder="0" className={inputCls} /></FF>
               <FF label="Biaya (Rp)"><input type="number" name="cost" value={form.cost} onChange={fc} min="0" placeholder="0" className={inputCls} /></FF>
             </div>
-            <FF label="Pelaksana"><input name="executor" value={form.executor} onChange={fc} placeholder="Nama petani" className={inputCls} /></FF>
+            <FF label="Pelaksana">
+              <select name="executor" value={form.executor} onChange={fc} className={inputCls}>
+                <option value="">-- Pilih Pelaksana --</option>
+                {buildPelaksanaChoices(pelaksanaOptions, form.executor && !pelaksanaOptions.includes(form.executor) ? form.executor : '').map(n => (
+                  <option key={n} value={n}>{n}{!pelaksanaOptions.includes(n) ? ' (nilai tersimpan)' : ''}</option>
+                ))}
+              </select>
+              {!form.crop_cycle_id && <p className="text-[10px] text-muted italic mt-1">Pilih Siklus Tanam terlebih dahulu untuk melihat Pelaksana.</p>}
+              {form.crop_cycle_id && pelaksanaOptions.length === 0 && (
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                  Tidak ada petani yang ditugaskan pada farm &amp; blok siklus ini. Hubungi Owner Anda melalui menu Penugasan.
+                </p>
+              )}
+            </FF>
             <FF label="Status">
               <select name="status" value={form.status} onChange={fc} className={inputCls}>
                 {Object.entries(statusMap).map(([v, l]) => <option key={v} value={v}>{l}</option>)}

@@ -22,17 +22,7 @@ const Modal = ({ title, onClose, children }) => (
 const FF = ({ label, children }) => (<div className="flex flex-col gap-1.5"><label className="text-[10px] font-bold text-muted uppercase tracking-wider">{label}</label>{children}</div>);
 const inputCls = "w-full px-4 py-3 bg-background/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
 
-function useEligibleCycles(token, stage) {
-  const [cycles, setCycles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    if (!stage) return;
-    fetch(`${BASE_URL}/lifecycle/cycles/eligible?stage=${stage}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(j => { if (j.success) setCycles(j.data || []); }).catch(() => setCycles([]))
-      .finally(() => setLoading(false));
-  }, [token, stage]);
-  return { cycles, loading };
-}
+import { useEligibleCycles, usePelaksanaOptions, pelaksanaForCycle, buildPelaksanaChoices } from './pelaksana';
 const cycleLabel = c => {
   const farmName = c?.farm_master?.name || c?.farm_id?.name || '';
   const blockName = c?.block?.name ? ` / ${c.block.name}` : '';
@@ -52,6 +42,9 @@ const PenanamanPage = () => {
       .then(r => r.json()).then(j => { if (j.success) setCropTypes(j.data); }).catch(() => {});
   }, [token]);
   const [form, setForm] = useState({ crop_cycle_id: '', crop_type: '', variety: '', planting_date: '', area_ha: '', seedling_count: '', executor: '', notes: '' });
+  const assignments = usePelaksanaOptions(token);
+  const selectedCycle = cycles.find(c => c._id === form.crop_cycle_id);
+  const pelaksanaOptions = pelaksanaForCycle(assignments, selectedCycle);
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -150,7 +143,20 @@ const PenanamanPage = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Varietas"><input name="variety" value={form.variety} onChange={fc} placeholder="DxP, Arabika, dll" className={inputCls} /></FF>
-              <FF label="Pelaksana"><input name="executor" value={form.executor} onChange={fc} placeholder="Nama petani" className={inputCls} /></FF>
+              <FF label="Pelaksana">
+                <select name="executor" value={form.executor} onChange={fc} className={inputCls}>
+                  <option value="">-- Pilih Pelaksana --</option>
+                  {buildPelaksanaChoices(pelaksanaOptions, form.executor && !pelaksanaOptions.includes(form.executor) ? form.executor : '').map(n => (
+                    <option key={n} value={n}>{n}{!pelaksanaOptions.includes(n) ? ' (nilai tersimpan)' : ''}</option>
+                  ))}
+                </select>
+                {!form.crop_cycle_id && <p className="text-[10px] text-muted italic mt-1">Pilih Siklus Tanam terlebih dahulu untuk melihat Pelaksana.</p>}
+                {form.crop_cycle_id && pelaksanaOptions.length === 0 && (
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                    Tidak ada petani yang ditugaskan pada farm &amp; blok siklus ini. Hubungi Owner Anda melalui menu Penugasan.
+                  </p>
+                )}
+              </FF>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Luas Area (Ha)"><input type="number" name="area_ha" value={form.area_ha} onChange={fc} required step="0.1" min="0" placeholder="5.0" className={inputCls} /></FF>
