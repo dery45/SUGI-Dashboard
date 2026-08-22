@@ -31,7 +31,13 @@ const Login = () => {
     setError('');
     try {
       const userData = await login(email, password);
-      navigate(homePathFor(userData.role));
+      if (userData.role === 'farmer') {
+        // Petani: land on their actual first accessible stage (assignment-driven)
+        const { resolveFarmerLanding } = await import('@/services/farmerLanding');
+        navigate(await resolveFarmerLanding(localStorage.getItem('token')));
+      } else {
+        navigate(homePathFor(userData.role));
+      }
     } catch (err) {
       setError(err.message || 'Email atau password salah');
     } finally {

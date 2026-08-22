@@ -1,14 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { resolveFarmerLanding } from './farmerLanding';
 
+// Static role→home map. For Petani this is only a *fallback* — the real landing
+// is resolved asynchronously from their assignments (see FarmerRedirect).
 export const homePathFor = (role) => {
   if (role === 'government') return '/government';
-  // Petani lands on their first lifecycle stage (Phase 4b policy change).
-  // Persiapan Lahan is the entry point of every cycle, so it is the sensible
-  // first-stage default; per-stage visibility is enforced by the backend guard
-  // (Task 1) and the page itself renders an Indonesian no-access message when
-  // the farmer's assignment does not cover this stage — no redirect loop.
   if (role === 'farmer') return '/management/lifecycle/persiapan-lahan';
   return '/management';
 };
@@ -27,8 +25,28 @@ export function ProtectedRoute({ children, roles }) {
   return children;
 }
 
+/**
+ * Petani redirect: routes to the farmer's ACTUAL first accessible stage in
+ * Persiapan Lahan → Penanaman → Perawatan → Panen order, resolved from their
+ * active penugasan. Falls back to Persiapan Lahan (which renders the backend
+ * guard's Indonesian no-access message) when nothing is accessible.
+ */
+function FarmerRedirect() {
+  const { token } = useAuth();
+  const [path, setPath] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    resolveFarmerLanding(token).then(p => { if (!cancelled) setPath(p); });
+    return () => { cancelled = true; };
+  }, [token]);
+  if (!path) return <LoadingScreen />;
+  return <Navigate to={path} replace />;
+}
+
 export function AppRedirect() {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
-  return <Navigate to={user ? homePathFor(user.role) : '/login'} replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'farmer') return <FarmerRedirect />;
+  return <Navigate to={homePathFor(user.role)} replace />;
 }
