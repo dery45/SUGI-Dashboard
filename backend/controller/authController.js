@@ -20,6 +20,16 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Password salah' });
     }
 
+    // Reject login for farmer/farmer_owner with zero farm assignments
+    if (['farmer', 'farmer_owner'].includes(user.role)) {
+      if (!user.assigned_farms || user.assigned_farms.length === 0) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'Akun Anda tidak memiliki farm yang ditugaskan. Hubungi administrator untuk mendapatkan akses farm.' 
+        });
+      }
+    }
+
     const token = jwt.sign({ id: user._id, role: user.role, email: user.email, name: user.name }, JWT_SECRET, {
       expiresIn: '24h',
     });
