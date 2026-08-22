@@ -148,7 +148,7 @@ const FarmerManagementPage = () => {
           <div className="flex items-center gap-3">
             <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
             <div>
-              <h1 className="text-2xl font-black text-foreground tracking-tight">Petani & Pengguna</h1>
+              <h1 className="text-2xl font-black text-foreground tracking-tight">User Manajemen</h1>
               <p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Kelola seluruh akun pengguna</p>
             </div>
           </div>
