@@ -47,6 +47,11 @@ const FarmerManagementPage = () => {
 
   const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
+  const isSingleFarmOwner = user?.role === 'farmer_owner' && farms.length === 1;
+  const showFarmerPicker = form.role === 'farmer' && (
+    user?.role === 'superadmin' || (user?.role === 'farmer_owner' && farms.length > 1)
+  );
+
   const validate = () => {
     const rules = {
       name: [[required, 'Nama']],
@@ -56,6 +61,9 @@ const FarmerManagementPage = () => {
     const { errors: e, hasErrors } = validateForm(form, rules);
     if (form.role === 'farmer_owner' && (!form.assigned_farms || form.assigned_farms.length === 0)) {
       e.assigned_farms = 'Minimal satu farm harus ditugaskan';
+    }
+    if (showFarmerPicker && (!form.assigned_farms || form.assigned_farms.length === 0)) {
+      e.assigned_farms = 'Minimal satu farm harus dipilih';
     }
     setErrors(e);
     return !hasErrors && !e.assigned_farms;
@@ -209,6 +217,46 @@ const FarmerManagementPage = () => {
                   {form.assigned_farms.length > 0 && (
                     <p className="text-[10px] text-muted">{form.assigned_farms.length} farm dipilih</p>
                   )}
+                </div>
+              )}
+              {form.role === 'farmer' && showFarmerPicker && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                    Farm yang Ditugaskan <span className="text-destructive ml-1">*</span>
+                  </label>
+                  {errors.assigned_farms && <p className="text-[11px] font-semibold text-destructive">{errors.assigned_farms}</p>}
+                  {farms.length === 0 ? (
+                    <p className="text-sm text-muted/50 italic">Belum ada farm tersedia.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-border/30 rounded-xl">
+                      {farms.map(farm => (
+                        <label key={farm._id} className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all text-sm ${
+                          form.assigned_farms.includes(farm._id)
+                            ? 'bg-primary/10 border border-primary/30'
+                            : 'bg-background/30 border border-border/30 hover:border-primary/30'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={form.assigned_farms.includes(farm._id)}
+                            onChange={() => toggleFarm(farm._id)}
+                            className="w-4 h-4 accent-primary"
+                          />
+                          <span className="font-medium text-foreground">{farm.name}</span>
+                          <span className="text-muted text-[10px] ml-auto">{farm.code}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {form.assigned_farms.length > 0 && (
+                    <p className="text-[10px] text-muted">{form.assigned_farms.length} farm dipilih</p>
+                  )}
+                </div>
+              )}
+              {form.role === 'farmer' && isSingleFarmOwner && !editItem && (
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl">
+                  <p className="text-xs font-semibold text-foreground">Petani akan otomatis ditugaskan ke farm Anda:</p>
+                  <p className="text-xs text-primary font-bold mt-1">{farms[0]?.name} ({farms[0]?.code})</p>
+                  <p className="text-[10px] text-muted mt-1">Akses penuh ke blok & tahap akan dibuat otomatis di Penugasan.</p>
                 </div>
               )}
             </div>
