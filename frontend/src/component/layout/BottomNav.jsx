@@ -5,18 +5,18 @@ import { Leaf, DollarSign, Settings, Building2, BarChart3, MessageSquare } from 
 const linksByRole = {
   farmer: [
     { to: '/management', label: 'Analitik', icon: BarChart3 },
-    { to: '/management/lifecycle', label: 'Siklus', icon: Leaf },
+    { to: '/management/lifecycle/persiapan-lahan', label: 'Siklus', icon: Leaf },
     { to: '/settings', label: 'Pengaturan', icon: Settings },
   ],
   farmer_owner: [
     { to: '/management', label: 'Analitik', icon: BarChart3 },
-    { to: '/management/lifecycle', label: 'Siklus', icon: Leaf },
+    { to: '/management/lifecycle/persiapan-lahan', label: 'Siklus', icon: Leaf },
     { to: '/management/sales', label: 'Penjualan', icon: DollarSign },
     { to: '/settings', label: 'Pengaturan', icon: Settings },
   ],
   superadmin: [
     { to: '/management', label: 'Analitik', icon: BarChart3 },
-    { to: '/management/lifecycle', label: 'Siklus', icon: Leaf },
+    { to: '/management/lifecycle/persiapan-lahan', label: 'Siklus', icon: Leaf },
     { to: '/management/sales', label: 'Penjualan', icon: DollarSign },
     { to: '/chatbot-insight', label: 'Chatbot', icon: MessageSquare },
     { to: '/settings', label: 'Pengaturan', icon: Settings },

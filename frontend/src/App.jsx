@@ -13,9 +13,6 @@ import SettingsPage from './pages/Settings/SettingsPage';
 const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard/FarmerDashboard'));
 const GovernmentDashboard = lazy(() => import('./pages/GovernmentDashboard/GovernmentDashboard'));
 const ManagementDashboard = lazy(() => import('./pages/ManagementDashboard/ManagementDashboard'));
-const LifecycleManagementPage = lazy(() => import('./pages/Lifecycle/LifecycleManagementPage'));
-const PersiapanLahanPage = lazy(() => import('./pages/Lifecycle/PersiapanLahanPage'));
-const PenanamanPage = lazy(() => import('./pages/Lifecycle/PenanamanPage'));
 const PerawatanPage = lazy(() => import('./pages/Lifecycle/PerawatanPage'));
 const PanenPage = lazy(() => import('./pages/Lifecycle/PanenPage'));
 const UMManagementPage = lazy(() => import('./pages/UMManagement/UMManagementPage'));
@@ -108,13 +105,6 @@ function AppContent() {
           <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
             <Suspense fallback={<DashboardSkeleton />}>
               <ManagementDashboard />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="management/lifecycle" element={
-          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
-            <Suspense fallback={<DashboardSkeleton />}>
-              <LifecycleManagementPage />
             </Suspense>
           </ProtectedRoute>
         } />

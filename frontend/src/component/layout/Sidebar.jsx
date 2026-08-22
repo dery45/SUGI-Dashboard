@@ -224,12 +224,6 @@ const Sidebar = ({ isOpen, user, onToggle }) => {
                   </button>
                   <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${openLifecycle ? 'max-h-[600px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
                     <div className="flex flex-col gap-1 pl-4 border-l-2 border-border/40 ml-8 py-2">
-                      {(isOwner || isSuperadmin) && (
-                        <NavLink to="/management/lifecycle" end className={childLinkCls}>
-                          <Leaf className="w-3.5 h-3.5 opacity-60" />
-                          <span>Semua Tahapan</span>
-                        </NavLink>
-                      )}
                       {visibleLifecycleItems.map(s => (
                         <NavLink key={s.path} to={s.path} className={childLinkCls}>
                           {s.icon}
