@@ -1,18 +1,27 @@
-const CACHE_NAME = 'sugi-dash-v1';
-const STATIC_ASSETS = [
+/* SUGIDash service worker — offline-capable since Phase 4c.
+ *
+ * Strategy:
+ *  - Precache the app shell ('/', '/index.html', manifest, icons) on install.
+ *  - Navigation requests: network-first, falling back to cached '/index.html'
+ *    so any client-side route (e.g. /login, /management/...) boots offline.
+ *  - Same-origin build assets (/assets/*): stale-while-revalidate runtime cache
+ *    — first visit populates it, subsequent offline loads serve from cache.
+ *  - API GETs: network-only (never serve stale data silently); failures surface
+ *    to the app's own error states.
+ */
+const SHELL_CACHE = 'sugi-dash-shell-v2';
+const RUNTIME_CACHE = 'sugi-dash-runtime-v2';
+const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.svg',
   '/icons.svg',
-  // Note: JS/CSS bundles are hashed at build time.
-  // They are cached via HTTP headers (Cache-Control) rather than precache.
-  // For full precache, use vite-plugin-pwa to generate a precache manifest.
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_ASSETS))
   );
   self.skipWaiting();
 });
@@ -20,15 +29,53 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter((k) => k !== SHELL_CACHE && k !== RUNTIME_CACHE)
+          .map((k) => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
-  );
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return; // cross-origin (GeoJSON etc.) → network
+
+  // 1) SPA navigations: network-first, cached shell fallback → app boots offline
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .catch(() =>
+          caches.match('/index.html').then(
+            (hit) => hit || caches.match('/')
+          )
+        )
+    );
+    return;
+  }
+
+  // 2) Hashed build assets: stale-while-revalidate runtime cache
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        const refresh = fetch(req)
+          .then((res) => {
+            if (res && res.ok) {
+              const copy = res.clone();
+              caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
+            }
+            return res;
+          })
+          .catch(() => cached);
+        return cached || refresh;
+      })
+    );
+    return;
+  }
+
+  // 3) API calls: never cache — let app-level error states handle offline
 });
