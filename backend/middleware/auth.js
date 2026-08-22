@@ -45,6 +45,85 @@ const isFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
 
 const checkRole = authorize;
 
+// Farmer-scoped access check for lifecycle/sales routes
+const isFarmerScoped = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    
+    // Superadmin, government, farmer_owner pass through (they have isManagement guard)
+    if (['superadmin', 'government', 'farmer_owner'].includes(req.user.role)) {
+      return next();
+    }
+    
+    // For farmers, check if they have assignment for the requested resource
+    if (req.user.role === 'farmer') {
+      const FarmerAssignment = require('../model/FarmerAssignment');
+      const farmerId = req.user.id;
+      
+      // Extract farm_id or block from request
+      let farmId = req.body.farm_id || req.query.farm_id || req.params.farm_id;
+      let blockId = req.body.block || req.query.block || req.params.block_id;
+      let cropCycleId = req.body.crop_cycle_id || req.query.crop_cycle_id || req.params.crop_cycle_id;
+      
+      // For sales, check sales_access
+      const isSalesRoute = req.path.includes('/sales');
+      const isLifecycleRoute = req.path.includes('/lifecycle');
+      
+      const assignments = await FarmerAssignment.find({ 
+        farmer: farmerId, 
+        status: 'Active' 
+      }).lean();
+      
+      if (!assignments.length) {
+        return res.status(403).json({ success: false, message: 'Anda tidak memiliki penugasan aktif' });
+      }
+      
+      let hasAccess = false;
+      
+      for (const assignment of assignments) {
+        // Check farm access
+        if (farmId && assignment.farm?.toString() === farmId) {
+          hasAccess = true;
+          break;
+        }
+        // Check block access
+        if (blockId && assignment.block?.toString() === blockId) {
+          hasAccess = true;
+          break;
+        }
+        // For sales, check sales_access flag
+        if (isSalesRoute && assignment.sales_access) {
+          hasAccess = true;
+          break;
+        }
+        // For lifecycle, check access_stages
+        if (isLifecycleRoute && assignment.access_stages?.length > 0) {
+          hasAccess = true;
+          break;
+        }
+        // If crop_cycle_id provided, check if assignment belongs to that cycle
+        if (cropCycleId && assignment.crop_cycle?.toString() === cropCycleId) {
+          hasAccess = true;
+          break;
+        }
+      }
+      
+      if (!hasAccess) {
+        return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke resource ini' });
+      }
+      
+      return next();
+    }
+    
+    // Other roles not allowed
+    return res.status(403).json({ success: false, message: 'Akses ditolak' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   authenticate,
   authorize,
@@ -54,5 +133,6 @@ module.exports = {
   isManagement,
   isFarmerOwner,
   isFarmer,
+  isFarmerScoped,
   JWT_SECRET,
 };
