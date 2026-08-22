@@ -109,12 +109,18 @@ const ctrl = require('../controller/assignmentController');
 
 router.use(authenticate);
 
-router.get('/farmer-assignments', ctrl.listFarmerAssignments);
+// Penugasan viewer: Owner + Petani + superadmin — NOT Government (Phase 4b Task 4)
+const isPenugasanViewer = (req, res, next) => {
+  if (['superadmin', 'farmer_owner', 'farmer'].includes(req.user?.role)) return next();
+  return res.status(403).json({ success: false, message: 'Akses ditolak. Penugasan hanya untuk Owner dan Petani yang ditugaskan' });
+};
+
+router.get('/farmer-assignments', isPenugasanViewer, ctrl.listFarmerAssignments);
 router.post('/farmer-assignments', isFarmerOwner, ctrl.createFarmerAssignment);
 router.put('/farmer-assignments/:id', isFarmerOwner, ctrl.updateFarmerAssignment);
 router.delete('/farmer-assignments/:id', isFarmerOwner, ctrl.removeFarmerAssignment);
 
-router.get('/task-assignments', ctrl.listTaskAssignments);
+router.get('/task-assignments', isPenugasanViewer, ctrl.listTaskAssignments);
 router.post('/task-assignments', isFarmerOwner, ctrl.createTaskAssignment);
 router.delete('/task-assignments/:id', isFarmerOwner, ctrl.removeTaskAssignment);
 

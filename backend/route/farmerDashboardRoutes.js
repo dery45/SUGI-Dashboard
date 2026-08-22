@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate, isManagement } = require('../middleware/auth');
 const { getFarmerDashboard: getFarmerDashboardV2 } = require('../controller/farmerDashboardController');
 
 /**
@@ -34,7 +34,7 @@ const { getFarmerDashboard: getFarmerDashboardV2 } = require('../controller/farm
  *         $ref: '#/components/schemas/Error'
  */
 
-// farmer/v2: authenticate only (README `/farmer` = All authenticated)
-router.get('/farmer/v2', authenticate, getFarmerDashboardV2);
+// farmer/v2: Owner + superadmin only (Petani uses lifecycle stages per Phase 4b policy change)
+router.get('/farmer/v2', authenticate, isManagement, getFarmerDashboardV2);
 
 module.exports = router;
