@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Version** | v0.14.0 (unreleased, on `dev` only) |
+| **Version** | v0.15.0 (unreleased, on `dev` only) |
 | **HEAD commit** | Phase-4b TASK commits on top of `9f175ac` (2026-08-22) |
 | **Branch** | `dev` (active) — `main` frozen at `ee4faf7` (2026-03-22) |
 | **Remote** | `origin` → `https://github.com/dery45/SUGI-Dashboard.git` |
@@ -36,6 +36,7 @@
 | v0.9.0 | 2026-08-14 | Backend restructure + API docs | Phase-2 restructure, response envelope, Swagger + Postman (Phase 3) | `792b84e` … `8e52237` |
 | v0.10.0 | 2026-08-18 | Lifecycle UX | Single-entry "Persiapan Lahan" flow, per-stage eligibility validation | `19f8ef6` `30f0c13` `5962b77` `943c435` `8cd73f5` |
 | v0.11.0 | 2026-08-18 | QA & test infrastructure | Playwright suites (TASK 0–9, FE-1..FE-5, TASK 9b), findings & reports | `a248a4d` … `a0e1bad` |
+| v0.15.0 | 2026-08-22 | Phase 4 closeout | "Semua Tahapan" removed; assignment-driven Petani landing (per-stage priority); cascading cycle-closure UI lock (frontend-only); Pelaksana dropdown scoped via penugasan farm+block; Analitik & KPI redesign on shared kit; PWA offline fixed (nav fallback + runtime cache, offline reload verified 200/rendered); clickthrough rebuilt from App.jsx (124/124) + gov /management/farmers route fix | `bcd2629` `e1dff85` `6f2ac68` `090c9b7` `6197135` `28b7c1d` `8e77c43` |
 | v0.14.0 | 2026-08-22 | RBAC completion + Lifecycle split | Farmer-scoped guard fix (per-stage, specific 403s), Rule D Owner→Farmer auto-assign/picker, 10-item sidebar rebuild with per-item backend guards, Lifecycle split into 4 pages, farmer landing redirect, Settings farm-visibility, PWA icon/shortcuts, chart resize fix, raw-id populate bugfix | `63d1c0e` `0f76ef9` `9f175ac` + TASK 4–9 commits |
 | v0.13.0 | 2026-08-22 | RBAC overhaul + UX polish | "Pemilik Petani"→"Owner" wording, user-mgmt CRUD scoping (Gov/Owner rules A–C,F,G), `sales_access` on FarmerAssignment, login rejects unassigned farmer/owner, UI renames (User Manajemen/Penugasan), animations, login redesign (hero.png), Indonesian audit, SW hashed-bundle note | `24dc71f` `730761e` `847ce2c` `41c32e4` `331b745` `f37cdf6` |
 | v0.12.0 | 2026-08-20 | Frontend bug-fixing phase | Role-aware redirects, centralized authService, sale modal guard, hardcoded-dropdown fixes, orphan cleanup, `/api` base-URL standardization, forceReauth on password change | `e32128b` `0319769` `6bce2a6` `a443887` `a08bbb3` `0325623` `7d7bc1b` |

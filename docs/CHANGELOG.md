@@ -4,8 +4,50 @@ All notable changes to the SUGI Dashboard project are documented here.
 
 > **Versioning note:** The repository has no official git tags or releases. Milestones
 > below are **derived** from logical clusters of the commit history
-> (`1af4021` 2026-03-22 → Phase 4b TASK commits 2026-08-22), reconstructed from actual
+> (`1af4021` 2026-03-22 → Phase 4c TASK commits 2026-08-22), reconstructed from actual
 > diffs. See [`VERSION.md`](./VERSION.md) for the methodology.
+
+---
+
+## [v0.15.0] — 2026-08-22 — Phase 4 Closeout (Scope Cleanup, Offline PWA, Lifecycle Locks)
+
+Final phase of the RBAC/Lifecycle overhaul. Closeout report covering 4a+4b+4c:
+`docs/PHASE4_CLOSEOUT_REPORT.md`.
+
+### Removed
+- **"Semua Tahapan"** page, route, sidebar entry, and orphaned `LifecycleTabs.jsx`
+  (BottomNav links repointed to Persiapan Lahan). Grep exact-case: zero references.
+
+### Added
+- **Assignment-driven Petani landing**: `services/farmerLanding.js` resolves the first
+  accessible stage (Persiapan Lahan → Penanaman → Perawatan → Panen) from active
+  penugasan; wired into `/`, post-login navigation; zero-access fallback renders the
+  backend's inline Indonesian 403.
+- **Cascading cycle-closure lock (frontend-only)**: closing a Panen immediately writes
+  the land record's Tgl Tutup + status Tertutup and locks Persiapan Lahan / Penanaman /
+  Perawatan rows for completed cycles with Indonesian toasts. No backend enforcement
+  added for this rule by design.
+- **Pelaksana dropdown** in Penanaman/Perawatan sourced from penugasan matching the
+  cycle's farm AND block; empty case message; historical values preserved as
+  "(nilai tersimpan)".
+- **Analitik & KPI redesign**: shared Card/charts/DataTable kit; new Tren Hasil Panen,
+  Distribusi Status Siklus, Biaya per Kategori, Penjualan Terbaru widgets; all prior
+  KPIs/alerts preserved; alerts audit confirmed no links to removed routes.
+
+### Fixed
+- **PWA offline support for real**: sw.js v2 — network-first navigations with cached
+  shell fallback + stale-while-revalidate runtime cache for hashed assets. Playwright
+  offline re-test: reload = 200 with rendered login UI, deep-link boots via fallback,
+  zero failed requests (4b had net::ERR_FAILED / blank DOM).
+- `/management/farmers` route excluded Pemerintah while sidebar/backend allowed them —
+  caught by the rebuilt clickthrough matrix; roles updated.
+- Recharts transient `width(-1)/height(-1)` warning silenced app-wide (99% dims +
+  minWidth/minHeight + debounce, 25 sites).
+
+### Changed
+- Test suite rebuilt: clickthrough route list generated from App.jsx (124 tests,
+  31 routes × 4 roles) — PASS; redirect/sale/expense/lifecycle/auth suites re-run PASS;
+  owner seed password synced (`owner1234`) across scripts.
 
 ---
 
