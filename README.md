@@ -6,8 +6,12 @@
 
 ### Authentication & Role-Based Access
 - JWT-based authentication with bcrypt password hashing
-- Four roles: `superadmin`, `government`, `farmer_owner`, `farmer`
-- Role-based route guarding and sidebar visibility
+- Four roles: `superadmin`, `government`, `farmer_owner` (Owner), `farmer` (Petani)
+- Exact 10-item sidebar with per-item role gating; Petani items derive from their live
+  penugasan (per-stage lifecycle access + optional Penjualan access via `sales_access`)
+- Petani lands on their first accessible lifecycle stage; Owner/superadmin on Analitik &
+  KPI; Pemerintah on Government Dashboard
+- Login rejected for farmer/farmer_owner accounts with zero farm assignments
 
 ### Farmer Dashboard (Market Intelligence)
 - **10 AI-Powered Insights**: Skor PPH Nasional, Cadangan Pangan Daerah, Komoditas Terbaik, Margin Produsen–Konsumen, Surplus/Defisit Pangan, Peringkat Surplus Komoditas, Peluang Pasar Bulanan, Provinsi Terbaik, Rekomendasi Tanam, Rekomendasi Jual
@@ -31,6 +35,7 @@
 - **Alert System**: Automated tracking of closing harvest windows and unassigned tasks
 
 ### Agricultural Lifecycle Management
+- **Four per-stage pages** (`/management/lifecycle/persiapan-lahan|penanaman|perawatan|panen`) individually guarded — Owner/superadmin get all stages; Petani only the stages their penugasan grants
 - **Single-Entry Crop Cycle Flow**: a crop cycle is created once through the "Persiapan Lahan" (land preparation) step; later stages reference the cycle via a dropdown
 - **Per-Stage Eligibility Validation**: each lifecycle transition validates the current cycle status before allowing the next stage (`GET /api/lifecycle/cycles/eligible` returns only eligible cycles)
 - **Land Preparation**: Full CRUD for land opening/closing with cost tracking
@@ -38,10 +43,13 @@
 - **Maintenance Tracking**: Fertilization, spraying, pruning with labor hour and cost aggregation
 - **Harvest Management**: Open/Close harvest windows with expected vs. actual yield comparison and overdue alerts
 
-### Farmer & User Management
-- Role-based Access Control (RBAC) with 4 roles
-- Organization-specific user filtering, search, and deactivation
-- Farmer-to-Block assignment system (Unit Management)
+### Farmer & User Management (Kelola User)
+- Role-based Access Control (RBAC) with 4 roles and per-item CRUD scoping:
+  Government manages Pemerintah users only; Owner manages own-farm farmers;
+  farmer accounts with zero farm assignments are rejected at login
+- **Penugasan** (Owner): farmer→block assignments with per-stage access and a
+  Penjualan (`sales_access`) toggle
+- **User Manajemen** (Owner + Pemerintah): user CRUD scoped by role and farm-sharing
 
 ### Sales & Distribution
 - Record sales to Mills, Middlemen, or Direct markets
@@ -215,25 +223,24 @@ SUGI-Dashboard-DEMO/
 ├── frontend/                         # Vite + React 19 SPA
 │   ├── public/                       # Static assets (GeoJSON maps, icons)
 │   ├── src/
-│   │   ├── api/                      # 6 API client modules (all via services/authService)
-│   │   ├── assets/                   # Images, fonts, brand assets
-│   │   ├── components/
-│   │   │   ├── charts/               # Recharts wrappers (BarChart, LineChart, PieChart)
-│   │   │   ├── chatbot/              # Chatbot Insight components
-│   │   │   │   ├── KnowledgeGraph.jsx # Interactive cytoscape graph
-│   │   │   │   ├── InsightPanel.jsx   # AI-generated insight cards
-│   │   │   │   └── ExportModal.jsx    # Export to PNG/PDF/CSV/JSON
-│   │   │   ├── common/               # Shared UI (Card, DataTable, Modal, ErrorBoundary)
-│   │   │   ├── dashboard/            # 15 dashboard-specific components (KpiCard, ChartCard)
-│   │   │   ├── layout/               # Sidebar, TopBar, MainLayout, BottomNav
-│   │   │   ├── management/           # 10 management module components
-│   │   │   └── map/                  # IndonesiaMap (Leaflet)
-│   │   ├── contexts/                 # 3 React Contexts (Auth, Theme, DashboardFilter)
-│   │   ├── hooks/                    # 3 custom hooks
-│   │   ├── pages/                    # 28 page views (11 main + 17 master)
-│   │   │   └── master/               # 17 master data CRUD pages
-│   │   ├── services/                 # authService.js (auth/API single source) + ProtectedRoutes.jsx
-│   │   ├── App.jsx                   # Root component with routing
+│   │   ├── api/                      # shared API clients (via services/authService)
+│   │   ├── assets/                   # hero.png (login brand panel)
+│   │   ├── component/                # SHARED: charts/ common/ dashboard/ layout/ map/
+│   │   ├── contexts/                 # AuthContext, ThemeContext, DashboardFilterContext
+│   │   ├── data/                     # dataColumns.js + dataset discovery tables
+│   │   ├── hooks/                    # useMasterData (shared)
+│   │   ├── pages/
+│   │   │   ├── <Feature>/            # feature folder w/ local api/ component/ hooks/
+│   │   │   │   ├── Login, FarmerDashboard, GovernmentDashboard,
+│   │   │   │   ├── ManagementDashboard (+component/hooks/api),
+│   │   │   │   ├── Lifecycle        # 4 per-stage pages + LifecycleTabs ("Semua Tahapan")
+│   │   │   │   ├── Sales, Settings, UMManagement (Penugasan),
+│   │   │   │   ├── FarmerManagement (User Manajemen), ChatbotInsight
+│   │   │   ├── MasterData/           # 4 operational catalogs (Farms superadmin-only …)
+│   │   │   └── GovernmentData/       # 13 government-facing dataset catalogs
+│   │   ├── services/                 # authService, filterService, insightService, ProtectedRoutes
+│   │   ├── utils/                    # validation.js, importTemplates.js
+│   │   ├── App.jsx                   # Root component with routing (lazy + role guards)
 │   │   └── main.jsx                  # React DOM entry point
 │   ├── index.html
 │   ├── vite.config.js
@@ -331,7 +338,7 @@ The Vite dev server proxies `/api` requests to `http://localhost:3000`.
 |------|-------|----------|
 | Super Admin | `superadmin@sugi.id` | `superadmin123` |
 | Government | `government@sugi.id` | `government123` |
-| Farmer Owner | `owner@sugi.id` | `owner123` |
+| Farmer Owner | `owner@sugi.id` | `owner1234` |
 
 ### 7. Key API Endpoints
 

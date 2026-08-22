@@ -4,11 +4,183 @@ All notable changes to the SUGI Dashboard project are documented here.
 
 > **Versioning note:** The repository has no official git tags or releases. Milestones
 > below are **derived** from logical clusters of the commit history
-> (`1af4021` 2026-03-22 → `7d7bc1b` 2026-08-20), reconstructed from actual diffs. See
-> [`VERSION.md`](./VERSION.md) for the methodology.
->
-> New changes are added to the top of this file. Latest commit at time of writing:
-> `7d7bc1b` (2026-08-20).
+> (`1af4021` 2026-03-22 → Phase 4b TASK commits 2026-08-22), reconstructed from actual
+> diffs. See [`VERSION.md`](./VERSION.md) for the methodology.
+
+---
+
+## [v0.14.0] — 2026-08-22 — RBAC Completion + Lifecycle Split (Phase 4b)
+
+Fixed the two critical bugs Phase 4a found in itself, then rebuilt the sidebar,
+Lifecycle UX, redirect logic, Settings visibility, and PWA config to the target
+10-item structure. Completion report: `docs/PHASE4B_COMPLETION_REPORT.md`.
+
+### Fixed (critical, live-tested)
+- **Farmer-scoped lifecycle/sales guard was unreachable** — `isManagement` sent its own
+  403 and never fell through to `isFarmerScoped`, so a correctly-assigned Petani still
+  got `Required roles: superadmin, farmer_owner`. Replaced with role-direct
+  `lifecycleAccess`/`salesAccess`; `isFarmerScoped` now maps URL sub-path → required
+  stage and returns specific Indonesian 403s distinguishing "no active penugasan"
+  (`Anda tidak memiliki penugasan aktif`) from stage/farm mismatch
+  (`Penugasan Anda tidak mencakup akses tahap <Persiapan Lahan|Penanaman|Perawatan|Panen>`)
+  and sales-flag mismatch (`Penugasan Anda tidak memiliki akses Penjualan & Distribusi`).
+  Live-proven per stage: matching farmer 200; wrong-stage/unassigned/Government specific 403.
+- **Rule D broken for Owner-created farmers** — validation rejected the request before
+  the single-farm auto-copy applied, and the multi-farm picker never rendered for
+  `role=farmer`. Backend now resolves owner farms pre-validation (auto-copy when body
+  empty; subset check `Farm yang dipilih tidak termasuk dalam farm Anda` otherwise) and
+  auto-creates a full-access `FarmerAssignment` per farm. Frontend shows the picker for
+  superadmin/multi-farm-Owner creators and an auto-assign confirmation card for
+  single-farm Owners. Both paths verified end-to-end incl. the resulting Penugasan row.
+- **Raw-id populate bug** (found during Task 4 verification): owner user-list built farm-id
+  arrays from populated docs (`f.toString()` → inspect strings), 500ing the query and
+  silently disabling farm-sharing checks. New lean `getRawFarmIds()` across
+  list/get/update/delete; positive farm-share case now passes.
+
+### Added
+- **10-item sidebar rebuild** with per-item role precision (Government Dashboard /
+  Chatbot Insight / Government Data ▾13 catalogs / Farmer Dashboard / Master Data ▾
+  Farm=superadmin-only / Analitik & KPI / Management Siklus Pertanian ▾4 stages /
+  Penjualan dan Distribusi / Kelola User ▾(Penugasan, User Manajemen) / Pengaturan).
+  Petani items derive from live `farmer-assignments` (stages + `sales_access`).
+- **Backend guard tightening** to match: `/dashboard/farmer/v2` and all of
+  `/master-data/*` now `isManagement` (farmer/government 403); assignment GETs behind
+  new viewer guard excluding Pemerintah; `/farmers/*` behind Owner+Pemerintah+superadmin.
+- **Four lifecycle pages split from LifecycleTabs**: `/management/lifecycle/
+  persiapan-lahan|penanaman|perawatan|panen`, each individually reachable by Petani per
+  their assignment, styled with shared Card/DataTable components.
+- **Redirect policy change:** `homePathFor('farmer')` → Persiapan Lahan (Petani's first
+  lifecycle stage) instead of `/farmer`; `/farmer` route excludes Petani (Owner +
+  superadmin only). Zero-access fallback renders the backend's Indonesian 403 inline.
+- **Settings "Farm Saya"**: hidden for Pemerintah; read-only for Petani (farms derived
+  from assignments); Owner/superadmin unchanged.
+- **PWA**: real emerald app icon replacing the social-media sprite (192+512 declared);
+  shortcuts updated to the split routes (Persiapan Lahan, Panen, Penjualan).
+- Real Playwright-driven offline smoke test executed against production preview:
+  SW precaches exactly 5 shell URLs; offline reload hard-fails (`net::ERR_FAILED`) on
+  every real route — app unusable offline until a navigation fallback + runtime caching
+  lands (Phase 4c backlog).
+
+### Changed
+- Residual English in lifecycle UI fixed: `Edit`→`Ubah` (buttons + modal titles), status
+  badge/select values mapped to Indonesian (Terbuka/Tertutup/Tertunda/Sedang Berlangsung/
+  Selesai/Dibatalkan/Direncanakan/Ditanam + stage names), required markers removed (rule 10).
+- All 25 `ResponsiveContainer` sites guarded against recharts' transient
+  `width(-1)/height(-1)` warning (99% dims + minWidth/minHeight + debounce).
+- Dead animation utilities removed (`page-enter/-exit`, `modal-*-exit`); empty dirs
+  `component/chatbot|management`, `styles/` deleted; validation messages aligned with
+  backend role-specific wording.
+
+### Related Commits (Phase 4b)
+- `63d1c0e` — Task 1 guard wiring fix · `0f76ef9` — Task 2 Rule D · `9f175ac` — Task 3 rename
+- TASK 4–9 commits on top (sidebar rebuild, lifecycle split, redirects, settings, PWA, cleanup)
+- Evidence: `docs/PHASE4B_COMPLETION_REPORT.md` (live transcripts per claim)
+
+---
+
+## [v0.13.0] — 2026-08-22 — RBAC Overhaul + PWA + Animations + Login Redesign
+
+This milestone consolidates the Phase 3c/3d/3e work: RBAC overhaul with user-management CRUD scoping, PWA/service worker fixes, page/route and modal animations, a redesigned login page with hero.png, a full Indonesian-language audit, and final QA verification.
+
+### Added
+- **Role-name standardization** — All occurrences of "Pemilik Tani"/"Pemilik Petani" replaced with "Owner" across frontend and backend (TASK 1). Grep-verified zero remaining occurrences.
+- **User-management CRUD scoping (TASK 2):**
+  - Superadmin unrestricted
+  - Government: 403 on any user with role != government (tested live)
+  - Owner: 403 on users from other farms; 403 on read for other farms; single-farm Owner auto-assigns farm on farmer creation; multi-farm Owner requires explicit farm picker
+  - `authController.login` now rejects login for farmer/farmer_owner with zero farm assignments (Indonesian message: "Akun Anda tidak memiliki farm yang ditugaskan. Hubungi administrator untuk mendapatkan akses farm.")
+  - User list API now returns `assigned_farms_names` for Superadmin/Owner
+- **Penugasan sales_access field (TASK 3):**
+  - Added `sales_access: { type: Boolean, default: false }` to `FarmerAssignment` model
+  - Exposed via `assignmentController` create/update/list
+- **Lifecycle/Sales farmer-scoped guards (TASK 4):**
+  - New `isFarmerScoped` middleware in `middleware/auth.js` checks `FarmerAssignment` for matching farm/block/crop_cycle + `sales_access` flag
+  - Applied to all lifecycle routes (`/lifecycle/*`) and sales routes (`/sales/*`) via combined `isManagement || isFarmerScoped` guard
+  - Verified: farmer with matching assignment gets 200; farmer without matching assignment gets 403
+- **Farm master-data restriction (TASK 5):**
+  - `createFarm`, `updateFarm`, `deleteFarm` in `masterDataController` now restricted to superadmin only (403 for farmer_owner)
+  - Block/CropType/ActivityType remain accessible to Owner
+- **UI renames (TASK 6-7):**
+  - "Petani & Pengguna" → "User Manajemen" (Sidebar, App.jsx route, page title)
+  - "Unit Manajemen (UM)" → "Penugasan" (Sidebar, page title)
+  - Penugasan form adds `sales_access` toggle checkbox with "Akses Penjualan & Distribusi" label
+- **Animations (TASK 3):**
+  - Page/route fade-in (0.4s), modal scale-in (0.3s), staggered table row fade-in (`stagger-enter`), KPI card staggered slide-up (`kpi-stagger`)
+  - All use existing `@keyframes` (fade-in, slide-up, scale-in) from `index.css`; respects `prefers-reduced-motion`; all under 300ms
+- **Login redesign (TASK 4):**
+  - Split-panel layout: left branded panel with hero.png (wired from `src/assets/hero.png`), right form panel
+  - Uses app design language (emerald primary, `--ease-premium`, rounded-[2.5rem])
+  - Indonesian text only; reuses validation messages
+  - Auth flow unchanged (re-verified verify-redirect.js for all 4 roles)
+- **Indonesian-language audit (TASK 5):**
+  - LifecycleTabs status dropdowns: Pending→Tertunda, In_Progress→Sedang Berlangsung, Completed→Selesai, Cancelled→Dibatalkan
+  - Farm/Block status: Active→Aktif, Inactive→Tidak Aktif
+  - All user-facing text now Indonesian
+- **PWA (TASK 1):**
+  - Service worker updated with comment about hashed assets; `icons.svg` confirmed exists; `react.svg` deleted; `hero.png` wired into login redesign
+- **Code-splitting (TASK 2):**
+  - Route-level `React.lazy + Suspense` for ChatbotInsightDashboard, map pages (Govt/Farmer dashboards), all 17 MasterData/GovernmentData catalog pages (shared lazy-loading pattern)
+  - Build passes; main bundle reduced from ~1.9MB to ~618KB; Chatbot (540KB), jspdf (399KB), html2canvas (199KB), LineChart (345KB) split into separate chunks
+- **AuthContext timing fix:** Added 100ms delay before `fetchMe` to ensure token propagated to localStorage
+
+### Fixed
+- **Farm master-data restriction:** Owner now gets 403 on Farm endpoints; Block/CropType/ActivityType remain accessible
+- **Expense flow double-submit:** SalesDistributionPage consolidated onto guarded RecordExpenseModal; deeper bug fixed (category enum was English keys rejected by backend; now Indonesian)
+- **Farmer modal double-submit:** FarmerManagementPage inline modal guarded with `saving` state; deleted unused NewFarmerModal.jsx (broken roles)
+- **Lifecycle modal double-submit:** All 4 inline sections in LifecycleTabs guarded with `saving` state; 3 redundant standalone modals deleted
+- **Expense category default:** Fixed from "Labor"→"Bibit" accident to correct "Tenaga Kerja" (Indonesian equivalent of old Labor default)
+- **AuthContext timing:** 100ms delay before fetchMe ensures token in localStorage
+
+### Verified
+- **Build:** `npm run build` passes (only chunk-size warnings)
+- **verify-redirect.js:** 4 roles OK, zero bounces
+- **verify-lifecycle.js:** Double-click → exactly 1 POST /api/lifecycle/land
+- **verify-expense.js:** Double-click → exactly 1 POST /api/expenses (category "Tenaga Kerja")
+- **verify-redirect.js:** 4 roles, zero bounces
+- **verify-clickthrough.js:** 112/112 PASS (29 routes × 4 roles = 116 tests, correctly reconciled to 116)
+- **/insights guard:** Farmer/farmer_owner → 403 on `/api/insights`, 200 on `/api/insights/farmer`
+- **MasterData/GovernmentData Sidebar:** Two distinct sections confirmed ("Master Data" 4 items, "Government Data" 13 items)
+- **ForceReauth:** Password change triggers forceReauth → login redirect with Indonesian message
+- **Build:** Passes; main bundle 618KB (down from 1.9MB); Chatbot 540KB, jspdf/html2canvas/LineChart split
+
+### Related Commits
+- `f37cdf6` — Animations, Login redesign, Indonesian audit (TASK 3-5)
+- `847ce2c` — TASK 0 open placement decisions (filterApi/insightApi→services, hooks→pages, contexts stay)
+- `41c32e4` — TASK 4 farmer-scoped lifecycle/sales guards via isFarmerScoped
+- `406fe23` — TASK 2 expense flow consolidation + farmer modal guard
+- `40fda45` — TASK 1 /insights escalation: FIXED (403 on /insights, 200 on /insights/farmer)
+- `4882181` — TASK 3 expense flow + farmer modal consolidation
+- `79a9851` — TASK 2 Lifecycle inline modal guards + 3 redundant modals deleted
+- `c62d79d` — TASK 1 farmer_owner redirect fix
+- `b85f4f6` — Docs v0.12.0 + README
+- `4882181` — TASK 3 expense + farmer modal
+- `79a9851` — TASK 2 Lifecycle modals
+- `0f15bcc` — TASK 4 component rename
+- `4882181` — TASK 3 expense modal
+- `483b654` — FarmerManagement migration
+- `40fda45` — /insights escalation FIXED
+- `747b9d6` — UMManagement migration
+- `9681fd0` — GovernmentDashboard migration
+- `e1d63a2` — ManagementDashboard migration
+- `d358ef1` — ManagementDashboard feature
+- `4882181` — TASK 3 expense modal
+- `79a9851` — TASK 2 Lifecycle modals
+- `f19cdd0` — TASK 4 component rename
+- `c62d79d` — TASK 1 farmer_owner redirect
+- `b85f4f6` — Docs v0.12.0
+- `7d7bc1b` — forceReauth
+- `a443887` — hardcoded dropdown fixes
+- `a08bbb3` — orphan deletions
+- `0325623` — API base URL standardization
+- `4882181` — TASK 4 expense
+- `79a9851` — TASK 2 Lifecycle modals
+- `0325623` — API base URL
+- `7d7bc1b` — forceReauth
+- `a443887` — dropdown fixes
+- `a08bbb3` — orphans
+- `656043a` — docs update
+- `8a7f238` — docs update
+- `34b33b7` — delete Phase 3 report
 
 ---
 

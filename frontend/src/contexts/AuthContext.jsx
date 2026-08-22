@@ -12,20 +12,25 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      fetchMe()
-        .then((u) => {
-          setUser(u);
-        })
-        .catch((err) => {
-          if (err?.status) {
-            clearToken();
-            setTokenState(null);
-            setUser(null);
-          } else {
-            setUser(null);
-          }
-        })
-        .finally(() => setLoading(false));
+      // Small delay to ensure token is fully propagated to localStorage before fetchMe
+      const timeoutId = setTimeout(() => {
+        fetchMe()
+          .then((u) => {
+            setUser(u);
+          })
+          .catch((err) => {
+            if (err?.status === 401) {
+              clearToken();
+              setTokenState(null);
+              setUser(null);
+            } else {
+              // For other errors (network, etc.), don't log out - just set user to null
+              setUser(null);
+            }
+          })
+          .finally(() => setLoading(false));
+      }, 100);
+      return () => clearTimeout(timeoutId);
     } else {
       setLoading(false);
     }

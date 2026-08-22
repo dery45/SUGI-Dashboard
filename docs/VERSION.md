@@ -14,8 +14,8 @@
 
 | Field | Value |
 |---|---|
-| **Version** | v0.12.0 (unreleased, on `dev` only) |
-| **HEAD commit** | `7d7bc1b` (2026-08-20) |
+| **Version** | v0.14.0 (unreleased, on `dev` only) |
+| **HEAD commit** | Phase-4b TASK commits on top of `9f175ac` (2026-08-22) |
 | **Branch** | `dev` (active) — `main` frozen at `ee4faf7` (2026-03-22) |
 | **Remote** | `origin` → `https://github.com/dery45/SUGI-Dashboard.git` |
 | **Backend** | Express 5.2.1, Mongoose 9.3.1, natural 8.1.1 (NLP) — 88 documented endpoints |
@@ -36,6 +36,8 @@
 | v0.9.0 | 2026-08-14 | Backend restructure + API docs | Phase-2 restructure, response envelope, Swagger + Postman (Phase 3) | `792b84e` … `8e52237` |
 | v0.10.0 | 2026-08-18 | Lifecycle UX | Single-entry "Persiapan Lahan" flow, per-stage eligibility validation | `19f8ef6` `30f0c13` `5962b77` `943c435` `8cd73f5` |
 | v0.11.0 | 2026-08-18 | QA & test infrastructure | Playwright suites (TASK 0–9, FE-1..FE-5, TASK 9b), findings & reports | `a248a4d` … `a0e1bad` |
+| v0.14.0 | 2026-08-22 | RBAC completion + Lifecycle split | Farmer-scoped guard fix (per-stage, specific 403s), Rule D Owner→Farmer auto-assign/picker, 10-item sidebar rebuild with per-item backend guards, Lifecycle split into 4 pages, farmer landing redirect, Settings farm-visibility, PWA icon/shortcuts, chart resize fix, raw-id populate bugfix | `63d1c0e` `0f76ef9` `9f175ac` + TASK 4–9 commits |
+| v0.13.0 | 2026-08-22 | RBAC overhaul + UX polish | "Pemilik Petani"→"Owner" wording, user-mgmt CRUD scoping (Gov/Owner rules A–C,F,G), `sales_access` on FarmerAssignment, login rejects unassigned farmer/owner, UI renames (User Manajemen/Penugasan), animations, login redesign (hero.png), Indonesian audit, SW hashed-bundle note | `24dc71f` `730761e` `847ce2c` `41c32e4` `331b745` `f37cdf6` |
 | v0.12.0 | 2026-08-20 | Frontend bug-fixing phase | Role-aware redirects, centralized authService, sale modal guard, hardcoded-dropdown fixes, orphan cleanup, `/api` base-URL standardization, forceReauth on password change | `e32128b` `0319769` `6bce2a6` `a443887` `a08bbb3` `0325623` `7d7bc1b` |
 
 ## Current Implementation Snapshot
@@ -63,27 +65,32 @@
 
 ### Frontend (`frontend/`, React 19 + Vite 8 + Tailwind 4)
 
-- **Pages (28):** 11 main pages (Login, FarmerDashboard, GovernmentDashboard,
-  ManagementDashboard, LifecycleManagementPage, MasterDataPage, UMManagementPage,
-  FarmerManagementPage, SalesDistributionPage, SettingsPage, ChatbotInsightDashboard)
-  + 17 generated `pages/master/*` dataset pages + master sub-pages
-  (Farm/Block/CropType/ActivityType).
+- **Structure (post v0.14.0):** `component/` (shared: charts, common, dashboard, layout,
+  map) + feature folders under `pages/<Feature>/` with local `api/ component/ hooks/`,
+  `services/` (authService, filterService, insightService, ProtectedRoutes), 3 contexts,
+  shared `hooks/useMasterData.js`. MasterData = 4 operational catalogs; GovernmentData =
+  13 government-facing catalogs.
+- **Lifecycle pages (v0.14.0):** tab-based LifecycleTabs kept for Owner/superadmin
+  ("Semua Tahapan") plus four per-stage pages — Persiapan Lahan, Penanaman, Perawatan,
+  Panen — individually reachable by Petani when their penugasan grants the stage.
+- **Sidebar (v0.14.0):** exact 10-item structure with per-item role gates; Petani items
+  derive from live farmer-assignments (stages + sales_access).
 - **Components:** dashboard primitives (KpiCard, ChartCard, ChartContainer, FilterBar,
   DateFilter, CommodityFilter, ProvinceFilter), layout (Sidebar, TopBar, BottomNav,
-  MainLayout), management (LifecycleTabs, RecordSaleModal, RecordExpenseModal,
-  NewCycleModal, …), chatbot (KnowledgeGraph, InsightPanel, ExportModal), common
+  MainLayout), chatbot (KnowledgeGraph, InsightPanel, ExportModal), common
   (DataTable, DataPageTemplate, ErrorBoundary, ExportButton, …).
 - **Services (v0.12.0):** `services/authService.js` (single source of truth for token
   storage, auth headers, base URL, login/me/logout) + `services/ProtectedRoutes.jsx`
-  (role-aware `homePathFor`/`ProtectedRoute`/`AppRedirect`).
+  (role-aware `homePathFor`/`ProtectedRoute`/`AppRedirect`; farmer lands on their first
+  lifecycle stage since v0.14.0).
 - **Contexts (v0.12.0):** AuthContext, DashboardFilterContext, ThemeContext
   (FilterContext removed as dead code).
-- **PWA:** `public/manifest.json` + `public/sw.js` (added v0.5.0).
-- **Discovery table (`src/data/`):** `allData.js` + `dataColumns.js` drive the generated
-  master pages.
-- **API clients (6, v0.12.0):** managementApi, filterApi, insightApi, farmerDashboardApi,
-  govtDashboardApi, chatbotInsightApi — all route through `authService`;
-  legacy `dashboardApi.js` deleted (v0.12.0).
+- **PWA:** `public/manifest.json` + `public/sw.js` (added v0.5.0; real emerald app icon
+  v0.14.0 — offline precache still shell-only, see Phase 4c backlog).
+- **Discovery table (`src/data/`):** `allData.js` + `dataColumns.js` drive the dataset
+  pages.
+- **API clients:** feature-local (`pages/<Feature>/api/`) for dashboards/chatbot +
+  `services/filterService|insightService` shared — all route through `authService`.
 
 ## Versioning Conventions Going Forward
 
