@@ -14,6 +14,10 @@ const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard/FarmerDashboa
 const GovernmentDashboard = lazy(() => import('./pages/GovernmentDashboard/GovernmentDashboard'));
 const ManagementDashboard = lazy(() => import('./pages/ManagementDashboard/ManagementDashboard'));
 const LifecycleManagementPage = lazy(() => import('./pages/Lifecycle/LifecycleManagementPage'));
+const PersiapanLahanPage = lazy(() => import('./pages/Lifecycle/PersiapanLahanPage'));
+const PenanamanPage = lazy(() => import('./pages/Lifecycle/PenanamanPage'));
+const PerawatanPage = lazy(() => import('./pages/Lifecycle/PerawatanPage'));
+const PanenPage = lazy(() => import('./pages/Lifecycle/PanenPage'));
 const UMManagementPage = lazy(() => import('./pages/UMManagement/UMManagementPage'));
 const FarmerManagementPage = lazy(() => import('./pages/FarmerManagement/FarmerManagementPage'));
 const SalesDistributionPage = lazy(() => import('./pages/Sales/SalesDistributionPage'));
@@ -87,9 +91,11 @@ function AppContent() {
 
       <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route path="farmer" element={
-          <Suspense fallback={<DashboardSkeleton />}>
-            <DashboardFilterProvider><FarmerDashboard /></DashboardFilterProvider>
-          </Suspense>
+          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
+            <Suspense fallback={<DashboardSkeleton />}>
+              <DashboardFilterProvider><FarmerDashboard /></DashboardFilterProvider>
+            </Suspense>
+          </ProtectedRoute>
         } />
         <Route path="government" element={
           <ProtectedRoute roles={['superadmin', 'government']}>
@@ -112,6 +118,27 @@ function AppContent() {
             </Suspense>
           </ProtectedRoute>
         } />
+        {/* Per-stage lifecycle pages — farmer allowed; backend Task 1 guard scopes per assignment */}
+        <Route path="management/lifecycle/persiapan-lahan" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner', 'farmer']}>
+            <Suspense fallback={<DashboardSkeleton />}><PersiapanLahanPage /></Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="management/lifecycle/penanaman" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner', 'farmer']}>
+            <Suspense fallback={<DashboardSkeleton />}><PenanamanPage /></Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="management/lifecycle/perawatan" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner', 'farmer']}>
+            <Suspense fallback={<DashboardSkeleton />}><PerawatanPage /></Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="management/lifecycle/panen" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner', 'farmer']}>
+            <Suspense fallback={<DashboardSkeleton />}><PanenPage /></Suspense>
+          </ProtectedRoute>
+        } />
         <Route path="management/um" element={
           <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
             <Suspense fallback={<DashboardSkeleton />}>
@@ -127,7 +154,7 @@ function AppContent() {
           </ProtectedRoute>
         } />
         <Route path="management/sales" element={
-          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
+          <ProtectedRoute roles={['superadmin', 'farmer_owner', 'farmer']}>
             <Suspense fallback={<MasterDataSkeleton />}>
               <SalesDistributionPage />
             </Suspense>

@@ -3,6 +3,7 @@ import { useGenericResource } from '@/pages/Lifecycle/hooks/useGenericResource';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
+export const statusLabels = { Open: 'Terbuka', Closed: 'Tertutup', Completed: 'Selesai', In_Progress: 'Sedang Berlangsung', Pending: 'Tertunda', Cancelled: 'Dibatalkan', Planned: 'Direncanakan', Planted: 'Ditanam', Land_Preparation: 'Persiapan Lahan', Maintenance: 'Perawatan', Harvesting: 'Panen' };
 const Badge = ({ status }) => {
   const map = {
     Open: 'bg-green-100 text-green-800',
@@ -15,7 +16,7 @@ const Badge = ({ status }) => {
   };
   return (
     <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${map[status] || 'bg-gray-100 text-gray-600'}`}>
-      {status?.replace(/_/g, ' ')}
+      {statusLabels[status] || status?.replace(/_/g, ' ') || '-'}
     </span>
   );
 };
@@ -40,7 +41,7 @@ const Modal = ({ title, onClose, children }) => (
 
 const FF = ({ label, required, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}{required && ' *'}</label>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     {children}
   </div>
 );
@@ -113,7 +114,7 @@ function useEligibleCycles(token, stage) {
 const cycleLabel = (c) => {
   const farmName = c?.farm_master?.name || c?.farm_id?.name || c?.farm || '';
   const blockName = c?.block?.name ? ` / ${c.block.name}` : '';
-  const status = String(c?.status || '').replace(/_/g, ' ');
+  const status = statusLabels[c?.status] || String(c?.status || '').replace(/_/g, ' ');
   return `${c?.cycle || '(tanpa siklus)'} — ${farmName}${blockName}${status ? ` (${status})` : ''}`;
 };
 
@@ -272,7 +273,7 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
                 <td className="px-4 py-3">{r.clearing_cost ? `Rp ${Number(r.clearing_cost).toLocaleString('id-ID')}` : '—'}</td>
                 <td className="px-4 py-3"><Badge status={r.status} /></td>
                 <td className="px-4 py-3 flex items-center gap-2 flex-wrap">
-                  <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
+                  <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Ubah</button>
                   {r.status === 'Open' && <button onClick={() => openClose(r)} className="text-xs text-orange-600 hover:text-orange-800 font-semibold border border-orange-300 px-2 py-0.5 rounded">Tutup</button>}
                   <button onClick={() => setDeleteTarget({ id: r._id, name: r.farm_master?.name || r.farm_id?.name || r.farm })} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </td>
@@ -303,7 +304,7 @@ const LandPrepSection = ({ showToast, farms: propFarms, farmLocked = false }) =>
         </Modal>
       )}
       {modal === 'edit' && (
-        <Modal title="Edit Data Lahan" onClose={() => setModal(null)}>
+        <Modal title="Ubah Data Lahan" onClose={() => setModal(null)}>
           <form onSubmit={handleEdit} className="space-y-4">
             <FarmBlockSelects farms={farms} farmLocked={farmLocked} form={form} onChange={fc} blocks={blocks} />
             <div className="grid grid-cols-2 gap-4">
@@ -418,7 +419,7 @@ const PlantingSection = ({ showToast }) => {
                 <td className="px-4 py-3 text-gray-500">{r.executor}</td>
                 <td className="px-4 py-3"><Badge status={r.status} /></td>
                 <td className="px-4 py-3 flex gap-2">
-                  <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
+                  <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Ubah</button>
                   <button onClick={() => setDeleteTarget({ id: r._id, name: r.farm_master?.name || r.farm_id?.name || r.farm })} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </td>
               </tr>
@@ -427,7 +428,7 @@ const PlantingSection = ({ showToast }) => {
         </table>
       </div>
       {modal === 'form' && (
-        <Modal title={editTarget ? 'Edit Data Penanaman' : 'Tambah Penanaman Baru'} onClose={() => setModal(null)}>
+        <Modal title={editTarget ? 'Ubah Data Penanaman' : 'Tambah Penanaman Baru'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <CycleSelect cycles={cycles} loading={loading} value={form.crop_cycle_id} onChange={fc} extra={editTarget} />
             <div className="grid grid-cols-2 gap-4">
@@ -586,7 +587,7 @@ const MaintenanceSection = ({ showToast }) => {
                   </select>
                 </td>
                 <td className="px-4 py-3 flex gap-2">
-                  <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
+                  <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Ubah</button>
                   <button onClick={() => setDeleteTarget({ id: r._id, name: `${r.farm_master?.name || r.farm_id?.name || ''} - ${r.activity_type_ref?.name || activityTypes.find(a => a._id === r.activity_type)?.name || r.activity_type}` })} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                 </td>
               </tr>
@@ -595,7 +596,7 @@ const MaintenanceSection = ({ showToast }) => {
         </table>
       </div>
       {modal === 'form' && (
-        <Modal title={editTarget ? 'Edit Aktivitas Perawatan' : 'Tambah Aktivitas Perawatan'} onClose={() => setModal(null)}>
+        <Modal title={editTarget ? 'Ubah Aktivitas Perawatan' : 'Tambah Aktivitas Perawatan'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <CycleSelect cycles={cycles} loading={loading} value={form.crop_cycle_id} onChange={fc} extra={editTarget} />
             <div className="grid grid-cols-2 gap-4">
@@ -728,7 +729,7 @@ const HarvestingSection = ({ showToast }) => {
                   <td className="px-4 py-3 font-semibold text-green-700">{r.actual_yield_kg != null ? r.actual_yield_kg.toLocaleString('id-ID') : <span className="text-gray-300">—</span>}</td>
                   <td className="px-4 py-3"><Badge status={r.status} /></td>
                   <td className="px-4 py-3 flex items-center gap-2 flex-wrap">
-                    <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
+                    <button onClick={() => openEdit(r)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">Ubah</button>
                     {r.status === 'Open' && <button onClick={() => openClose(r)} className="text-xs text-orange-600 hover:text-orange-800 font-semibold border border-orange-300 px-2 py-0.5 rounded">Tutup</button>}
                     <button onClick={() => setDeleteTarget({ id: r._id, name: r.farm_master?.name || r.farm_id?.name || r.farm })} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus</button>
                   </td>
@@ -739,7 +740,7 @@ const HarvestingSection = ({ showToast }) => {
         </table>
       </div>
       {modal === 'form' && (
-        <Modal title={editTarget ? 'Edit Data Panen' : 'Buka Masa Panen Baru'} onClose={() => setModal(null)}>
+        <Modal title={editTarget ? 'Ubah Data Panen' : 'Buka Masa Panen Baru'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <CycleSelect cycles={cycles} loading={loading} value={form.crop_cycle_id} onChange={fc} extra={editTarget} />
             <div className="grid grid-cols-2 gap-4">

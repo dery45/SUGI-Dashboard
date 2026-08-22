@@ -4,7 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const homePathFor = (role) => {
   if (role === 'government') return '/government';
-  if (role === 'farmer') return '/farmer';
+  // Petani lands on their first lifecycle stage (Phase 4b policy change).
+  // Persiapan Lahan is the entry point of every cycle, so it is the sensible
+  // first-stage default; per-stage visibility is enforced by the backend guard
+  // (Task 1) and the page itself renders an Indonesian no-access message when
+  // the farmer's assignment does not cover this stage — no redirect loop.
+  if (role === 'farmer') return '/management/lifecycle/persiapan-lahan';
   return '/management';
 };
 
