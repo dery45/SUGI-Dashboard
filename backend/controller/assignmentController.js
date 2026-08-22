@@ -47,7 +47,7 @@ const listFarmerAssignments = async (req, res) => {
 
 const createFarmerAssignment = async (req, res) => {
   try {
-    let { farmer, block, blocks, farm, access_stages } = req.body;
+    let { farmer, block, blocks, farm, access_stages, sales_access } = req.body;
 
     // Accept single block or array of blocks
     if (block && !blocks) {
@@ -76,6 +76,7 @@ const createFarmerAssignment = async (req, res) => {
       block: b,
       farm,
       access_stages: validatedStages,
+      sales_access: sales_access || false,
       assigned_by: req.user.id,
     }));
 
@@ -101,7 +102,7 @@ const createFarmerAssignment = async (req, res) => {
 
 const updateFarmerAssignment = async (req, res) => {
   try {
-    const { access_stages, status } = req.body;
+    const { access_stages, status, sales_access } = req.body;
     const update = {};
     if (access_stages !== undefined) {
       update.access_stages = Array.isArray(access_stages)
@@ -109,6 +110,7 @@ const updateFarmerAssignment = async (req, res) => {
         : [];
     }
     if (status !== undefined) update.status = status;
+    if (sales_access !== undefined) update.sales_access = sales_access;
 
     const data = await FarmerAssignment.findByIdAndUpdate(req.params.id, update, { new: true })
       .populate('farmer', 'name email')
