@@ -48,7 +48,8 @@
   Government manages Pemerintah users only; Owner manages own-farm farmers;
   farmer accounts with zero farm assignments are rejected at login
 - **Penugasan** (Owner): farmer→block assignments with per-stage access and a
-  Penjualan (`sales_access`) toggle
+  Penjualan (`sales_access`) toggle — Owners see and manage only penugasan on
+  their own assigned farms
 - **User Manajemen** (Owner + Pemerintah): user CRUD scoped by role and farm-sharing
 
 ### Sales & Distribution

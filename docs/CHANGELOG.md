@@ -9,6 +9,36 @@ All notable changes to the SUGI Dashboard project are documented here.
 
 ---
 
+## [v0.15.1] — 2026-08-22 — Owner Penugasan Scoping Fix
+
+Bug fix reported live: an Owner (`owner1@sugi.id`) with existing penugasan saw an
+empty Penugasan table and an empty Pelaksana dropdown, while superadmin saw all rows.
+
+### Fixed
+- **Owner assignment lists were always empty.** `listFarmerAssignments` scoped the
+  farmer_owner role by farms where the owner has `FarmerAssignment` rows *as a farmer*
+  — owners never appear there, so the query became `{farm: {$in: []}}`. Scope is now
+  derived from the owner's `User.assigned_farms` via a lean raw-id helper
+  (`getOwnerFarmIds`), consistent with master-data scoping.
+- **Pelaksana dropdown empty for Owners** — same endpoint fed the dropdown; fixed at
+  the source.
+
+### Added (hardening)
+- Owner assignment mutations are now farm-scoped: create validates every block belongs
+  to the owner's farms; update/delete verify the target assignment's farm is in scope.
+  Violations return Indonesian 403s:
+  - `Anda hanya dapat menugaskan petani pada farm Anda sendiri`
+  - `Anda hanya dapat mengelola penugasan pada farm Anda sendiri`
+
+### Verified (live)
+- owner1: Penugasan **9/9 own-farm rows** (was 0); Pelaksana options for a Timun/BlkTest
+  cycle resolve to 6 farmers.
+- Farmer still sees only self; Government still 403 on the endpoint.
+- Foreign-farm create/update/delete → 403; own-farm update/delete → 200.
+- Related commit: `dab7881`.
+
+---
+
 ## [v0.15.0] — 2026-08-22 — Phase 4 Closeout (Scope Cleanup, Offline PWA, Lifecycle Locks)
 
 Final phase of the RBAC/Lifecycle overhaul. Closeout report covering 4a+4b+4c:
