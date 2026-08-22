@@ -46,79 +46,67 @@ const isFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
 const checkRole = authorize;
 
 // Farmer-scoped access check for lifecycle/sales routes
+// Distinguishes "no active assignment" vs "assignment exists but stage/farm not covered"
 const isFarmerScoped = async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
-    
-    // Superadmin, government, farmer_owner pass through (they have isManagement guard)
-    if (['superadmin', 'government', 'farmer_owner'].includes(req.user.role)) {
-      return next();
+    if (req.user.role !== 'farmer') {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
-    
-    // For farmers, check if they have assignment for the requested resource
-    if (req.user.role === 'farmer') {
-      const FarmerAssignment = require('../model/FarmerAssignment');
-      const farmerId = req.user.id;
-      
-      // Extract farm_id or block from request
-      let farmId = req.body.farm_id || req.query.farm_id || req.params.farm_id;
-      let blockId = req.body.block || req.query.block || req.params.block_id;
-      let cropCycleId = req.body.crop_cycle_id || req.query.crop_cycle_id || req.params.crop_cycle_id;
-      
-      // For sales, check sales_access
-      const isSalesRoute = req.path.includes('/sales');
-      const isLifecycleRoute = req.path.includes('/lifecycle');
-      
-      const assignments = await FarmerAssignment.find({ 
-        farmer: farmerId, 
-        status: 'Active' 
-      }).lean();
-      
-      if (!assignments.length) {
-        return res.status(403).json({ success: false, message: 'Anda tidak memiliki penugasan aktif' });
-      }
-      
-      let hasAccess = false;
-      
-      for (const assignment of assignments) {
-        // Check farm access
-        if (farmId && assignment.farm?.toString() === farmId) {
-          hasAccess = true;
-          break;
-        }
-        // Check block access
-        if (blockId && assignment.block?.toString() === blockId) {
-          hasAccess = true;
-          break;
-        }
-        // For sales, check sales_access flag
-        if (isSalesRoute && assignment.sales_access) {
-          hasAccess = true;
-          break;
-        }
-        // For lifecycle, check access_stages
-        if (isLifecycleRoute && assignment.access_stages?.length > 0) {
-          hasAccess = true;
-          break;
-        }
-        // If crop_cycle_id provided, check if assignment belongs to that cycle
-        if (cropCycleId && assignment.crop_cycle?.toString() === cropCycleId) {
-          hasAccess = true;
-          break;
-        }
-      }
-      
-      if (!hasAccess) {
-        return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke resource ini' });
-      }
-      
-      return next();
+    const FarmerAssignment = require('../model/FarmerAssignment');
+    const farmerId = req.user.id;
+    let farmId = req.body?.farm_id || req.query.farm_id || req.params.farm_id;
+    let blockId = req.body?.block || req.query?.block || req.params.block_id;
+    let cropCycleId = req.body?.crop_cycle_id || req.query?.crop_cycle_id || req.params.crop_cycle_id;
+    const urlForCheck = req.originalUrl || req.path;
+    const isSalesRoute = urlForCheck.includes('/sales');
+    const isLifecycleRoute = urlForCheck.includes('/lifecycle');
+    // Map lifecycle sub-path to required stage (used for specific error)
+    let requiredStage = null;
+    if (isLifecycleRoute) {
+      if (urlForCheck.includes('/land')) requiredStage = 'Land_Preparation';
+      else if (urlForCheck.includes('/plantings')) requiredStage = 'Planting';
+      else if (urlForCheck.includes('/activities')) requiredStage = 'Maintenance';
+      else if (urlForCheck.includes('/harvests')) requiredStage = 'Harvesting';
+      else if (urlForCheck.includes('/cycles/eligible')) requiredStage = null; // any stage suffices
     }
-    
-    // Other roles not allowed
-    return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    const assignments = await FarmerAssignment.find({ farmer: farmerId, status: 'Active' }).lean();
+    if (!assignments.length) {
+      return res.status(403).json({ success: false, message: 'Anda tidak memiliki penugasan aktif' });
+    }
+    let hasAccess = false;
+    let hasStageMismatch = false;
+    for (const assignment of assignments) {
+      if (farmId && assignment.farm?.toString() === farmId) { hasAccess = true; break; }
+      if (blockId && assignment.block?.toString() === blockId) { hasAccess = true; break; }
+      if (cropCycleId && assignment.crop_cycle?.toString() === cropCycleId) { hasAccess = true; break; }
+      if (isSalesRoute && assignment.sales_access) { hasAccess = true; break; }
+      if (isSalesRoute && !assignment.sales_access) hasStageMismatch = true;
+      if (isLifecycleRoute) {
+        if (requiredStage) {
+          if (assignment.access_stages?.includes(requiredStage)) { hasAccess = true; break; }
+          if (assignment.access_stages?.length) hasStageMismatch = true;
+          // empty access_stages means full access
+          if (!assignment.access_stages || assignment.access_stages.length === 0) { hasAccess = true; break; }
+        } else {
+          // cycles/eligible or generic lifecycle -> any stage suffices
+          if (assignment.access_stages?.length > 0 || !assignment.access_stages) { hasAccess = true; break; }
+        }
+      }
+    }
+    if (!hasAccess) {
+      if (isSalesRoute && hasStageMismatch) {
+        return res.status(403).json({ success: false, message: 'Penugasan Anda tidak memiliki akses Penjualan & Distribusi' });
+      }
+      if (isLifecycleRoute && requiredStage && hasStageMismatch) {
+        const stageLabels = { Land_Preparation: 'Persiapan Lahan', Planting: 'Penanaman', Maintenance: 'Perawatan', Harvesting: 'Panen' };
+        return res.status(403).json({ success: false, message: `Penugasan Anda tidak mencakup akses tahap ${stageLabels[requiredStage] || requiredStage}` });
+      }
+      return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke resource ini untuk farm/block tersebut' });
+    }
+    return next();
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

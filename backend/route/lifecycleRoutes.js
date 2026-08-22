@@ -166,17 +166,17 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authenticate, isManagement, isFarmerScoped } = require('../middleware/auth');
+const { authenticate, isFarmerScoped } = require('../middleware/auth');
 const ctrl = require('../controller/lifecycleController');
 
 router.use(authenticate);
 
-// Combine isManagement OR isFarmerScoped for lifecycle routes
-const lifecycleAccess = (req, res, next) => {
-  isManagement(req, res, (err) => {
-    if (!err) return next();
-    isFarmerScoped(req, res, next);
-  });
+// Single combined guard — role-direct, no response side-effects from sub-call
+const lifecycleAccess = async (req, res, next) => {
+  if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  if (['superadmin', 'farmer_owner'].includes(req.user.role)) return next();
+  if (req.user.role === 'farmer') return isFarmerScoped(req, res, next);
+  return res.status(403).json({ success: false, message: 'Akses ditolak. Lifecycle hanya untuk Owner dan Petani yang ditugaskan' });
 };
 
 router.get('/cycles/eligible', lifecycleAccess, ctrl.listEligibleCycles);
