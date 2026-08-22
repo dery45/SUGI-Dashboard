@@ -139,7 +139,7 @@ function AppContent() {
           </ProtectedRoute>
         } />
         <Route path="management/farmers" element={
-          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
+          <ProtectedRoute roles={['superadmin', 'farmer_owner', 'government']}>
             <Suspense fallback={<MasterDataSkeleton />}>
               <FarmerManagementPage />
             </Suspense>
