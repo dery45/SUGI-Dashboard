@@ -60,10 +60,10 @@ const FarmerManagementPage = () => {
     if (!editItem) rules.password = [[required, 'Password']];
     const { errors: e, hasErrors } = validateForm(form, rules);
     if (form.role === 'farmer_owner' && (!form.assigned_farms || form.assigned_farms.length === 0)) {
-      e.assigned_farms = 'Minimal satu farm harus ditugaskan';
+      e.assigned_farms = 'Minimal satu farm harus ditugaskan untuk Owner';
     }
     if (showFarmerPicker && (!form.assigned_farms || form.assigned_farms.length === 0)) {
-      e.assigned_farms = 'Minimal satu farm harus dipilih';
+      e.assigned_farms = 'Minimal satu farm harus ditugaskan untuk Petani';
     }
     setErrors(e);
     return !hasErrors && !e.assigned_farms;
@@ -189,7 +189,7 @@ const FarmerManagementPage = () => {
               {form.role === 'farmer_owner' && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
-                    Farm yang Ditugaskan <span className="text-destructive ml-1">*Required</span>
+                    Farm yang Ditugaskan
                   </label>
                   {errors.assigned_farms && <p className="text-[11px] font-semibold text-destructive">{errors.assigned_farms}</p>}
                   {farms.length === 0 ? (

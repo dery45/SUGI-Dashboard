@@ -2,6 +2,16 @@ const mongoose = require('mongoose');
 const User = require('../model/User');
 const { validate, errorResponse, required, isEmail, minLength } = require('../util/validate');
 
+// Raw farm-id reader: lean + NO populate so assigned_farms are scalar ObjectIds.
+// (populate + .toString() yields inspect strings like "{ _id: ObjectId(...) }",
+// which broke the owner list query and silently disabled farm-sharing checks.)
+const getRawFarmIds = async (userId) => {
+  const u = await User.findById(userId).select('assigned_farms').lean();
+  return (u?.assigned_farms || []).map(f =>
+    f && typeof f === 'object' ? (f._id || f).toString() : String(f)
+  );
+};
+
 const listUsers = async (req, res) => {
   try {
     const { role, search, page = 1, limit = 20 } = req.query;
@@ -18,8 +28,7 @@ const listUsers = async (req, res) => {
       query.role = 'government';
     } else if (req.user.role === 'farmer_owner') {
       // Owner can only see users they created OR themselves, AND only those sharing a farm
-      const owner = await User.findById(req.user.id).populate('assigned_farms', '_id');
-      const ownerFarmIds = (owner?.assigned_farms || []).map(f => f.toString());
+      const ownerFarmIds = await getRawFarmIds(req.user.id);
 
       if (!ownerFarmIds.length) {
         return res.json({
@@ -37,7 +46,6 @@ const listUsers = async (req, res) => {
       }).select('_id');
 
       const sharedFarmUserIds = sharedFarmUsers.map(u => u._id.toString());
-      const ownerId = req.user.id.toString();
 
       query.$or = [
         { createdBy: req.user.id },
@@ -101,11 +109,12 @@ const getUserById = async (req, res) => {
       const isSelf = user._id.toString() === req.user.id;
       const hasAccess = user.createdBy && user.createdBy.toString() === req.user.id;
       
-      // Check farm sharing
-      const owner = await User.findById(req.user.id).populate('assigned_farms', '_id');
-      const ownerFarmIds = (owner?.assigned_farms || []).map(f => f.toString());
-      const targetFarmIds = (user.assigned_farms || []).map(f => f.toString());
-      const sharesFarm = ownerFarmIds.some(f => targetFarmIds.includes(f.toString()));
+      // Check farm sharing (lean raw ids — populated .toString() gives junk)
+      const ownerFarmIds = await getRawFarmIds(req.user.id);
+      const targetFarmIds = (user.assigned_farms || []).map(f =>
+        f && typeof f === 'object' ? (f._id || f).toString() : String(f)
+      );
+      const sharesFarm = ownerFarmIds.some(id => targetFarmIds.includes(id));
       
       if (!isSelf && !hasAccess && !sharesFarm) {
         return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke user ini' });
@@ -163,8 +172,7 @@ const createUser = async (req, res) => {
     if (role === 'farmer' && ['superadmin', 'farmer_owner'].includes(req.user.role)) {
       let effectiveFarms = assigned_farms;
       if (req.user.role === 'farmer_owner') {
-        const owner = await User.findById(req.user.id);
-        const ownerFarmIds = (owner?.assigned_farms || []).map(f => f.toString());
+        const ownerFarmIds = await getRawFarmIds(req.user.id);
         if (!assigned_farms || !Array.isArray(assigned_farms) || assigned_farms.length === 0) {
           // Single-farm auto-assign: use owner's farms
           effectiveFarms = ownerFarmIds;
@@ -277,11 +285,12 @@ const updateUser = async (req, res) => {
       const isSelf = target._id.toString() === req.user.id;
       const hasAccess = target.createdBy && target.createdBy.toString() === req.user.id;
 
-      // Check farm sharing
-      const owner = await User.findById(req.user.id).populate('assigned_farms', '_id');
-      const ownerFarmIds = (owner?.assigned_farms || []).map(f => f.toString());
-      const targetFarmIds = (target.assigned_farms || []).map(f => f.toString());
-      const sharesFarm = ownerFarmIds.some(f => targetFarmIds.includes(f.toString()));
+      // Check farm sharing (lean raw ids)
+      const ownerFarmIds = await getRawFarmIds(req.user.id);
+      const targetFarmIds = (target.assigned_farms || []).map(f =>
+        f && typeof f === 'object' ? (f._id || f).toString() : String(f)
+      );
+      const sharesFarm = ownerFarmIds.some(id => targetFarmIds.includes(id));
 
       if (!isSelf && !hasAccess && !sharesFarm) {
         return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke user ini' });
@@ -350,11 +359,12 @@ const deleteUser = async (req, res) => {
       const isSelf = target._id.toString() === req.user.id;
       const hasAccess = target.createdBy && target.createdBy.toString() === req.user.id;
 
-      // Check farm sharing
-      const owner = await User.findById(req.user.id).populate('assigned_farms', '_id');
-      const ownerFarmIds = (owner?.assigned_farms || []).map(f => f.toString());
-      const targetFarmIds = (target.assigned_farms || []).map(f => f.toString());
-      const sharesFarm = ownerFarmIds.some(f => targetFarmIds.includes(f.toString()));
+      // Check farm sharing (lean raw ids)
+      const ownerFarmIds = await getRawFarmIds(req.user.id);
+      const targetFarmIds = (target.assigned_farms || []).map(f =>
+        f && typeof f === 'object' ? (f._id || f).toString() : String(f)
+      );
+      const sharesFarm = ownerFarmIds.some(id => targetFarmIds.includes(id));
 
       if (!isSelf && !hasAccess && !sharesFarm) {
         return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke user ini' });
