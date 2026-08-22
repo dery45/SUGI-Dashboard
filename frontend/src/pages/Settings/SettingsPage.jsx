@@ -30,9 +30,10 @@ const SettingsPage = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [profRes, farmsRes] = await Promise.all([
+      const [profRes, farmsRes, assignRes] = await Promise.all([
         fetch(`${BASE_URL}/settings/profile`, { headers }),
-        user?.role === 'farmer_owner' ? fetch(`${BASE_URL}/master-data/farms/all`, { headers }) : Promise.resolve(null)
+        (user?.role === 'farmer_owner' || user?.role === 'superadmin') ? fetch(`${BASE_URL}/master-data/farms/all`, { headers }) : Promise.resolve(null),
+        user?.role === 'farmer' ? fetch(`${BASE_URL}/assignments/farmer-assignments`, { headers }) : Promise.resolve(null),
       ]);
       const profJson = await profRes.json();
       if (profJson.success) {
@@ -42,6 +43,15 @@ const SettingsPage = () => {
       if (farmsRes) {
         const farmsJson = await farmsRes.json();
         if (farmsJson.success) setFarms(farmsJson.data);
+      }
+      if (assignRes) {
+        const assignJson = await assignRes.json();
+        if (assignJson.success) {
+          // Petani "Farm Saya" is read-only: farms derived from their assignments
+          const farmMap = new Map();
+          (assignJson.data || []).forEach(a => { const f = a.farm; if (f && f._id) farmMap.set(f._id, f); });
+          setFarms([...farmMap.values()]);
+        }
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -128,7 +138,8 @@ const SettingsPage = () => {
         {[
           { id: 'profile', label: 'Profil' },
           { id: 'security', label: 'Keamanan' },
-          ...(user?.role === 'farmer_owner' || user?.role === 'superadmin' ? [{ id: 'farms', label: 'Farm Saya' }] : [])
+          // Farm Saya: hidden for Government; read-only for Petani (no edit controls rendered)
+          ...((user?.role === 'farmer' || user?.role === 'farmer_owner' || user?.role === 'superadmin') ? [{ id: 'farms', label: 'Farm Saya' }] : [])
         ].map(tab => (
           <button
             key={tab.id}
@@ -189,10 +200,14 @@ const SettingsPage = () => {
         </Card>
       )}
 
-      {/* Farms Tab (farmer_owner only) */}
+      {/* Farms Tab — Owner/Superadmin manage; Petani read-only; Government: tab hidden */}
       {activeTab === 'farms' && (
         <Card title="Farm yang Ditugaskan">
-          <p className="text-xs text-muted mb-4">Farm yang Anda miliki akses untuk mengelolanya.</p>
+          <p className="text-xs text-muted mb-4">
+            {user?.role === 'farmer'
+              ? 'Farm yang ditugaskan kepada Anda (hanya lihat).'
+              : 'Farm yang Anda miliki akses untuk mengelolanya.'}
+          </p>
           {farms.length === 0 ? (
             <p className="text-sm text-muted/50 italic">Belum ada farm yang ditugaskan.</p>
           ) : (
@@ -203,7 +218,7 @@ const SettingsPage = () => {
                     <p className="text-sm font-bold text-foreground">{farm.name}</p>
                     <p className="text-[11px] text-muted">{farm.code} — {farm.province || '-'} — {farm.total_area_ha || 0} Ha</p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${farm.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{farm.status}</span>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${farm.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{farm.status === 'Active' ? 'Aktif' : 'Tidak Aktif'}</span>
                 </div>
               ))}
             </div>
