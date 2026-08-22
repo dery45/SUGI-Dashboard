@@ -24,7 +24,7 @@ const UMManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ farmer: '', blocks: [], access_stages: [] });
+  const [form, setForm] = useState({ farmer: '', blocks: [], access_stages: [], sales_access: false });
   const [errors, setErrors] = useState({});
   const [filterFarm, setFilterFarm] = useState('');
   const [notification, setNotification] = useState(null);
@@ -70,7 +70,7 @@ const UMManagementPage = () => {
     try {
       if (editItem) {
         const res = await fetch(`${BASE_URL}/assignments/farmer-assignments/${editItem._id}`, {
-          method: 'PUT', headers, body: JSON.stringify({ access_stages: form.access_stages })
+          method: 'PUT', headers, body: JSON.stringify({ access_stages: form.access_stages, sales_access: form.sales_access })
         });
         const json = await res.json();
         if (!json.success) {
@@ -80,12 +80,12 @@ const UMManagementPage = () => {
         }
         setShowModal(false);
         setEditItem(null);
-        setForm({ farmer: '', blocks: [], access_stages: [] });
+        setForm({ farmer: '', blocks: [], access_stages: [], sales_access: false });
         setErrors({});
         showToast('Penugasan berhasil diperbarui!');
       } else {
         const res = await fetch(`${BASE_URL}/assignments/farmer-assignments`, {
-          method: 'POST', headers, body: JSON.stringify({ farmer: form.farmer, blocks: form.blocks, access_stages: form.access_stages })
+          method: 'POST', headers, body: JSON.stringify({ farmer: form.farmer, blocks: form.blocks, access_stages: form.access_stages, sales_access: form.sales_access })
         });
         const json = await res.json();
         if (!json.success) {
@@ -94,7 +94,7 @@ const UMManagementPage = () => {
           return;
         }
         setShowModal(false);
-        setForm({ farmer: '', blocks: [], access_stages: [] });
+        setForm({ farmer: '', blocks: [], access_stages: [], sales_access: false });
         setErrors({});
         showToast('Penugasan berhasil disimpan!');
       }
@@ -107,7 +107,8 @@ const UMManagementPage = () => {
     setForm({
       farmer: typeof item.farmer === 'object' ? item.farmer._id : item.farmer,
       blocks: [typeof item.block === 'object' ? item.block._id : item.block],
-      access_stages: item.access_stages || []
+      access_stages: item.access_stages || [],
+      sales_access: item.sales_access || false
     });
     setErrors({});
     setShowModal(true);
@@ -202,9 +203,9 @@ const UMManagementPage = () => {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
-            <div><h1 className="text-2xl font-black text-foreground tracking-tight">Unit Manajemen (UM)</h1><p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Penugasan petani ke blok + akses siklus</p></div>
+            <div><h1 className="text-2xl font-black text-foreground tracking-tight">Penugasan</h1><p className="text-muted text-xs font-bold uppercase tracking-[0.25em] opacity-60 mt-0.5">Penugasan petani ke blok + akses siklus & penjualan</p></div>
           </div>
-          <button onClick={() => { setEditItem(null); setForm({ farmer: '', blocks: [], access_stages: [] }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider">+ Tambah Penugasan</button>
+          <button onClick={() => { setEditItem(null); setForm({ farmer: '', blocks: [], access_stages: [], sales_access: false }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider">+ Tambah Penugasan</button>
         </div>
       </div>
 
@@ -278,6 +279,18 @@ const UMManagementPage = () => {
                   ))}
                 </div>
                 <p className="text-[10px] text-muted italic mt-0.5">Kosongkan semua jika ingin memberi akses penuh ke semua tahapan</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Akses Penjualan & Distribusi <span className="text-muted/50 font-normal normal-case">(Opsional)</span></label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${form.sales_access ? 'bg-amber-500/10 border-amber-500 text-amber-600' : 'border-border/40 hover:border-amber-500/30'}`}>
+                    <input type="checkbox" checked={form.sales_access} onChange={() => setForm({ ...form, sales_access: !form.sales_access })} className="accent-amber-500" />
+                    <span className="font-medium">Akses Penjualan & Distribusi</span>
+                    <span className="text-[10px] text-muted/50 ml-auto">(Sales Access)</span>
+                  </label>
+                </div>
+                <p className="text-[10px] text-muted italic mt-0.5">Aktifkan untuk memberi akses ke modul Penjualan & Distribusi</p>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">

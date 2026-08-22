@@ -27,8 +27,8 @@ const Sidebar = ({ isOpen, user, onToggle }) => {
   const mgmtSubLinks = [
     ...(user?.role !== 'farmer' ? [{ name: 'Analitik & KPI', path: '/management', icon: <BarChart3 className="w-4 h-4" />, end: true }] : []),
     ...(user?.role !== 'farmer' ? [{ name: 'Siklus Pertanian', path: '/management/lifecycle', icon: <Leaf className="w-4 h-4" /> }] : []),
-    ...(user?.role !== 'farmer' ? [{ name: 'Unit Manajemen (UM)', path: '/management/um', icon: <Users className="w-4 h-4" /> }] : []),
-    ...(user?.role !== 'farmer' ? [{ name: 'Petani & Pengguna', path: '/management/farmers', icon: <UserCheck className="w-4 h-4" /> }] : []),
+    ...(user?.role !== 'farmer' ? [{ name: 'Penugasan', path: '/management/um', icon: <Users className="w-4 h-4" /> }] : []),
+    ...(user?.role !== 'farmer' ? [{ name: 'User Manajemen', path: '/management/farmers', icon: <UserCheck className="w-4 h-4" /> }] : []),
     ...(user?.role !== 'farmer' ? [{ name: 'Penjualan & Distribusi', path: '/management/sales', icon: <DollarSign className="w-4 h-4" /> }] : []),
   ];
 
