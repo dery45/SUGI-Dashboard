@@ -69,8 +69,11 @@ const PenanamanPage = () => {
     { header: 'Status', accessor: r => <Badge status={r.status} /> },
   ];
 
+  const LOCK_MSG = 'Siklus ini sudah selesai (Panen ditutup) — data Penanaman terkunci.';
+  const isLocked = r => r.status === 'Completed' || r.status === 'Failed';
   const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', crop_type: '', variety: '', planting_date: new Date().toISOString().split('T')[0], area_ha: '', seedling_count: '', executor: '', notes: '' }); setModal('form'); };
   const openEdit = r => {
+    if (isLocked(r)) { showToast(LOCK_MSG); return; }
     setEditTarget(r);
     setForm({
       crop_cycle_id: r.crop_cycle_id?._id || r.crop_cycle_id || r._id,
@@ -123,7 +126,7 @@ const PenanamanPage = () => {
         {loading ? (
           <div className="flex justify-center py-12"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
         ) : (
-          <DataTable columns={columns} data={records} onEdit={openEdit} onDelete={id => { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data penanaman dihapus.'); } }} itemsPerPage={10} />
+          <DataTable columns={columns} data={records} onEdit={openEdit} onDelete={id => { const rec = records.find(r => r._id === id); if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; } if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data penanaman dihapus.'); } }} itemsPerPage={10} />
         )}
       </Card>
 

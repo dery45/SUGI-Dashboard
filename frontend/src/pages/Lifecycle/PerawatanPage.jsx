@@ -72,8 +72,23 @@ const PerawatanPage = () => {
     { header: 'Status', accessor: r => <Badge status={r.status} /> },
   ];
 
+  // Completed-cycle cascade lock (frontend-only): activities of a closed cycle are read-only
+  const [completedCycleIds, setCompletedCycleIds] = useState(() => new Set());
+  useEffect(() => {
+    fetch(`${BASE_URL}/lifecycle/plantings`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(j => {
+        if (j.success) setCompletedCycleIds(new Set((j.data || []).filter(c => c.status === 'Completed').map(c => c._id)));
+      }).catch(() => {});
+  }, [token]);
+  const isLocked = r => {
+    const cid = r.crop_cycle_id?._id || r.crop_cycle_id;
+    return cid && completedCycleIds.has(cid);
+  };
+  const LOCK_MSG = 'Siklus ini sudah selesai (Panen ditutup) — data Perawatan terkunci.';
+
   const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending' }); setModal('form'); };
   const openEdit = r => {
+    if (isLocked(r)) { showToast(LOCK_MSG); return; }
     setEditTarget(r);
     setForm({
       crop_cycle_id: r.crop_cycle_id?._id || r.crop_cycle_id || '',
@@ -147,7 +162,7 @@ const PerawatanPage = () => {
               data={filtered}
               itemsPerPage={10}
               onEdit={openEdit}
-              onDelete={id => { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data perawatan dihapus.'); } }}
+              onDelete={id => { const rec = records.find(r => r._id === id); if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; } if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data perawatan dihapus.'); } }}
             />
           </>
         )}

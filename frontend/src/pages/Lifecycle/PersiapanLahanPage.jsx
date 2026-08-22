@@ -69,6 +69,17 @@ const PersiapanLahanPage = () => {
   const [editTarget, setEditTarget] = useState(null);
   const [closingDate, setClosingDate] = useState('');
   const [saving, setSaving] = useState(false);
+  // Completed-cycle cascade lock (frontend-only, Phase 4c Task 3):
+  // cycles whose Panen closed are status 'Completed' → their Persiapan Lahan
+  // record auto-filled Tgl Tutup/Tertutup at close-time and is now read-only.
+  const [completedCycleIds, setCompletedCycleIds] = useState(() => new Set());
+  useEffect(() => {
+    fetch(`${BASE_URL}/lifecycle/plantings`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(j => {
+        if (j.success) setCompletedCycleIds(new Set((j.data || []).filter(c => c.status === 'Completed').map(c => c._id)));
+      }).catch(() => {});
+  }, [token]);
+  const isLocked = r => r.status === 'Closed' || (r.crop_cycle_id && completedCycleIds.has(r.crop_cycle_id._id || r.crop_cycle_id));
   const blocks = useBlocks(token, form.farm_id);
   const [notification, setNotification] = useState(null);
   const showToast = m => { setNotification(m); setTimeout(() => setNotification(null), 3000); };
@@ -84,7 +95,8 @@ const PersiapanLahanPage = () => {
   ];
 
   const openAdd = () => { setEditTarget(null); setForm({ farm_id: farmLocked && availableFarms[0] ? availableFarms[0]._id : '', block: '', cycle: '', opening_date: new Date().toISOString().split('T')[0], clearing_cost: '', notes: '' }); setModal('add'); };
-  const openEdit = r => { setEditTarget(r); setForm({ farm_id: r.farm_id?._id || r.farm_id || '', block: r.block?._id || r.block || '', cycle: r.cycle || '', opening_date: r.land_opening_date ? r.land_opening_date.split('T')[0] : '', clearing_cost: r.clearing_cost || '', notes: r.notes || '' }); setModal('edit'); };
+  const LOCK_MSG = 'Siklus ini sudah selesai (Panen ditutup) — data Persiapan Lahan terkunci.';
+  const openEdit = r => { if (isLocked(r)) { showToast(LOCK_MSG); return; } setEditTarget(r); setForm({ farm_id: r.farm_id?._id || r.farm_id || '', block: r.block?._id || r.block || '', cycle: r.cycle || '', opening_date: r.land_opening_date ? r.land_opening_date.split('T')[0] : '', clearing_cost: r.clearing_cost || '', notes: r.notes || '' }); setModal('edit'); };
   const openClose = r => { setEditTarget(r); setClosingDate(new Date().toISOString().split('T')[0]); setModal('close'); };
 
   const handleAdd = async e => {
@@ -131,7 +143,16 @@ const PersiapanLahanPage = () => {
         {loading ? (
           <div className="flex justify-center py-12"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
         ) : (
-          <DataTable columns={columns} data={records} onEdit={openEdit} onDelete={id => { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data lahan dihapus.'); } }} itemsPerPage={10} />
+          <DataTable
+            columns={columns}
+            data={records}
+            onEdit={openEdit}
+            onDelete={id => {
+              const rec = records.find(r => r._id === id);
+              if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; }
+              if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data lahan dihapus.'); }
+            }}
+            itemsPerPage={10} />
         )}
       </Card>
 

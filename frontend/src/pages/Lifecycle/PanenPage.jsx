@@ -93,8 +93,27 @@ const PanenPage = () => {
   };
   const handleClose = async e => {
     e.preventDefault(); if (saving) return; setSaving(true);
-    try { await updateData(editTarget._id, { actual_yield_kg: +yieldInput || 0, status: 'Closed' }); showToast('Masa panen ditutup!'); setModal(null); fetchData(); }
-    finally { setSaving(false); }
+    try {
+      await updateData(editTarget._id, { actual_yield_kg: +yieldInput || 0, status: 'Closed' });
+      // Cascading closure (frontend-only, Phase 4c Task 3): closing the Panen
+      // auto-fills the cycle's Persiapan Lahan Tgl Tutup + status Tertutup.
+      // Fires immediately at close-time (not on next load). UI lock only —
+      // no new backend authorization for this rule by design.
+      try {
+        const cycleId = editTarget?.crop_cycle_id?._id || editTarget?.crop_cycle_id;
+        const lands = await fetch(`${BASE_URL}/lifecycle/land`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json());
+        const landRec = (lands.data || []).find(l => (l.crop_cycle_id?._id || l.crop_cycle_id) === cycleId);
+        if (landRec) {
+          await fetch(`${BASE_URL}/lifecycle/land/${landRec._id}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ land_closing_date: new Date().toISOString().split('T')[0], status: 'Closed' }),
+          });
+        }
+      } catch { /* cascade best-effort; panen close already succeeded */ }
+      showToast('Masa panen ditutup! Siklus selesai — tahapan terkait terkunci.');
+      setModal(null); fetchData();
+    } finally { setSaving(false); }
   };
 
   if (error && (error.includes('403') || error.includes('Akses'))) {
