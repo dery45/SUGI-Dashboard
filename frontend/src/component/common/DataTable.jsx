@@ -55,8 +55,8 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <ChevronsUpDown className="w-3 h-3 opacity-30" />;
     return sortConfig.direction === 'asc' ?
-      <ChevronUp className="w-4 h-4 text-primary" /> :
-      <ChevronDown className="w-4 h-4 text-primary" />;
+      <ChevronUp className="w-4 h-4 text-foreground dark:text-primary" /> :
+      <ChevronDown className="w-4 h-4 text-foreground dark:text-primary" />;
   };
 
   const visiblePages = useMemo(() => {
@@ -107,19 +107,20 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
         )}
       </div>
 
-      <div className="overflow-hidden border border-border/40 rounded-[1.5rem] bg-surface/30 backdrop-blur-md shadow-sm">
+      <div className="relative overflow-hidden border border-border/50 dark:border-primary/15 rounded-[1.5rem] bg-surface dark:bg-gradient-to-br dark:from-surface dark:via-surface dark:to-primary/[0.09] shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_-12px_rgba(16,185,129,0.25)] backdrop-blur-md">
+        <span className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[3px] bg-gradient-to-r from-transparent via-primary/50 to-transparent rounded-full pointer-events-none" />
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="border-b border-border/20 bg-background/20 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">
+              <tr className="border-b border-border/60 dark:border-primary/20 bg-muted/[0.06] dark:bg-primary/[0.12] font-bold uppercase tracking-widest text-[10px] text-foreground">
                 {columns.map((col, index) => (
                   <th
                     key={index}
-                    className={`px-6 py-4 cursor-pointer hover:bg-primary/5 transition-colors group/th ${col.sortable !== false ? '' : 'cursor-default'}`}
+                    className={`px-6 py-4 cursor-pointer hover:bg-muted/10 dark:hover:bg-primary/15 transition-colors group/th ${col.sortable !== false ? '' : 'cursor-default'}`}
                     onClick={() => col.sortable !== false && requestSort(col.accessor)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="transition-colors group-hover/th:text-primary">
+                      <span className="transition-colors group-hover/th:text-foreground dark:group-hover/th:text-primary">
                         {col.header}
                       </span>
                       {col.sortable !== false && getSortIcon(col.accessor)}
@@ -131,14 +132,14 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/10 stagger-enter">
+            <tbody className="divide-y divide-border/40 dark:divide-primary/10 stagger-enter">
               {currentItems.map((row, rowIndex) => (
-                <tr key={rowIndex} className="group hover:bg-primary/[0.01] transition-colors">
+                <tr key={rowIndex} className="group hover:bg-muted/[0.05] dark:hover:bg-primary/[0.08] transition-colors">
                   {columns.map((col, colIndex) => {
                     const cellValue = typeof col.accessor === 'function' ? col.accessor(row) : row[col.accessor];
                     return (
                       <td key={colIndex} className="px-6 py-3.5">
-                        <span className={`text-[13px] ${colIndex === 0 ? 'font-bold text-foreground' : 'font-medium text-muted-foreground/80'}`}>
+                        <span className={`text-[13px] ${colIndex === 0 ? 'font-bold text-foreground' : 'font-medium text-muted'}`}>
                           {cellValue === null ? '-' : (col.format ? col.format(cellValue) : cellValue)}
                         </span>
                       </td>
@@ -148,12 +149,12 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                     <td className="px-6 py-3.5 text-right w-24">
                       <div className="flex justify-end gap-2">
                         {onEdit && (
-                          <button onClick={() => onEdit(row)} className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors">
+                          <button onClick={() => onEdit(row)} className="p-1.5 text-muted hover:text-foreground dark:hover:text-primary hover:bg-muted/10 dark:hover:bg-primary/10 rounded-lg transition-colors">
                             <Edit2 className="w-4 h-4" />
                           </button>
                         )}
                         {onDelete && (
-                          <button onClick={() => onDelete(row._id)} className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors">
+                          <button onClick={() => onDelete(row._id)} className="p-1.5 text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
@@ -174,7 +175,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
         </div>
 
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-background/20 border-t border-border/10 gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-muted/[0.04] dark:bg-primary/[0.06] border-t border-border/40 dark:border-primary/10 gap-4">
             <div className="flex items-center gap-3 flex-wrap justify-center">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold text-muted uppercase tracking-wider opacity-60">
@@ -186,7 +187,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-surface/60 border border-border/50 rounded-lg px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  className="bg-surface border border-border/60 dark:border-primary/25 rounded-lg px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                 >
                   {PAGE_SIZES.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -206,7 +207,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
               <button
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-xl border border-border/40 hover:border-primary hover:text-primary disabled:opacity-20 transition-all duration-300 hover:bg-primary/5 shadow-sm disabled:cursor-not-allowed group"
+                className="p-2 rounded-xl border border-border/40 hover:border-foreground/40 hover:text-foreground disabled:opacity-20 transition-all duration-300 shadow-sm disabled:cursor-not-allowed group dark:hover:border-primary dark:hover:text-primary dark:hover:bg-primary/5"
                 title="Halaman Pertama"
               >
                 <ChevronsLeft className="w-4 h-4" />
@@ -214,7 +215,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-xl border border-border/40 hover:border-primary hover:text-primary disabled:opacity-20 transition-all duration-300 hover:bg-primary/5 shadow-sm disabled:cursor-not-allowed group"
+                className="p-2 rounded-xl border border-border/40 hover:border-foreground/40 hover:text-foreground disabled:opacity-20 transition-all duration-300 shadow-sm disabled:cursor-not-allowed group dark:hover:border-primary dark:hover:text-primary dark:hover:bg-primary/5"
                 title="Halaman Sebelumnya"
               >
                 <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
@@ -230,8 +231,8 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                       onClick={() => setCurrentPage(p)}
                       className={`w-8 h-8 rounded-xl text-[10px] font-black transition-all duration-300 border ${
                         currentPage === p
-                          ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
-                          : 'text-muted border-transparent hover:bg-primary/5 hover:text-primary hover:border-primary/20'
+                          ? 'bg-foreground text-background border-foreground scale-105 dark:bg-primary dark:text-white dark:border-primary dark:shadow-lg dark:shadow-primary/20'
+                          : 'text-muted border-transparent hover:bg-muted/10 hover:text-foreground hover:border-border/60 dark:hover:bg-primary/5 dark:hover:text-primary dark:hover:border-primary/20'
                       }`}
                     >
                       {p}
@@ -243,7 +244,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-xl border border-border/40 hover:border-primary hover:text-primary disabled:opacity-20 transition-all duration-300 hover:bg-primary/5 shadow-sm disabled:cursor-not-allowed group"
+                className="p-2 rounded-xl border border-border/40 hover:border-foreground/40 hover:text-foreground disabled:opacity-20 transition-all duration-300 shadow-sm disabled:cursor-not-allowed group dark:hover:border-primary dark:hover:text-primary dark:hover:bg-primary/5"
                 title="Halaman Selanjutnya"
               >
                 <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -251,7 +252,7 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
               <button
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-xl border border-border/40 hover:border-primary hover:text-primary disabled:opacity-20 transition-all duration-300 hover:bg-primary/5 shadow-sm disabled:cursor-not-allowed group"
+                className="p-2 rounded-xl border border-border/40 hover:border-foreground/40 hover:text-foreground disabled:opacity-20 transition-all duration-300 shadow-sm disabled:cursor-not-allowed group dark:hover:border-primary dark:hover:text-primary dark:hover:bg-primary/5"
                 title="Halaman Terakhir"
               >
                 <ChevronsRight className="w-4 h-4" />
@@ -265,3 +266,4 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
 };
 
 export default DataTable;
+
