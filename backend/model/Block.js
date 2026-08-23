@@ -8,6 +8,7 @@ const blockSchema = new mongoose.Schema(
     area_ha: { type: Number, required: true },
     polygon: [{ lat: Number, lng: Number }],
     soil_type: { type: String },
+    water_source: { type: String },
     status: { type: String, enum: ['Active', 'Inactive', 'Planted', 'Harvested'], default: 'Active' },
     notes: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

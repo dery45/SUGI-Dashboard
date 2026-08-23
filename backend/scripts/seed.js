@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const User = require('../model/User');
 const CropType = require('../model/CropType');
 const ActivityType = require('../model/ActivityType');
+const FarmMaster = require('../model/FarmMaster');
+const Block = require('../model/Block');
 
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/sugi-dashboard-demo');
@@ -29,9 +31,25 @@ async function seed() {
     {
       name: 'Farmer Owner',
       email: 'owner@sugi.id',
-      password: 'owner123',
+      password: 'owner1234',
       role: 'farmer_owner',
       phone: '081234567892',
+      address: 'Sumatera Utara, Indonesia',
+    },
+    {
+      name: 'Lifecycle Farmer',
+      email: 'lifecycle_farmer_130702@sugi.test',
+      password: 'Farmer123',
+      role: 'farmer',
+      phone: '081234567893',
+      address: 'Sumatera Utara, Indonesia',
+    },
+    {
+      name: 'QA Redirect Farmer',
+      email: 'qa_redirect_farmer_1787227895469@sugi.test',
+      password: 'QaRedirect123',
+      role: 'farmer',
+      phone: '081234567894',
       address: 'Sumatera Utara, Indonesia',
     },
   ];
@@ -48,6 +66,102 @@ async function seed() {
     }
   }
 
+  // Create a farm for the farmer owner
+  let farm = await FarmMaster.findOne({ code: 'FARM001' });
+  if (!farm) {
+    farm = await FarmMaster.create({
+      name: 'Kebun Test',
+      code: 'FARM001',
+      province: 'Sumatera Utara',
+      city: 'Deli Serdang',
+      district: 'Sibolangit',
+      village: 'Sibolangit',
+      land_owner: 'Budi Santoso',
+      responsible_person: 'Budi Santoso',
+      contact: '081234567892',
+      total_area_ha: 100,
+      status: 'Active',
+      description: 'Kebun uji coba',
+    });
+    console.log('Farm FARM001 — created');
+  }
+
+  // Assign farm to farmer owner
+  const owner = await User.findOne({ email: 'owner@sugi.id' });
+  if (owner && !owner.assigned_farms?.includes(farm._id)) {
+    owner.assigned_farms = [farm._id];
+    await owner.save();
+    console.log('Assigned farm to owner@sugi.id');
+  }
+
+  // Create a block for the farm
+  let block = await Block.findOne({ code: 'BLOCK001' });
+  if (!block) {
+    block = await Block.create({
+      name: 'Blok A',
+      code: 'BLOCK001',
+      farm: farm._id,
+      area_ha: 50,
+      soil_type: 'Alluvial',
+      water_source: 'Irigasi',
+      status: 'Active',
+      notes: 'Blok uji coba',
+    });
+    console.log('Block BLOCK001 — created');
+  }
+
+  // Assign block to lifecycle farmer
+  const lifecycleFarmer = await User.findOne({ email: 'lifecycle_farmer_130702@sugi.test' });
+  if (lifecycleFarmer) {
+    const FarmerAssignment = require('../model/FarmerAssignment');
+    const existingAssignment = await FarmerAssignment.findOne({ farmer: lifecycleFarmer._id, block: block._id });
+    if (!existingAssignment) {
+      await FarmerAssignment.create({
+        farmer: lifecycleFarmer._id,
+        farm: farm._id,
+        block: block._id,
+        access_stages: ['Land_Preparation'],
+        sales_access: true,
+        assigned_by: owner._id,
+        status: 'Active',
+      });
+      console.log('Assigned block to lifecycle_farmer');
+    }
+  }
+
+  // Assign block to QA redirect farmer
+  const qaFarmer = await User.findOne({ email: 'qa_redirect_farmer_1787227895469@sugi.test' });
+  if (qaFarmer) {
+    const FarmerAssignment = require('../model/FarmerAssignment');
+    const existingAssignment = await FarmerAssignment.findOne({ farmer: qaFarmer._id, block: block._id });
+    if (!existingAssignment) {
+      await FarmerAssignment.create({
+        farmer: qaFarmer._id,
+        farm: farm._id,
+        block: block._id,
+        access_stages: ['Land_Preparation'],
+        sales_access: true,
+        assigned_by: owner._id,
+        status: 'Active',
+      });
+      console.log('Assigned block to qa_redirect_farmer');
+    }
+    // Also assign farm to user.assigned_farms for login
+    if (!qaFarmer.assigned_farms?.includes(farm._id)) {
+      qaFarmer.assigned_farms = [farm._id];
+      await qaFarmer.save();
+      console.log('Assigned farm to qa_redirect_farmer');
+    }
+  }
+
+  // Assign farm to lifecycle farmer for login
+  const lifecycleFarmerUser = await User.findOne({ email: 'lifecycle_farmer_130702@sugi.test' });
+  if (lifecycleFarmerUser && !lifecycleFarmerUser.assigned_farms?.includes(farm._id)) {
+    lifecycleFarmerUser.assigned_farms = [farm._id];
+    await lifecycleFarmerUser.save();
+    console.log('Assigned farm to lifecycle_farmer');
+  }
+
   // ── Crop Types ───────────────────────────────────────────────────────────────
   const cropTypes = [
     {
@@ -58,6 +172,7 @@ async function seed() {
       duration_days: 120,
       yield_per_ha: 5000,
       unit: 'Kg',
+      description: 'Tanaman pangan utama Indonesia',
     },
     {
       code: 'JAGUNG',
@@ -67,6 +182,7 @@ async function seed() {
       duration_days: 100,
       yield_per_ha: 7000,
       unit: 'Kg',
+      description: 'Tanaman palawija utama',
     },
     {
       code: 'KOPI',
@@ -76,6 +192,7 @@ async function seed() {
       duration_days: 365,
       yield_per_ha: 1200,
       unit: 'Kg',
+      description: 'Tanaman perkebunan kopi arabika',
     },
     {
       code: 'KELAPASAWIT',
@@ -85,6 +202,7 @@ async function seed() {
       duration_days: 1095,
       yield_per_ha: 18000,
       unit: 'Kg',
+      description: 'Tanaman perkebunan kelapa sawit',
     },
     {
       code: 'CABAI',
@@ -94,6 +212,7 @@ async function seed() {
       duration_days: 90,
       yield_per_ha: 8000,
       unit: 'Kg',
+      description: 'Tanaman hortikultura cabai merah',
     },
     {
       code: 'KEDELAI',
@@ -103,6 +222,7 @@ async function seed() {
       duration_days: 85,
       yield_per_ha: 2500,
       unit: 'Kg',
+      description: 'Tanaman palawija kedelai',
     },
     {
       code: 'TEBU',
@@ -112,6 +232,7 @@ async function seed() {
       duration_days: 365,
       yield_per_ha: 70000,
       unit: 'Kg',
+      description: 'Tanaman perkebunan tebu gula',
     },
     {
       code: 'UBIKAYU',
@@ -121,6 +242,7 @@ async function seed() {
       duration_days: 270,
       yield_per_ha: 25000,
       unit: 'Kg',
+      description: 'Tanaman palawija ubi kayu',
     },
   ];
 
@@ -138,109 +260,109 @@ async function seed() {
       code: 'LAND_CLEAR',
       name: 'Pembersihan Lahan',
       category: 'Pengolahan Lahan',
-      unit: 'HOK',
-      estimated_duration_hours: 16,
+      description: 'Pembersihan lahan sebelum pengolahan tanah',
+      duration_hours: 16,
       color: '#f59e0b',
-      icon: '🌿',
+      unit: 'HOK',
     },
     {
       code: 'SOIL_PREP',
       name: 'Pengolahan Tanah',
       category: 'Pengolahan Lahan',
-      unit: 'HOK',
-      estimated_duration_hours: 24,
+      description: 'Pengolahan tanah (membajak, menggaru, dll)',
+      duration_hours: 24,
       color: '#b45309',
-      icon: '🚜',
+      unit: 'HOK',
     },
     {
       code: 'PLANTING',
       name: 'Penanaman',
       category: 'Penanaman',
-      unit: 'HOK',
-      estimated_duration_hours: 8,
+      description: 'Proses penanaman bibit/benih',
+      duration_hours: 8,
       color: '#10b981',
-      icon: '🌱',
+      unit: 'HOK',
     },
     {
       code: 'FERTILIZE',
       name: 'Pemupukan Dasar',
       category: 'Pemupukan',
-      unit: 'HOK',
-      estimated_duration_hours: 6,
+      description: 'Pemupukan dasar sebelum tanam',
+      duration_hours: 6,
       color: '#3b82f6',
-      icon: '🧪',
+      unit: 'HOK',
     },
     {
       code: 'WEEDING',
       name: 'Penyiangan',
       category: 'Pemeliharaan',
-      unit: 'HOK',
-      estimated_duration_hours: 8,
+      description: 'Pengendalian gulma/manual weeding',
+      duration_hours: 8,
       color: '#8b5cf6',
-      icon: '🌾',
+      unit: 'HOK',
     },
     {
       code: 'SPRAY',
       name: 'Penyemprotan Hama',
       category: 'Pengendalian Hama',
-      unit: 'HOK',
-      estimated_duration_hours: 4,
+      description: 'Penyemprotan pestisida/herbisida',
+      duration_hours: 4,
       color: '#ef4444',
-      icon: '🧴',
+      unit: 'HOK',
     },
     {
       code: 'IRRIGATE',
       name: 'Pengairan',
       category: 'Pengairan',
-      unit: 'HOK',
-      estimated_duration_hours: 2,
+      description: 'Pengairan/irigasi tanaman',
+      duration_hours: 2,
       color: '#06b6d4',
-      icon: '💧',
+      unit: 'HOK',
     },
     {
       code: 'FERTILIZE_TOP',
       name: 'Pemupukan Susulan',
       category: 'Pemupukan',
-      unit: 'HOK',
-      estimated_duration_hours: 6,
+      description: 'Pemupukan susulan saat vegetatif',
+      duration_hours: 6,
       color: '#6366f1',
-      icon: '🧪',
+      unit: 'HOK',
     },
     {
       code: 'PRUNE',
       name: 'Pemangkasan',
       category: 'Pemeliharaan',
-      unit: 'HOK',
-      estimated_duration_hours: 8,
+      description: 'Pemangkasan tanaman/percabangan',
+      duration_hours: 8,
       color: '#ec4899',
-      icon: '✂️',
+      unit: 'HOK',
     },
     {
       code: 'HARVEST',
       name: 'Panen',
       category: 'Panen',
-      unit: 'HOK',
-      estimated_duration_hours: 24,
+      description: 'Panen hasil tanaman',
+      duration_hours: 24,
       color: '#f97316',
-      icon: '🌾',
+      unit: 'HOK',
     },
     {
       code: 'POST_HARVEST',
       name: 'Pasca Panen',
       category: 'Pasca Panen',
-      unit: 'HOK',
-      estimated_duration_hours: 12,
+      description: 'Pengolahan pasca panen (pengeringan, penyortiran)',
+      duration_hours: 12,
       color: '#14b8a6',
-      icon: '🏪',
+      unit: 'HOK',
     },
     {
       code: 'INSPECT',
       name: 'Inspeksi',
       category: 'Lainnya',
-      unit: 'HOK',
-      estimated_duration_hours: 2,
+      description: 'Inspeksi rutin kondisi tanaman/lahan',
+      duration_hours: 2,
       color: '#6b7280',
-      icon: '🔍',
+      unit: 'HOK',
     },
   ];
 

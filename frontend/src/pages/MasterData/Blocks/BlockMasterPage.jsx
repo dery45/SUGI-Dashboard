@@ -140,6 +140,8 @@ const BlockMasterPage = () => {
               <Select label="Status" name="status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                 <option value="Active">Aktif</option>
                 <option value="Inactive">Tidak Aktif</option>
+                <option value="Planted">Ditanam</option>
+                <option value="Harvested">Dipanen</option>
               </Select>
               <div className="flex flex-col gap-1.5 col-span-2">
                 <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Deskripsi <span className="text-muted/50 font-normal normal-case">(Optional)</span></label>

@@ -33,7 +33,7 @@ const PerawatanPage = () => {
   const { token } = useAuth();
   const { data, loading, error, fetchData, createData, updateData, deleteData } = useGenericResource('lifecycle/activities', token);
   const records = Array.isArray(data) ? data : [];
-  const { cycles, loading: cyclesLoading } = useEligibleCycles(token);
+  const { cycles, loading: cyclesLoading } = useEligibleCycles(token, 'maintenance');
   const [activityTypes, setActivityTypes] = useState([]);
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {

@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Card from '@/component/common/Card';
 import DataTable from '@/component/common/DataTable';
 import { Input, Select } from '@/component/common/FormField';
-import { required, isEmail, compose, validateForm } from '@/utils/validation';
+import { required, isEmail, minLength, compose, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 
 const ROLE_LABELS = { superadmin: 'Super Admin', government: 'Pemerintah', farmer_owner: 'Owner', farmer: 'Petani' };
@@ -57,7 +57,10 @@ const FarmerManagementPage = () => {
       name: [[required, 'Nama']],
       email: [[compose(required, isEmail), 'Email']]
     };
-    if (!editItem) rules.password = [[required, 'Password']];
+    // On edit the password is optional (empty = keep current), but if filled it must be valid
+    rules.password = editItem
+      ? [[minLength, 6, 'Password']]
+      : [[required, 'Password'], [minLength, 6, 'Password']];
     const { errors: e, hasErrors } = validateForm(form, rules);
     if (form.role === 'farmer_owner' && (!form.assigned_farms || form.assigned_farms.length === 0)) {
       e.assigned_farms = 'Minimal satu farm harus ditugaskan untuk Owner';
@@ -77,6 +80,10 @@ const FarmerManagementPage = () => {
     try {
       const body = { ...form };
       if (editItem && !body.password) delete body.password;
+      // On edit, owners cannot change farm assignments — omit the field so
+      // updating a password/profile never trips the backend 403. On create
+      // it is still required (multi-farm owners pick farms via the checkboxes).
+      if (editItem && user?.role === 'farmer_owner') delete body.assigned_farms;
       const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
       const json = await res.json();
       if (!json.success) {

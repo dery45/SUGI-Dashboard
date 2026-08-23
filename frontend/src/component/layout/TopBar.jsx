@@ -5,7 +5,7 @@ const TopBar = ({ onLogout, toggleSidebar, isSidebarOpen }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="h-16 sm:h-20 lg:h-24 flex items-center px-3 sm:px-4 lg:px-8 transition-all duration-300 sticky top-0 z-40 bg-transparent safe-area-top">
+    <header className="h-16 sm:h-20 lg:h-24 flex items-center px-3 sm:px-4 lg:px-8 transition-all duration-300 sticky top-0 z-[60] bg-transparent safe-area-top">
       <div className="w-full h-12 sm:h-14 lg:h-16 bg-surface/60 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between px-3 sm:px-4 lg:px-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
           <button 

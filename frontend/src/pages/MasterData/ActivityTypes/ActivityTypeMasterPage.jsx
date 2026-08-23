@@ -13,7 +13,7 @@ const ActivityTypeMasterPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', estimated_duration_hours: '', color: '#10b981', icon: '🌾', description: '' });
+  const [form, setForm] = useState({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
   const [errors, setErrors] = useState({});
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -52,7 +52,7 @@ const ActivityTypeMasterPage = () => {
         return;
       }
       setShowModal(false); setEditItem(null);
-      setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', estimated_duration_hours: '', color: '#10b981', icon: '🌾', description: '' });
+setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
       setErrors({});
       fetchData();
     } catch (e) { alert(e.message); }
@@ -76,7 +76,7 @@ const ActivityTypeMasterPage = () => {
     { header: 'Nama', accessor: 'name' },
     { header: 'Kategori', accessor: 'category' },
     { header: 'Satuan', accessor: 'unit' },
-    { header: 'Durasi (jam)', accessor: 'estimated_duration_hours' },
+    { header: 'Durasi (jam)', accessor: 'duration_hours' },
     { header: 'Warna', accessor: (r) => <span className="inline-block w-6 h-6 rounded-full border border-border/30" style={{ backgroundColor: r.color || '#10b981' }} /> }
   ];
 
@@ -95,7 +95,7 @@ const ActivityTypeMasterPage = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={fetchData} className="p-2.5 rounded-xl border border-border/40 hover:border-primary hover:text-primary transition-all"><RefreshCw className="w-4 h-4" /></button>
-            <button onClick={() => { setEditItem(null); setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', estimated_duration_hours: '', color: '#10b981', icon: '🌾', description: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Aktivitas</button>
+            <button onClick={() => { setEditItem(null); setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Aktivitas</button>
           </div>
         </div>
       </div>
@@ -112,9 +112,8 @@ const ActivityTypeMasterPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <Input label="Kode Aktivitas" name="code" required value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} error={errors.code} />
               <Input label="Nama Aktivitas" name="name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} error={errors.name} />
-              <Input label="Durasi (jam)" name="estimated_duration_hours" type="number" value={form.estimated_duration_hours} optional onChange={e => setForm({ ...form, estimated_duration_hours: e.target.value })} />
+              <Input label="Durasi (jam)" name="duration_hours" type="number" value={form.duration_hours} optional onChange={e => setForm({ ...form, duration_hours: e.target.value })} />
               <Input label="Warna" name="color" type="color" value={form.color} optional onChange={e => setForm({ ...form, color: e.target.value })} />
-              <Input label="Icon (emoji)" name="icon" value={form.icon} optional onChange={e => setForm({ ...form, icon: e.target.value })} />
               <Select label="Kategori" name="category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                 {['Pengolahan Lahan', 'Penanaman', 'Pemeliharaan', 'Pemupukan', 'Pengairan', 'Pengendalian Hama', 'Panen', 'Pasca Panen', 'Lainnya'].map(c => <option key={c} value={c}>{c}</option>)}
               </Select>
