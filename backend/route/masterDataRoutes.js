@@ -51,7 +51,13 @@ const ctrl = require('../controller/masterDataController');
  *               total_area_ha: { type: number }
  *               province: { type: string }
  *               city: { type: string }
- *               address: { type: string }
+ *               district: { type: string }
+ *               village: { type: string }
+ *               land_owner: { type: string }
+ *               responsible_person: { type: string }
+ *               contact: { type: string }
+ *               description: { type: string }
+ *               status: { type: string, enum: [Active, Inactive], default: Active }
  *     responses:
  *       '201': { description: Created, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -71,7 +77,7 @@ const ctrl = require('../controller/masterDataController');
  *     summary: Update a farm
  *     security: [{ bearerAuth: [] }]
  *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
- *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, total_area_ha: { type: number }, province: { type: string }, city: { type: string }, address: { type: string }, status: { type: string } } } } } }
+ *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, total_area_ha: { type: number }, province: { type: string }, city: { type: string }, district: { type: string }, village: { type: string }, land_owner: { type: string }, responsible_person: { type: string }, contact: { type: string }, description: { type: string }, status: { type: string, enum: [Active, Inactive] } } } } } }
  *     responses:
  *       '200': { description: Updated, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -123,6 +129,10 @@ const ctrl = require('../controller/masterDataController');
  *               code: { type: string }
  *               farm: { type: string }
  *               area_ha: { type: number }
+ *               soil_type: { type: string }
+ *               water_source: { type: string }
+ *               status: { type: string, enum: [Active, Inactive, Planted, Harvested], default: Active }
+ *               notes: { type: string }
  *     responses:
  *       '201': { description: Created, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -142,7 +152,7 @@ const ctrl = require('../controller/masterDataController');
  *     summary: Update a block
  *     security: [{ bearerAuth: [] }]
  *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
- *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, farm: { type: string }, area_ha: { type: number }, status: { type: string } } } } } }
+ *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, farm: { type: string }, area_ha: { type: number }, soil_type: { type: string }, water_source: { type: string }, status: { type: string, enum: [Active, Inactive, Planted, Harvested] }, notes: { type: string } } } } } }
  *     responses:
  *       '200': { description: Updated, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -191,6 +201,15 @@ const ctrl = require('../controller/masterDataController');
  *             properties:
  *               name: { type: string }
  *               code: { type: string }
+ *               scientific_name: { type: string }
+ *               category: { type: string }
+ *               planting_duration_days: { type: integer }
+ *               harvest_duration_days: { type: integer }
+ *               duration_days: { type: integer }
+ *               yield_per_ha: { type: number }
+ *               unit: { type: string }
+ *               description: { type: string }
+ *               status: { type: string, enum: [Active, Inactive], default: Active }
  *     responses:
  *       '201': { description: Created, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -210,7 +229,7 @@ const ctrl = require('../controller/masterDataController');
  *     summary: Update a crop type
  *     security: [{ bearerAuth: [] }]
  *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
- *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, status: { type: string } } } } } }
+ *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, scientific_name: { type: string }, category: { type: string }, planting_duration_days: { type: integer }, harvest_duration_days: { type: integer }, duration_days: { type: integer }, yield_per_ha: { type: number }, unit: { type: string }, description: { type: string }, status: { type: string, enum: [Active, Inactive] } } } } } }
  *     responses:
  *       '200': { description: Updated, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -259,6 +278,14 @@ const ctrl = require('../controller/masterDataController');
  *             properties:
  *               name: { type: string }
  *               code: { type: string }
+ *               category: { type: string }
+ *               description: { type: string }
+ *               default_duration_hours: { type: integer }
+ *               estimated_duration_hours: { type: integer }
+ *               color: { type: string }
+ *               icon: { type: string }
+ *               unit: { type: string }
+ *               status: { type: string, enum: [Active, Inactive], default: Active }
  *     responses:
  *       '201': { description: Created, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }
@@ -278,7 +305,7 @@ const ctrl = require('../controller/masterDataController');
  *     summary: Update an activity type
  *     security: [{ bearerAuth: [] }]
  *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
- *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, status: { type: string } } } } } }
+ *     requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string }, code: { type: string }, category: { type: string }, description: { type: string }, default_duration_hours: { type: integer }, estimated_duration_hours: { type: integer }, color: { type: string }, icon: { type: string }, unit: { type: string }, status: { type: string, enum: [Active, Inactive] } } } } } }
  *     responses:
  *       '200': { description: Updated, content: { application/json: { schema: { type: object, properties: { success: { type: boolean, example: true }, data: { type: object } } } } } }
  *       '400': { $ref: '#/components/schemas/Error' }

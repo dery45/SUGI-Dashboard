@@ -103,8 +103,10 @@ const SettingsPage = () => {
       const json = await res.json();
       if (json.success) {
         setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
-        forceReauth();
-        showToast('Kata sandi berhasil diubah. Silakan masuk kembali.');
+        // Let the user read the confirmation before forcing re-login;
+        // forceReauth() immediately would unmount this page and hide the toast.
+        showToast('Kata sandi berhasil diubah. Mengalihkan ke halaman masuk...');
+        setTimeout(() => forceReauth(), 1500);
       } else {
         setPasswordErrors(json.errors || {});
         showToast(json.message || 'Gagal mengubah password', 'error');

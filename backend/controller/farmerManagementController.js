@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const User = require('../model/User');
 const { validate, errorResponse, required, isEmail, minLength } = require('../util/validate');
 
@@ -47,11 +48,19 @@ const listUsers = async (req, res) => {
 
       const sharedFarmUserIds = sharedFarmUsers.map(u => u._id.toString());
 
-      query.$or = [
+      // Owner visibility scope. Combined via $and when a search $or exists,
+      // otherwise the scope would silently overwrite the search filter.
+      const scopeOr = [
         { createdBy: req.user.id },
         { _id: req.user.id },
         { _id: { $in: sharedFarmUserIds } }
       ];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: scopeOr }];
+        delete query.$or;
+      } else {
+        query.$or = scopeOr;
+      }
     }
     // Superadmin has no restrictions
 
@@ -144,7 +153,7 @@ const createUser = async (req, res) => {
       ],
       password: [
         [required, 'Password'],
-        [minLength, 3, 'Password'],
+        [minLength, 6, 'Password'],
       ],
     });
     if (errors) return errorResponse(res, errors);
@@ -266,7 +275,7 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { password: _password, ...updateData } = req.body;
+    const { password, ...updateData } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
@@ -302,6 +311,33 @@ const updateUser = async (req, res) => {
       }
     }
 
+    // Email change: validate format + uniqueness before writing
+    if (updateData.email !== undefined && updateData.email !== target.email) {
+      const emailErrors = validate(updateData, {
+        email: [
+          [required, 'Email'],
+          [isEmail, 'Email'],
+        ],
+      });
+      if (emailErrors) return errorResponse(res, emailErrors);
+      const duplicate = await User.findOne({ email: updateData.email, _id: { $ne: target._id } }).select('_id').lean();
+      if (duplicate) return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
+    }
+
+    // Admin password reset. findByIdAndUpdate does NOT run the document
+    // pre('save') hook that normally hashes passwords, so hash explicitly.
+    if (password !== undefined && password !== '') {
+      const pwErrors = validate({ password }, {
+        password: [
+          [required, 'Password'],
+          [minLength, 6, 'Password'],
+        ],
+      });
+      if (pwErrors) return errorResponse(res, pwErrors);
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
     // Role change restrictions
     if (req.user.role !== 'superadmin' && req.user.role !== 'government') {
       delete updateData.role;
@@ -313,20 +349,36 @@ const updateUser = async (req, res) => {
     }
 
     if (req.body.assigned_farms !== undefined) {
-      if (req.user.role !== 'superadmin' && req.user.role !== 'government') {
-        return res
-          .status(403)
-          .json({ success: false, message: 'Hanya Super Admin atau Pemerintah yang dapat mengubah penugasan farm' });
-      }
-      if (!Array.isArray(req.body.assigned_farms)) {
-        return res.status(400).json({ success: false, message: 'assigned_farms harus berupa array' });
-      }
-      for (const farmId of req.body.assigned_farms) {
-        if (!mongoose.Types.ObjectId.isValid(farmId)) {
-          return errorResponse(res, { assigned_farms: 'ID Farm tidak valid' });
+      const canManageFarms = ['superadmin', 'government'].includes(req.user.role);
+      // Normalize both sides to sorted string id arrays for comparison
+      const requested = Array.isArray(req.body.assigned_farms)
+        ? req.body.assigned_farms.map(f => f.toString()).sort()
+        : null;
+      const current = (target.assigned_farms || [])
+        .map(f => (f && typeof f === 'object' ? (f._id || f).toString() : String(f)))
+        .sort();
+      const unchanged =
+        !!requested && requested.length === current.length && requested.every((v, i) => v === current[i]);
+
+      if (!canManageFarms) {
+        // Owners may echo back the existing assignment on edit; only a real
+        // change to farm assignments is forbidden.
+        if (!unchanged) {
+          return res
+            .status(403)
+            .json({ success: false, message: 'Hanya Super Admin atau Pemerintah yang dapat mengubah penugasan farm' });
         }
+      } else {
+        if (!Array.isArray(req.body.assigned_farms)) {
+          return res.status(400).json({ success: false, message: 'assigned_farms harus berupa array' });
+        }
+        for (const farmId of req.body.assigned_farms) {
+          if (!mongoose.Types.ObjectId.isValid(farmId)) {
+            return errorResponse(res, { assigned_farms: 'ID Farm tidak valid' });
+          }
+        }
+        updateData.assigned_farms = req.body.assigned_farms;
       }
-      updateData.assigned_farms = req.body.assigned_farms;
     }
 
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true }).select(

@@ -31,6 +31,8 @@ async function apiFetch(path, token, options = {}) {
 export const fetchKPIs = (token, params = {}) => {
   const q = new URLSearchParams();
   if (params.farm_id) q.append('farm_id', params.farm_id);
+  if (params.block_id) q.append('block_id', params.block_id);
+  if (params.cycle_id) q.append('cycle_id', params.cycle_id);
   if (params.start_date) q.append('start_date', params.start_date);
   if (params.end_date) q.append('end_date', params.end_date);
   const qs = q.toString();
@@ -94,3 +96,31 @@ export const recordExpense = (token, data) =>
 
 export const updateExpense = (token, id, data) =>
   apiFetch(`/expenses/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) });
+
+// ─── Cascading Filter ──────────────────────────────────────────────────────────
+
+export const fetchBlocksByFarm = (token, farmId) => {
+  const q = new URLSearchParams();
+  if (farmId) q.append('farm_id', farmId);
+  return apiFetch(`/management/blocks?${q}`, token);
+};
+
+export const fetchCyclesByFarmBlock = (token, farmId, blockId) => {
+  const q = new URLSearchParams();
+  if (farmId) q.append('farm_id', farmId);
+  if (blockId) q.append('block', blockId);
+  return apiFetch(`/management/cycles?${q}`, token);
+};
+
+// ─── Chart Data ────────────────────────────────────────────────────────────────
+
+export const fetchChartData = (token, params = {}) => {
+  const q = new URLSearchParams();
+  if (params.farm_id) q.append('farm_id', params.farm_id);
+  if (params.block_id) q.append('block_id', params.block_id);
+  if (params.cycle_id) q.append('cycle_id', params.cycle_id);
+  if (params.start_date) q.append('start_date', params.start_date);
+  if (params.end_date) q.append('end_date', params.end_date);
+  if (params.year) q.append('year', params.year);
+  return apiFetch(`/management/chart-data?${q}`, token);
+};

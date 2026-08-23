@@ -53,11 +53,11 @@ const Login = () => {
         <div className="relative z-10 flex flex-col justify-between p-12 h-full text-white">
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight mb-4">SUGI<span className="text-white">Dash</span></h1>
-            <p className="text-white/80 text-lg font-medium">Food Security Intelligence System</p>
+            <p className="text-white/80 text-lg font-medium">Sistem Manajemen Pertanian Terpadu</p>
           </div>
           <div className="text-center text-white/70 text-sm">
-            <p>Analisis Ketahanan Pangan Nasional</p>
-            <p className="mt-1">Monitoring, Analisis, & Keputusan Berbasis Data</p>
+            <p>Kelola kebun, siklus tanam, panen, hingga penjualan hasil</p>
+            <p className="mt-1">Pantau, analisis, &amp; ambil keputusan berbasis data</p>
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@ const Login = () => {
         <div className="w-full max-w-md animate-fade-in">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-primary tracking-tight">SUGI<span className="text-foreground">Dash</span></h1>
-            <p className="text-muted mt-2">Food Security Intelligence System</p>
+            <p className="text-muted mt-2">Sistem Manajemen Pertanian Terpadu</p>
           </div>
           <Card>
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
