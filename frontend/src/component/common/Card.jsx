@@ -2,9 +2,10 @@ import React from 'react';
 
 const Card = ({ title, action, info, children, className = '' }) => {
   return (
-    <div className={`bg-surface border border-border/40 rounded-[2.5rem] shadow-[0_8px_30px_-12px_rgba(0,0,0,0.05)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-4px] animate-slide-up ${className}`}>
+    <div className={`bg-surface dark:bg-gradient-to-br dark:from-surface dark:via-surface dark:to-primary/[0.1] border border-primary/15 rounded-[2.5rem] shadow-[0_8px_30px_-12px_rgba(16,185,129,0.15)] flex flex-col transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden hover:shadow-[0_20px_50px_-15px_rgba(16,185,129,0.25)] hover:border-primary/30 hover:translate-y-[-4px] animate-slide-up ${className}`}>
+      <span className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-[3px] bg-gradient-to-r from-transparent via-primary/60 to-transparent rounded-full pointer-events-none" />
       {(title || action || info) && (
-        <div className="px-6 py-4 border-b border-border/30 flex justify-between items-center break-words gap-4 relative">
+        <div className="px-6 py-4 border-b border-primary/10 flex justify-between items-center break-words gap-4 relative">
           <div className="flex-1">
             {title && <h2 className="text-sm font-black text-foreground tracking-tight uppercase tracking-wider opacity-90">{title}</h2>}
           </div>

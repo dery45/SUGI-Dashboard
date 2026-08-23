@@ -123,7 +123,11 @@ const Sidebar = ({ isOpen, user, onToggle }) => {
           <div className="w-72 flex flex-col h-full flex-shrink-0">
             <div className="h-20 flex items-center px-8 border-b border-border/30 flex-shrink-0">
               <h1 className="text-xl font-black tracking-tighter flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/30 transition-transform duration-500 hover:rotate-12">S</div>
+                <img
+                  src="/images/sugi-logo.png"
+                  alt="SUGI"
+                  className="w-9 h-9 object-contain transition-transform duration-500 hover:rotate-12"
+                />
                 <div className="flex flex-col leading-none">
                   <span className="text-primary text-lg font-black italic">SUGI</span>
                   <span className="text-foreground/40 text-[10px] uppercase tracking-[0.2em] font-black">Dashboard</span>
