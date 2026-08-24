@@ -21,6 +21,19 @@ export const authHeaders = (extra = {}) => {
   };
 };
 
+/**
+ * Safely parse JSON response. Returns { json, parseError }.
+ * If parsing fails, parseError contains a user-friendly Indonesian message.
+ */
+async function safeJsonParse(res) {
+  try {
+    const json = await res.json();
+    return { json, parseError: null };
+  } catch {
+    return { json: null, parseError: 'Respons server tidak valid (bukan JSON)' };
+  }
+}
+
 export async function apiFetch(path, { method = 'GET', body, headers = {}, signal } = {}) {
   let res;
   try {
@@ -31,11 +44,23 @@ export async function apiFetch(path, { method = 'GET', body, headers = {}, signa
       signal,
     });
   } catch (err) {
-    throw err;
+    // Network error (backend down, no internet, etc.)
+    const networkErr = new Error('Tidak dapat terhubung ke server. Periksa koneksi internet atau hubungi administrator.');
+    networkErr.status = 0; // 0 indicates network failure
+    networkErr.isNetworkError = true;
+    throw networkErr;
   }
-  const json = await res.json().catch(() => ({}));
+
+  const { json, parseError } = await safeJsonParse(res);
+  if (parseError) {
+    const parseErr = new Error(parseError);
+    parseErr.status = res.status;
+    parseErr.isParseError = true;
+    throw parseErr;
+  }
+
   if (!res.ok || json.success === false) {
-    const err = new Error(json.message || json.error || `Request failed: ${res.status}`);
+    const err = new Error(json.message || json.error || `Permintaan gagal: ${res.status}`);
     err.status = res.status;
     throw err;
   }
@@ -43,12 +68,29 @@ export async function apiFetch(path, { method = 'GET', body, headers = {}, signa
 }
 
 export async function login(email, password) {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  const json = await res.json();
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (err) {
+    // Network error (backend down, no internet, etc.)
+    const networkErr = new Error('Tidak dapat terhubung ke server. Periksa koneksi internet atau hubungi administrator.');
+    networkErr.status = 0;
+    networkErr.isNetworkError = true;
+    throw networkErr;
+  }
+
+  const { json, parseError } = await safeJsonParse(res);
+  if (parseError) {
+    const parseErr = new Error('Respons server tidak valid. Silakan coba lagi atau hubungi administrator.');
+    parseErr.status = res.status;
+    parseErr.isParseError = true;
+    throw parseErr;
+  }
+
   if (!json.success) throw new Error(json.message);
   setToken(json.token);
   return json.user;

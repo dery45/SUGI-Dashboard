@@ -13,7 +13,7 @@ const fieldType = (accessor) => {
   return 'text';
 };
 
-const DataPageTemplate = ({ title, subtitle, columns, data, loading, error, insightText, insightSource, onRefresh, onImport, onAdd, onDelete, notification }) => {
+const DataPageTemplate = ({ title, subtitle, columns, data, loading, error, insightText, insightSource, onRefresh, onImport, onAdd, onDelete }) => {
   const [insight, setInsight] = useState(null);
   const [insightLoading, setInsightLoading] = useState(false);
 
@@ -85,12 +85,6 @@ const DataPageTemplate = ({ title, subtitle, columns, data, loading, error, insi
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-12">
-      {notification && (
-        <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold animate-slide-up">
-          {notification}
-        </div>
-      )}
-
       <div className="bg-surface/40 backdrop-blur-md p-6 rounded-[2rem] border border-border/40 flex flex-col gap-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

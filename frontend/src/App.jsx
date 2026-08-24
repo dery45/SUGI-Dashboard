@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardFilterProvider } from './contexts/DashboardFilterContext';
+import { ToastProvider } from './contexts/ToastContext';
 import MainLayout from './component/layout/MainLayout';
 import { ProtectedRoute, AppRedirect, homePathFor } from './services/ProtectedRoutes.jsx';
 import LoadingSkeleton from './component/common/LoadingSkeleton';
@@ -290,9 +291,11 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <ToastProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
   );

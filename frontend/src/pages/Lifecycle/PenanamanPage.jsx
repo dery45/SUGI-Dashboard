@@ -4,12 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 import Card from '@/component/common/Card';
 import DataTable from '@/component/common/DataTable';
-
-const statusMap = { Open: 'Terbuka', Closed: 'Tertutup', Completed: 'Selesai', In_Progress: 'Sedang Berlangsung', Pending: 'Tertunda', Cancelled: 'Dibatalkan', Planned: 'Direncanakan', Planted: 'Ditanam', Maintenance: 'Perawatan', Harvesting: 'Panen' };
-const Badge = ({ status }) => {
-  const colors = { Planned: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10', Land_Preparation: 'bg-blue-100 text-blue-700', Planted: 'bg-emerald-100 text-emerald-700', In_Progress: 'bg-yellow-100 text-yellow-800', Completed: 'bg-blue-100 text-blue-700', Cancelled: 'bg-red-100 text-red-700' };
-  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{statusMap[status] || status?.replace(/_/g, ' ') || '-'}</span>;
-};
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { Badge, getStatusLabel } from '@/utils/statusLabels';
+import { useToast } from '@/contexts/ToastContext';
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
     <div className="absolute inset-0 backdrop-blur-sm" />
@@ -26,7 +23,7 @@ import { useEligibleCycles, usePelaksanaOptions, pelaksanaForCycle, buildPelaksa
 const cycleLabel = c => {
   const farmName = c?.farm_master?.name || c?.farm_id?.name || '';
   const blockName = c?.block?.name ? ` / ${c.block.name}` : '';
-  const status = statusMap[c?.status] || String(c?.status || '').replace(/_/g, ' ');
+  const status = getStatusLabel(c?.status);
   return `${c?.cycle || '(tanpa siklus)'} — ${farmName}${blockName} (${status})`;
 };
 
@@ -48,8 +45,8 @@ const PenanamanPage = () => {
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const showToast = m => { setNotification(m); setTimeout(() => setNotification(null), 3000); };
+  const [viewModal, setViewModal] = useState(null);
+  const { showToast } = useToast();
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const columns = [
@@ -79,6 +76,7 @@ const PenanamanPage = () => {
     });
     setModal('form');
   };
+  const openView = r => { setViewModal(r); };
   const handleSubmit = async e => {
     e.preventDefault(); if (saving) return; setSaving(true);
     try {
@@ -103,7 +101,6 @@ const PenanamanPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold animate-slide-up">{notification}</div>}
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
@@ -119,7 +116,7 @@ const PenanamanPage = () => {
         {loading ? (
           <div className="flex justify-center py-12"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
         ) : (
-          <DataTable columns={columns} data={records} onEdit={openEdit} onDelete={id => { const rec = records.find(r => r._id === id); if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; } if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data penanaman dihapus.'); } }} itemsPerPage={10} />
+          <DataTable columns={columns} data={records} onView={openView} onEdit={openEdit} onDelete={id => { const rec = records.find(r => r._id === id); if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; } if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data penanaman dihapus.'); } }} editCondition={r => !isLocked(r)} deleteCondition={r => !isLocked(r)} itemsPerPage={10} />
         )}
       </Card>
 
@@ -170,6 +167,15 @@ const PenanamanPage = () => {
             </div>
           </form>
         </Modal>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Penanaman"
+        />
       )}
     </div>
   );

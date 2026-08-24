@@ -5,6 +5,8 @@ import DataTable from '@/component/common/DataTable';
 import { Select } from '@/component/common/FormField';
 import { required, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 const STAGE_OPTIONS = [
   { value: 'Land_Preparation', label: 'Persiapan Lahan' },
@@ -27,11 +29,10 @@ const UMManagementPage = () => {
   const [form, setForm] = useState({ farmer: '', blocks: [], access_stages: [], sales_access: false });
   const [errors, setErrors] = useState({});
   const [filterFarm, setFilterFarm] = useState('');
-  const [notification, setNotification] = useState(null);
+  const [viewModal, setViewModal] = useState(null);
+  const { showToast } = useToast();
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
-  const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
   const fetchData = useCallback(async () => {
     try {
@@ -125,6 +126,8 @@ const UMManagementPage = () => {
     } catch (e) { showToast(e.message); }
   };
 
+  const openView = (item) => { setViewModal(item); };
+
   const toggleBlock = (blockId) => {
     setForm(prev => ({
       ...prev,
@@ -197,8 +200,6 @@ const UMManagementPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold">{notification}</div>}
-
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -225,7 +226,7 @@ const UMManagementPage = () => {
       </div>
 
       <Card title="Daftar Penugasan Petani">
-        <DataTable columns={columns} data={filteredAssignments} onEdit={handleEdit} onDelete={handleRemoveAssignment} itemsPerPage={10} />
+        <DataTable columns={columns} data={filteredAssignments} onView={openView} onEdit={handleEdit} onDelete={handleRemoveAssignment} itemsPerPage={10} />
       </Card>
 
       {showModal && (
@@ -299,6 +300,15 @@ const UMManagementPage = () => {
             </div>
           </div>
         </div>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Penugasan"
+        />
       )}
     </div>
   );

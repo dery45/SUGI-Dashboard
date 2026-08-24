@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, isManagement } = require('../middleware/auth');
+const { authenticate, isManagement, authorize } = require('../middleware/auth');
 const ctrl = require('../controller/masterDataController');
 
 /**
@@ -322,34 +322,41 @@ const ctrl = require('../controller/masterDataController');
  *       '404': { $ref: '#/components/schemas/Error' }
  */
 
-router.use(authenticate, isManagement);
+router.use(authenticate);
 
-router.get('/farms/all', ctrl.getAllFarms);
-router.get('/farms', ctrl.listFarms);
-router.get('/farms/:id', ctrl.getFarm);
-router.post('/farms', ctrl.createFarm);
-router.put('/farms/:id', ctrl.updateFarm);
-router.delete('/farms/:id', ctrl.deleteFarm);
+// Read-only reference data: allow farmer + management roles
+const isManagementOrFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
 
-router.get('/blocks/all', ctrl.getAllBlocks);
-router.get('/blocks', ctrl.listBlocks);
-router.get('/blocks/:id', ctrl.getBlock);
-router.post('/blocks', ctrl.createBlock);
-router.put('/blocks/:id', ctrl.updateBlock);
-router.delete('/blocks/:id', ctrl.deleteBlock);
+// Farms - management only (farmer_owner/superadmin)
+router.get('/farms/all', isManagement, ctrl.getAllFarms);
+router.get('/farms', isManagement, ctrl.listFarms);
+router.get('/farms/:id', isManagement, ctrl.getFarm);
+router.post('/farms', isManagement, ctrl.createFarm);
+router.put('/farms/:id', isManagement, ctrl.updateFarm);
+router.delete('/farms/:id', isManagement, ctrl.deleteFarm);
 
-router.get('/crop-types/all', ctrl.getAllCropTypes);
-router.get('/crop-types', ctrl.listCropTypes);
-router.get('/crop-types/:id', ctrl.getCropType);
-router.post('/crop-types', ctrl.createCropType);
-router.put('/crop-types/:id', ctrl.updateCropType);
-router.delete('/crop-types/:id', ctrl.deleteCropType);
+// Blocks - management only
+router.get('/blocks/all', isManagement, ctrl.getAllBlocks);
+router.get('/blocks', isManagement, ctrl.listBlocks);
+router.get('/blocks/:id', isManagement, ctrl.getBlock);
+router.post('/blocks', isManagement, ctrl.createBlock);
+router.put('/blocks/:id', isManagement, ctrl.updateBlock);
+router.delete('/blocks/:id', isManagement, ctrl.deleteBlock);
 
-router.get('/activity-types/all', ctrl.getAllActivityTypes);
-router.get('/activity-types', ctrl.listActivityTypes);
-router.get('/activity-types/:id', ctrl.getActivityType);
-router.post('/activity-types', ctrl.createActivityType);
-router.put('/activity-types/:id', ctrl.updateActivityType);
-router.delete('/activity-types/:id', ctrl.deleteActivityType);
+// Crop Types - read for farmer + management, write for management only
+router.get('/crop-types/all', isManagementOrFarmer, ctrl.getAllCropTypes);
+router.get('/crop-types', isManagementOrFarmer, ctrl.listCropTypes);
+router.get('/crop-types/:id', isManagementOrFarmer, ctrl.getCropType);
+router.post('/crop-types', isManagement, ctrl.createCropType);
+router.put('/crop-types/:id', isManagement, ctrl.updateCropType);
+router.delete('/crop-types/:id', isManagement, ctrl.deleteCropType);
+
+// Activity Types - read for farmer + management, write for management only
+router.get('/activity-types/all', isManagementOrFarmer, ctrl.getAllActivityTypes);
+router.get('/activity-types', isManagementOrFarmer, ctrl.listActivityTypes);
+router.get('/activity-types/:id', isManagementOrFarmer, ctrl.getActivityType);
+router.post('/activity-types', isManagement, ctrl.createActivityType);
+router.put('/activity-types/:id', isManagement, ctrl.updateActivityType);
+router.delete('/activity-types/:id', isManagement, ctrl.deleteActivityType);
 
 module.exports = router;

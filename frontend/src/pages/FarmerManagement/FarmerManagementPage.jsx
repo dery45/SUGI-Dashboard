@@ -5,6 +5,8 @@ import DataTable from '@/component/common/DataTable';
 import { Input, Select } from '@/component/common/FormField';
 import { required, isEmail, minLength, compose, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 const ROLE_LABELS = { superadmin: 'Super Admin', government: 'Pemerintah', farmer_owner: 'Owner', farmer: 'Petani' };
 const ROLE_COLORS = { superadmin: 'bg-red-100 text-red-700', government: 'bg-purple-100 text-purple-700', farmer_owner: 'bg-blue-100 text-blue-700', farmer: 'bg-green-100 text-green-700' };
@@ -18,7 +20,7 @@ const FarmerManagementPage = () => {
   const [editItem, setEditItem] = useState(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [notification, setNotification] = useState(null);
+  const [viewModal, setViewModal] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', address: '', role: 'farmer', assigned_farms: [] });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -45,7 +47,7 @@ const FarmerManagementPage = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
+  const { showToast } = useToast();
 
   const isSingleFarmOwner = user?.role === 'farmer_owner' && farms.length === 1;
   const showFarmerPicker = form.role === 'farmer' && (
@@ -123,6 +125,8 @@ const FarmerManagementPage = () => {
     if (json.success) { showToast(`"${name}" berhasil dinonaktifkan.`); fetchData(); }
   };
 
+  const openView = (item) => { setViewModal(item); };
+
   const roleOptions = user?.role === 'farmer_owner'
     ? [{ value: 'farmer', label: 'Petani' }]
     : [{ value: 'farmer', label: 'Petani' }, { value: 'farmer_owner', label: 'Owner' }, { value: 'government', label: 'Pemerintah' }];
@@ -146,10 +150,6 @@ const FarmerManagementPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && (
-        <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold">{notification}</div>
-      )}
-
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -176,7 +176,7 @@ const FarmerManagementPage = () => {
       </div>
 
       <Card title="Daftar Pengguna">
-        <DataTable columns={columns} data={users} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={10} />
+        <DataTable columns={columns} data={users} onView={openView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={10} />
       </Card>
 
       {showModal && (
@@ -273,6 +273,15 @@ const FarmerManagementPage = () => {
             </div>
           </div>
         </div>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Pengguna"
+        />
       )}
     </div>
   );

@@ -3,7 +3,7 @@ import { Search, ChevronDown, ChevronUp, ChevronsUpDown, ChevronLeft, ChevronRig
 
 const PAGE_SIZES = [5, 10, 20, 50];
 
-const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPerPage: defaultItemsPerPage = 8, onEdit, onDelete }) => {
+const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPerPage: defaultItemsPerPage = 8, onEdit, onDelete, onView, editCondition, deleteCondition, viewCondition }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -127,9 +127,9 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                     </div>
                   </th>
                 ))}
-                {(onEdit || onDelete) && (
-                  <th className="px-6 py-4 cursor-default text-right">Aksi</th>
-                )}
+{(onEdit || onDelete || onView) && (
+                <th className="px-6 py-4 cursor-default text-right">Aksi</th>
+              )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 dark:divide-primary/10 stagger-enter">
@@ -145,16 +145,24 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                       </td>
                     );
                   })}
-                  {(onEdit || onDelete) && (
+{(onEdit || onDelete || onView) && (
                     <td className="px-6 py-3.5 text-right w-24">
-                      <div className="flex justify-end gap-2">
-                        {onEdit && (
-                          <button onClick={() => onEdit(row)} className="p-1.5 text-muted hover:text-foreground dark:hover:text-primary hover:bg-muted/10 dark:hover:bg-primary/10 rounded-lg transition-colors">
+                      <div className="flex justify-end gap-1">
+                        {onView && (!viewCondition || viewCondition(row)) && (
+                          <button onClick={() => onView(row)} className="p-1.5 text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Lihat Detail">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        )}
+                        {onEdit && (!editCondition || editCondition(row)) && (
+                          <button onClick={() => onEdit(row)} className="p-1.5 text-muted hover:text-foreground dark:hover:text-primary hover:bg-muted/10 dark:hover:bg-primary/10 rounded-lg transition-colors" title="Edit">
                             <Edit2 className="w-4 h-4" />
                           </button>
                         )}
-                        {onDelete && (
-                          <button onClick={() => onDelete(row._id)} className="p-1.5 text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors">
+                        {onDelete && (!deleteCondition || deleteCondition(row)) && (
+                          <button onClick={() => onDelete(row._id)} className="p-1.5 text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors" title="Hapus">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
@@ -163,9 +171,9 @@ const DataTable = ({ columns, data, title, subtitle, showSearch = true, itemsPer
                   )}
                 </tr>
               ))}
-              {processedData.length === 0 && (
+{processedData.length === 0 && (
                 <tr>
-                  <td colSpan={columns.length + ((onEdit || onDelete) ? 1 : 0)} className="px-6 py-12 text-center text-muted text-xs italic">
+                  <td colSpan={columns.length + ((onEdit || onDelete || onView) ? 1 : 0)} className="px-6 py-12 text-center text-muted text-xs italic">
                     Tidak ada data yang ditemukan.
                   </td>
                 </tr>

@@ -6,6 +6,8 @@ import { Input, Select } from '@/component/common/FormField';
 import { useAuth } from '@/contexts/AuthContext';
 import { required, isNumber, minValue, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 const FarmMasterPage = () => {
   const { token, user } = useAuth();
@@ -15,9 +17,11 @@ const FarmMasterPage = () => {
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState({ name: '', code: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' });
   const [errors, setErrors] = useState({});
+  const [viewModal, setViewModal] = useState(null);
 
   const isFarmerOwner = user?.role === 'farmer_owner';
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const { showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -50,7 +54,7 @@ const FarmMasterPage = () => {
       const json = await res.json();
       if (!json.success) {
         if (json.errors) setErrors(json.errors);
-        else alert(json.message);
+        else showToast(json.message, 'error');
         return;
       }
       setShowModal(false);
@@ -58,7 +62,8 @@ const FarmMasterPage = () => {
       setForm({ name: '', code: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' });
       setErrors({});
       fetchData();
-    } catch (e) { alert(e.message); }
+      showToast('Data farm berhasil disimpan!', 'success');
+    } catch (e) { showToast(e.message, 'error'); }
   };
 
   const handleEdit = (item) => {
@@ -72,7 +77,10 @@ const FarmMasterPage = () => {
     if (!confirm('Hapus data ini?')) return;
     await fetch(`${BASE_URL}/master-data/farms/${id}`, { method: 'DELETE', headers });
     fetchData();
+    showToast('Data farm berhasil dihapus!', 'success');
   };
+
+  const openView = (item) => { setViewModal(item); };
 
   const columns = [
     { header: 'Kode', accessor: 'code' },
@@ -110,7 +118,7 @@ const FarmMasterPage = () => {
       </div>
 
       <Card title="Daftar Farm">
-        <DataTable columns={columns} data={data} onEdit={isFarmerOwner ? handleEdit : handleEdit} onDelete={isFarmerOwner ? undefined : handleDelete} itemsPerPage={10} />
+        <DataTable columns={columns} data={data} onView={openView} onEdit={isFarmerOwner ? handleEdit : handleEdit} onDelete={isFarmerOwner ? undefined : handleDelete} itemsPerPage={10} />
       </Card>
 
       {showModal && (
@@ -144,6 +152,15 @@ const FarmMasterPage = () => {
             </div>
           </div>
         </div>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Farm"
+        />
       )}
     </div>
   );

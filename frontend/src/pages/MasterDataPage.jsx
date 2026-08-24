@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import DataPageTemplate from '../component/common/DataPageTemplate';
 import * as allCols from '../data/dataColumns';
+import { useToast } from '../contexts/ToastContext';
 
 const INSIGHT_SOURCE_MAP = {
   // Master Data - no insights
@@ -86,7 +87,6 @@ const MasterDataPage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [notification, setNotification] = useState(null);
 
   const config = dataRegistry[slug];
   // Master Data (farm, block, crop-type, activity-type) use /api/master-data/*
@@ -94,6 +94,7 @@ const MasterDataPage = () => {
   const isMasterData = config.group === 'master';
   const apiUrl = isMasterData ? `/api/master-data/${slug}` : `/api/master/${slug}`;
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const { showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -112,8 +113,6 @@ const MasterDataPage = () => {
   }, [apiUrl, token]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
   const normalizeKeys = (record) => {
     const norm = {};
@@ -183,7 +182,6 @@ const MasterDataPage = () => {
       onImport={handleImport}
       onAdd={handleAdd}
       onDelete={handleDelete}
-      notification={notification}
     />
   );
 };
