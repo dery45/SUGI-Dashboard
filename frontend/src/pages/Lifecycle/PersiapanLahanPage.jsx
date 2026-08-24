@@ -4,15 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 import Card from '@/component/common/Card';
 import DataTable from '@/component/common/DataTable';
-
-const statusMap = {
-  Open: 'Terbuka', Closed: 'Tertutup', Completed: 'Selesai', In_Progress: 'Sedang Berlangsung',
-  Pending: 'Tertunda', Cancelled: 'Dibatalkan', Planned: 'Direncanakan',
-};
-const Badge = ({ status }) => {
-  const colors = { Open: 'bg-green-100 text-green-800', Closed: 'bg-gray-100 text-gray-600', Completed: 'bg-blue-100 text-blue-700', In_Progress: 'bg-yellow-100 text-yellow-800', Pending: 'bg-orange-100 text-orange-700', Cancelled: 'bg-red-100 text-red-700', Planned: 'bg-purple-100 text-purple-700' };
-  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{statusMap[status] || status?.replace(/_/g, ' ') || '-'}</span>;
-};
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { Badge } from '@/utils/statusLabels';
+import { useToast } from '@/contexts/ToastContext';
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -30,13 +24,27 @@ const FF = ({ label, children }) => (
 );
 const inputCls = "w-full px-4 py-3 bg-background/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
 
-function useBlocks(token, farmId) {
+function useBlocks(token, farmId, assignments, isFarmer) {
   const [blocks, setBlocks] = useState([]);
   useEffect(() => {
     if (!farmId) { setBlocks([]); return; }
-    fetch(`${BASE_URL}/master-data/blocks?farm=${farmId}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(j => { if (j.success) setBlocks(j.data); }).catch(() => setBlocks([]));
-  }, [farmId, token]);
+    if (isFarmer && assignments) {
+      // For farmer users, extract blocks from their assignments for the selected farm
+      const blockMap = new Map();
+      assignments.forEach(a => {
+        const aFarmId = a.farm?._id || a.farm;
+        if (aFarmId === farmId && a.block) {
+          const block = typeof a.block === 'object' ? a.block : { _id: a.block };
+          blockMap.set(block._id, block);
+        }
+      });
+      setBlocks(Array.from(blockMap.values()));
+    } else {
+      // For superadmin/farmer_owner, use the master-data endpoint
+      fetch(`${BASE_URL}/master-data/blocks?farm=${farmId}`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(j => { if (j.success) setBlocks(j.data); }).catch(() => setBlocks([]));
+    }
+  }, [farmId, token, assignments, isFarmer]);
   return blocks;
 }
 
@@ -49,11 +57,28 @@ const PersiapanLahanPage = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {
     Promise.all([
-      fetch(`${BASE_URL}/master-data/farms`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      // Farmer users don't have access to /master-data/farms/all (requires superadmin/farmer_owner)
+      // They get their farms from assignments instead
+      user?.role !== 'farmer' 
+        ? fetch(`${BASE_URL}/master-data/farms/all`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+        : Promise.resolve({ success: true, data: [] }),
       user?.role === 'farmer' ? fetch(`${BASE_URL}/assignments/farmer-assignments`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ success: false })) : Promise.resolve({ success: false }),
     ]).then(([fj, aj]) => {
       if (fj.success) setFarms(fj.data);
-      if (aj.success) setAssignments(aj.data);
+      if (aj.success) {
+        setAssignments(aj.data);
+        // For farmer users, extract farms from assignments
+        if (user?.role === 'farmer') {
+          const farmMap = new Map();
+          aj.data?.forEach(a => {
+            if (a.farm) {
+              const farm = typeof a.farm === 'object' ? a.farm : { _id: a.farm };
+              farmMap.set(farm._id, farm);
+            }
+          });
+          setFarms(Array.from(farmMap.values()));
+        }
+      }
     }).catch(() => {});
   }, [token, user?.role]);
   const isFarmer = user?.role === 'farmer';
@@ -80,9 +105,9 @@ const PersiapanLahanPage = () => {
       }).catch(() => {});
   }, [token]);
   const isLocked = r => r.status === 'Closed' || (r.crop_cycle_id && completedCycleIds.has(r.crop_cycle_id._id || r.crop_cycle_id));
-  const blocks = useBlocks(token, form.farm_id);
-  const [notification, setNotification] = useState(null);
-  const showToast = m => { setNotification(m); setTimeout(() => setNotification(null), 3000); };
+  const blocks = useBlocks(token, form.farm_id, assignments, isFarmer);
+  const [viewModal, setViewModal] = useState(null);
+  const { showToast } = useToast();
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const columns = [
@@ -98,6 +123,7 @@ const PersiapanLahanPage = () => {
   const LOCK_MSG = 'Siklus ini sudah selesai (Panen ditutup) — data Persiapan Lahan terkunci.';
   const openEdit = r => { if (isLocked(r)) { showToast(LOCK_MSG); return; } setEditTarget(r); setForm({ farm_id: r.farm_id?._id || r.farm_id || '', block: r.block?._id || r.block || '', cycle: r.cycle || '', opening_date: r.land_opening_date ? r.land_opening_date.split('T')[0] : '', clearing_cost: r.clearing_cost || '', notes: r.notes || '' }); setModal('edit'); };
   const openClose = r => { setEditTarget(r); setClosingDate(new Date().toISOString().split('T')[0]); setModal('close'); };
+  const openView = r => { setViewModal(r); };
 
   const handleAdd = async e => {
     e.preventDefault(); if (saving) return; setSaving(true);
@@ -127,7 +153,6 @@ const PersiapanLahanPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold animate-slide-up">{notification}</div>}
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
@@ -146,12 +171,15 @@ const PersiapanLahanPage = () => {
           <DataTable
             columns={columns}
             data={records}
+            onView={openView}
             onEdit={openEdit}
             onDelete={id => {
               const rec = records.find(r => r._id === id);
               if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; }
               if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data lahan dihapus.'); }
             }}
+            editCondition={r => !isLocked(r)}
+            deleteCondition={r => !isLocked(r)}
             itemsPerPage={10} />
         )}
       </Card>
@@ -209,6 +237,15 @@ const PersiapanLahanPage = () => {
             </div>
           </form>
         </Modal>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Lahan"
+        />
       )}
     </div>
   );

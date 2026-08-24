@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, isManagement } = require('../middleware/auth');
+const { authenticate, isManagement, isFarmerScoped } = require('../middleware/auth');
 const { createExpense, listExpenses, updateExpense, deleteExpense } = require('../controller/expenseController');
 
 /**
@@ -8,7 +8,7 @@ const { createExpense, listExpenses, updateExpense, deleteExpense } = require('.
  * /expenses:
  *   post:
  *     tags: [Expenses]
- *     summary: "Log an expense (isManagement: superadmin, farmer_owner)"
+ *     summary: "Log an expense (superadmin, farmer_owner, or farmer with assignment)"
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
  *       required: true
@@ -33,7 +33,7 @@ const { createExpense, listExpenses, updateExpense, deleteExpense } = require('.
  *       '403': { $ref: '#/components/schemas/Error' }
  *   get:
  *     tags: [Expenses]
- *     summary: List expenses with optional filters (isManagement)
+ *     summary: List expenses with optional filters (superadmin, farmer_owner, or farmer with assignment)
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - { name: farm_id, in: query, schema: { type: string } }
@@ -58,7 +58,7 @@ const { createExpense, listExpenses, updateExpense, deleteExpense } = require('.
  * /expenses/{id}:
  *   patch:
  *     tags: [Expenses]
- *     summary: Update an expense (isManagement)
+ *     summary: Update an expense (superadmin, farmer_owner, or farmer with assignment)
  *     security: [{ bearerAuth: [] }]
  *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
  *     requestBody:
@@ -83,7 +83,7 @@ const { createExpense, listExpenses, updateExpense, deleteExpense } = require('.
  *       '404': { $ref: '#/components/schemas/Error' }
  *   delete:
  *     tags: [Expenses]
- *     summary: Delete an expense (isManagement)
+ *     summary: Delete an expense (superadmin, farmer_owner, or farmer with assignment)
  *     security: [{ bearerAuth: [] }]
  *     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
  *     responses:
@@ -95,17 +95,18 @@ const { createExpense, listExpenses, updateExpense, deleteExpense } = require('.
  *       '404': { $ref: '#/components/schemas/Error' }
  */
 
-// POST /api/expenses — Log an expense
+// Access control: superadmin, farmer_owner, or farmer with assignment
+const expenseAccess = async (req, res, next) => {
+  if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  if (['superadmin', 'farmer_owner'].includes(req.user.role)) return next();
+  if (req.user.role === 'farmer') return isFarmerScoped(req, res, next);
+  return res.status(403).json({ success: false, message: 'Akses ditolak' });
+};
+
 router.use(authenticate);
-router.post('/', isManagement, createExpense);
-
-// GET /api/expenses — List with optional filters
-router.get('/', isManagement, listExpenses);
-
-// PATCH /api/expenses/:id — Edit an expense entry
-router.patch('/:id', isManagement, updateExpense);
-
-// DELETE /api/expenses/:id — Delete an expense
-router.delete('/:id', isManagement, deleteExpense);
+router.post('/', expenseAccess, createExpense);
+router.get('/', expenseAccess, listExpenses);
+router.patch('/:id', expenseAccess, updateExpense);
+router.delete('/:id', expenseAccess, deleteExpense);
 
 module.exports = router;

@@ -5,12 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 import Card from '@/component/common/Card';
 import DataTable from '@/component/common/DataTable';
-
-const statusMap = { Pending: 'Tertunda', In_Progress: 'Sedang Berlangsung', Completed: 'Selesai', Cancelled: 'Dibatalkan' };
-const Badge = ({ status }) => {
-  const colors = { Pending: 'bg-orange-100 text-orange-700', In_Progress: 'bg-yellow-100 text-yellow-800', Completed: 'bg-green-100 text-green-700', Cancelled: 'bg-red-100 text-red-700' };
-  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{statusMap[status] || status?.replace(/_/g, ' ') || '-'}</span>;
-};
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { Badge, STATUS_LABELS } from '@/utils/statusLabels';
+import { useToast } from '@/contexts/ToastContext';
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
     <div className="absolute inset-0 backdrop-blur-sm" />
@@ -48,8 +45,8 @@ const PerawatanPage = () => {
   const [modal, setModal] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const showToast = m => { setNotification(m); setTimeout(() => setNotification(null), 3000); };
+  const [viewModal, setViewModal] = useState(null);
+  const { showToast } = useToast();
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const filtered = filterType ? records.filter(r => (r.activity_type_ref?._id || r.activity_type) === filterType) : records;
@@ -94,6 +91,7 @@ const PerawatanPage = () => {
     });
     setModal('form');
   };
+  const openView = r => { setViewModal(r); };
   const handleSubmit = async e => {
     e.preventDefault(); if (saving) return; setSaving(true);
     try {
@@ -109,9 +107,6 @@ const PerawatanPage = () => {
       setModal(null); fetchData();
     } finally { setSaving(false); }
   };
-  const handleStatusChange = async (id, status) => {
-    await updateData(id, { status }); showToast('Status diperbarui!');
-  };
 
   if (error && (error.includes('403') || error.includes('Akses'))) {
     return <Card title="Perawatan"><p className="p-6 text-center text-sm font-semibold text-destructive">{error}</p><p className="pb-6 text-center text-xs text-muted -mt-2">Hubungi Owner Anda untuk mendapatkan akses tahap ini.</p></Card>;
@@ -119,7 +114,6 @@ const PerawatanPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold animate-slide-up">{notification}</div>}
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full" />
@@ -155,8 +149,11 @@ const PerawatanPage = () => {
               columns={columns}
               data={filtered}
               itemsPerPage={10}
+              onView={openView}
               onEdit={openEdit}
               onDelete={id => { const rec = records.find(r => r._id === id); if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; } if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data perawatan dihapus.'); } }}
+              editCondition={r => !isLocked(r)}
+              deleteCondition={r => !isLocked(r)}
             />
           </>
         )}
@@ -201,7 +198,7 @@ const PerawatanPage = () => {
             </FF>
             <FF label="Status">
               <select name="status" value={form.status} onChange={fc} className={inputCls}>
-                {Object.entries(statusMap).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </FF>
             <div className="flex justify-end gap-3 mt-2">
@@ -210,6 +207,15 @@ const PerawatanPage = () => {
             </div>
           </form>
         </Modal>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Perawatan"
+        />
       )}
     </div>
   );

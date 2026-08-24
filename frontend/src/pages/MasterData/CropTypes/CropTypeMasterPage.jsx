@@ -6,6 +6,8 @@ import { Input, Select } from '@/component/common/FormField';
 import { useAuth } from '@/contexts/AuthContext';
 import { required, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 const CropTypeMasterPage = () => {
   const { token } = useAuth();
@@ -15,8 +17,10 @@ const CropTypeMasterPage = () => {
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState({ code: '', name: '', category: 'Padi', scientific_name: '', duration_days: '', yield_per_ha: '', unit: 'Kg', description: '' });
   const [errors, setErrors] = useState({});
+  const [viewModal, setViewModal] = useState(null);
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const { showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -48,14 +52,15 @@ const CropTypeMasterPage = () => {
       const json = await res.json();
       if (!json.success) {
         if (json.errors) { setErrors(json.errors); return; }
-        alert(json.message || 'Gagal menyimpan data');
+        showToast(json.message || 'Gagal menyimpan data', 'error');
         return;
       }
       setShowModal(false); setEditItem(null);
       setForm({ code: '', name: '', category: 'Padi', scientific_name: '', duration_days: '', yield_per_ha: '', unit: 'Kg', description: '' });
       setErrors({});
       fetchData();
-    } catch (e) { alert(e.message); }
+      showToast('Data jenis tanaman berhasil disimpan!', 'success');
+    } catch (e) { showToast(e.message, 'error'); }
   };
 
   const handleEdit = (item) => {
@@ -69,7 +74,10 @@ const CropTypeMasterPage = () => {
     if (!confirm('Hapus data ini?')) return;
     await fetch(`${BASE_URL}/master-data/crop-types/${id}`, { method: 'DELETE', headers });
     fetchData();
+    showToast('Data jenis tanaman berhasil dihapus!', 'success');
   };
+
+  const openView = (item) => { setViewModal(item); };
 
   const columns = [
     { header: 'Kode', accessor: 'code' },
@@ -101,7 +109,7 @@ const CropTypeMasterPage = () => {
       </div>
 
       <Card title="Daftar Jenis Tanaman">
-        <DataTable columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={10} />
+        <DataTable columns={columns} data={data} onView={openView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={10} />
       </Card>
 
       {showModal && (
@@ -132,6 +140,15 @@ const CropTypeMasterPage = () => {
             </div>
           </div>
         </div>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Jenis Tanaman"
+        />
       )}
     </div>
   );

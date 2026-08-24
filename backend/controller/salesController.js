@@ -1,5 +1,27 @@
 const Sale = require('../model/Sale');
+const FarmerAssignment = require('../model/FarmerAssignment');
 const { required, isObjectId, isNumber, minValue, validate, errorResponse } = require('../util/validate');
+
+async function getUserFarmIds(user) {
+  if (user.role === 'farmer') {
+    const assignments = await FarmerAssignment.find({ farmer: user.id, status: 'Active' }).lean();
+    return [...new Set(assignments.map(a => (a.farm?._id || a.farm).toString()))];
+  }
+  if (user.role === 'farmer_owner') {
+    const User = require('../model/User');
+    const u = await User.findById(user.id).select('assigned_farms').lean();
+    return (u?.assigned_farms || []).map(f => (f && typeof f === 'object' ? (f._id || f).toString() : String(f)));
+  }
+  return null; // superadmin/gov: no restriction
+}
+
+function buildFarmQuery(userFarmIds, explicitFarmId) {
+  if (!userFarmIds) return explicitFarmId ? { farm_id: explicitFarmId } : {};
+  if (explicitFarmId) {
+    return userFarmIds.includes(String(explicitFarmId)) ? { farm_id: explicitFarmId } : { farm_id: { $in: [] } };
+  }
+  return { farm_id: { $in: userFarmIds } };
+}
 
 // POST /api/sales — Record a new sale
 const createSale = async (req, res) => {
@@ -15,6 +37,12 @@ const createSale = async (req, res) => {
       invoice_ref,
       sale_date,
     } = req.body;
+
+    // Validate farm access
+    const userFarmIds = await getUserFarmIds(req.user);
+    if (userFarmIds && !userFarmIds.includes(farm_id)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak: farm tidak dalam penugasan Anda' });
+    }
 
     const errs = validate(
       { farm_id, buyer_name, buyer_type, quantity_kg, price_per_kg },
@@ -70,11 +98,18 @@ const createSale = async (req, res) => {
 const listSales = async (req, res) => {
   try {
     const { cycle_id, farm_id, buyer_type, page = 1, limit = 20 } = req.query;
-    const query = {};
-
+    
+    const userFarmIds = await getUserFarmIds(req.user);
+    const farmQuery = buildFarmQuery(userFarmIds, farm_id);
+    
+    const query = { ...farmQuery };
     if (cycle_id) query.crop_cycle_id = cycle_id;
-    if (farm_id) query.farm_id = farm_id;
     if (buyer_type) query.buyer_type = buyer_type;
+    
+    // If farmQuery results in empty match ($in: []), return empty
+    if (farmQuery.farm_id?.$in?.length === 0) {
+      return res.json({ success: true, data: [], total: 0, page: parseInt(page), totals: { totalKg: 0, totalRevenue: 0, avgPrice: 0 } });
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [sales, total] = await Promise.all([
@@ -115,8 +150,12 @@ const listSales = async (req, res) => {
 // GET /api/sales/:id — Single sale
 const getSale = async (req, res) => {
   try {
+    const userFarmIds = await getUserFarmIds(req.user);
     const sale = await Sale.findById(req.params.id).populate('farm_id', 'name').populate('createdBy', 'name');
     if (!sale) return res.status(404).json({ success: false, message: 'Data penjualan tidak ditemukan' });
+    if (userFarmIds && !userFarmIds.includes(sale.farm_id?.toString())) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
     res.json({ success: true, data: sale });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -126,13 +165,22 @@ const getSale = async (req, res) => {
 // PUT /api/sales/:id — Edit a sale entry
 const updateSale = async (req, res) => {
   try {
-    const sale = await Sale.findOneAndUpdate(
+    const userFarmIds = await getUserFarmIds(req.user);
+    const sale = await Sale.findById(req.params.id);
+    if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
+    if (userFarmIds && !userFarmIds.includes(sale.farm_id?.toString())) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+    // Prevent farm_id change to unauthorized farm
+    if (req.body.farm_id && userFarmIds && !userFarmIds.includes(req.body.farm_id)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak: farm tidak dalam penugasan Anda' });
+    }
+    const updated = await Sale.findOneAndUpdate(
       { _id: req.params.id },
       { $set: req.body },
       { new: true, runValidators: true }
     );
-    if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
-    res.json({ success: true, data: sale });
+    res.json({ success: true, data: updated });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -141,8 +189,13 @@ const updateSale = async (req, res) => {
 // DELETE /api/sales/:id — Delete a sale
 const deleteSale = async (req, res) => {
   try {
-    const sale = await Sale.findOneAndDelete({ _id: req.params.id });
+    const userFarmIds = await getUserFarmIds(req.user);
+    const sale = await Sale.findById(req.params.id);
     if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
+    if (userFarmIds && !userFarmIds.includes(sale.farm_id?.toString())) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+    await Sale.findOneAndDelete({ _id: req.params.id });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

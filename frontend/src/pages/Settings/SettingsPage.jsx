@@ -4,6 +4,7 @@ import Card from '@/component/common/Card';
 import { Input, Select } from '@/component/common/FormField';
 import { required, isEmail, isPhone, minLength, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import { useToast } from '@/contexts/ToastContext';
 
 const SettingsPage = () => {
   const { token, user, forceReauth } = useAuth();
@@ -11,7 +12,6 @@ const SettingsPage = () => {
   const [farms, setFarms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState(null);
   const [activeTab, setActiveTab] = useState('profile');
 
   const [profileForm, setProfileForm] = useState({ name: '', phone: '', address: '' });
@@ -21,11 +21,7 @@ const SettingsPage = () => {
   const [passwordErrors, setPasswordErrors] = useState({});
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
-  const showToast = (msg, type = 'success') => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  const { showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -119,12 +115,6 @@ const SettingsPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && (
-        <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg text-sm font-bold ${notification.type === 'error' ? 'bg-destructive text-white' : 'bg-primary text-white'}`}>
-          {notification.msg}
-        </div>
-      )}
-
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />

@@ -4,11 +4,13 @@ import DataTable from '@/component/common/DataTable';
 import RecordSaleModal from './component/RecordSaleModal';
 import RecordExpenseModal from './component/RecordExpenseModal';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 const BUYER_LABELS = { Mill: 'Pabrik', Middleman: 'Tengkulak', Direct: 'Langsung', Government: 'Pemerintah' };
 
 const SalesDistributionPage = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [activeTab, setActiveTab] = useState('sales');
   const [sales, setSales] = useState([]);
   const [expenses, setExpenses] = useState([]);
@@ -16,31 +18,63 @@ const SalesDistributionPage = () => {
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [farms, setFarms] = useState([]);
-  const [notification, setNotification] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+  const [viewSaleModal, setViewSaleModal] = useState(null);
+  const [viewExpenseModal, setViewExpenseModal] = useState(null);
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const isFarmer = user?.role === 'farmer';
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [sRes, eRes, fRes] = await Promise.all([
-        fetch(`${BASE_URL}/sales`, { headers }),
-        fetch(`${BASE_URL}/expenses`, { headers }),
-        fetch(`${BASE_URL}/master-data/farms/all`, { headers })
-      ]);
-      const sJson = await sRes.json();
-      const eJson = await eRes.json();
-      const fJson = await fRes.json();
-      if (sJson.success) setSales(sJson.data);
-      if (eJson.success) setExpenses(eJson.data);
-      if (fJson.success) setFarms(fJson.data);
+      
+      if (isFarmer) {
+        // Farmer users: get farms and assignments, then fetch sales/expenses
+        const [aRes, sRes, eRes] = await Promise.all([
+          fetch(`${BASE_URL}/assignments/farmer-assignments`, { headers }),
+          fetch(`${BASE_URL}/sales`, { headers }),
+          fetch(`${BASE_URL}/expenses`, { headers })
+        ]);
+        const aJson = await aRes.json();
+        const sJson = await sRes.json();
+        const eJson = await eRes.json();
+        
+        if (aJson.success) {
+          setAssignments(aJson.data);
+          // Extract unique farms from assignments
+          const farmMap = new Map();
+          aJson.data?.forEach(a => {
+            if (a.farm) {
+              const farm = typeof a.farm === 'object' ? a.farm : { _id: a.farm, name: a.farm_name || a.farm };
+              farmMap.set(farm._id, farm);
+            }
+          });
+          setFarms(Array.from(farmMap.values()));
+        }
+        if (sJson.success) setSales(sJson.data);
+        if (eJson.success) setExpenses(eJson.data);
+      } else {
+        // Superadmin/farmer_owner: fetch all farms + sales/expenses
+        const [sRes, eRes, fRes] = await Promise.all([
+          fetch(`${BASE_URL}/sales`, { headers }),
+          fetch(`${BASE_URL}/expenses`, { headers }),
+          fetch(`${BASE_URL}/master-data/farms/all`, { headers })
+        ]);
+        const sJson = await sRes.json();
+        const eJson = await eRes.json();
+        const fJson = await fRes.json();
+        if (sJson.success) setSales(sJson.data);
+        if (eJson.success) setExpenses(eJson.data);
+        if (fJson.success) setFarms(fJson.data);
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [token]);
+  }, [token, isFarmer]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const showToast = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
+  const { showToast } = useToast();
 
   const handleSaveSale = async (saleForm) => {
     try {
@@ -76,6 +110,9 @@ const SalesDistributionPage = () => {
     fetchData();
   };
 
+  const openViewSale = (item) => { setViewSaleModal(item); };
+  const openViewExpense = (item) => { setViewExpenseModal(item); };
+
   const totalKg = sales.reduce((s, r) => s + (r.quantity_kg || 0), 0);
   const totalRevenue = sales.reduce((s, r) => s + (r.total_revenue || r.quantity_kg * r.price_per_kg || 0), 0);
   const avgPrice = totalKg > 0 ? Math.round(totalRevenue / totalKg) : 0;
@@ -103,10 +140,6 @@ const SalesDistributionPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && (
-        <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold">{notification}</div>
-      )}
-
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -149,9 +182,9 @@ const SalesDistributionPage = () => {
         </div>
         <div className="p-6">
           {activeTab === 'sales' ? (
-            <DataTable columns={saleColumns} data={sales} onDelete={(id) => handleDeleteSale(id)} itemsPerPage={10} />
+            <DataTable columns={saleColumns} data={sales} onView={openViewSale} onDelete={(id) => handleDeleteSale(id)} itemsPerPage={10} />
           ) : (
-            <DataTable columns={expenseColumns} data={expenses} onDelete={(id) => handleDeleteExpense(id)} itemsPerPage={10} />
+            <DataTable columns={expenseColumns} data={expenses} onView={openViewExpense} onDelete={(id) => handleDeleteExpense(id)} itemsPerPage={10} />
           )}
         </div>
       </div>
@@ -171,6 +204,24 @@ const SalesDistributionPage = () => {
           onClose={() => setShowExpenseModal(false)}
           onSave={handleSaveExpense}
           farms={farms}
+        />
+      )}
+      {viewSaleModal && (
+        <ViewDetailModal
+          isOpen={!!viewSaleModal}
+          onClose={() => setViewSaleModal(null)}
+          record={viewSaleModal}
+          columns={saleColumns}
+          title="Detail Penjualan"
+        />
+      )}
+      {viewExpenseModal && (
+        <ViewDetailModal
+          isOpen={!!viewExpenseModal}
+          onClose={() => setViewExpenseModal(null)}
+          record={viewExpenseModal}
+          columns={expenseColumns}
+          title="Detail Pengeluaran"
         />
       )}
     </div>

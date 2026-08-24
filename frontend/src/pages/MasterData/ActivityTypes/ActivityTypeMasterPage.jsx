@@ -6,6 +6,8 @@ import { Input, Select } from '@/component/common/FormField';
 import { useAuth } from '@/contexts/AuthContext';
 import { required, validateForm } from '@/utils/validation';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { useToast } from '@/contexts/ToastContext';
 
 const ActivityTypeMasterPage = () => {
   const { token } = useAuth();
@@ -15,8 +17,10 @@ const ActivityTypeMasterPage = () => {
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
   const [errors, setErrors] = useState({});
+  const [viewModal, setViewModal] = useState(null);
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const { showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -48,14 +52,15 @@ const ActivityTypeMasterPage = () => {
       const json = await res.json();
       if (!json.success) {
         if (json.errors) { setErrors(json.errors); return; }
-        alert(json.message || 'Gagal menyimpan data');
+        showToast(json.message || 'Gagal menyimpan data', 'error');
         return;
       }
       setShowModal(false); setEditItem(null);
-setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
+      setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
       setErrors({});
       fetchData();
-    } catch (e) { alert(e.message); }
+      showToast('Data jenis aktivitas berhasil disimpan!', 'success');
+    } catch (e) { showToast(e.message, 'error'); }
   };
 
   const handleEdit = (item) => {
@@ -69,7 +74,10 @@ setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duratio
     if (!confirm('Hapus data ini?')) return;
     await fetch(`${BASE_URL}/master-data/activity-types/${id}`, { method: 'DELETE', headers });
     fetchData();
+    showToast('Data jenis aktivitas berhasil dihapus!', 'success');
   };
+
+  const openView = (item) => { setViewModal(item); };
 
   const columns = [
     { header: 'Kode', accessor: 'code' },
@@ -101,7 +109,7 @@ setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duratio
       </div>
 
       <Card title="Daftar Jenis Aktivitas">
-        <DataTable columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={10} />
+        <DataTable columns={columns} data={data} onView={openView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={10} />
       </Card>
 
       {showModal && (
@@ -131,6 +139,15 @@ setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duratio
             </div>
           </div>
         </div>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Jenis Aktivitas"
+        />
       )}
     </div>
   );

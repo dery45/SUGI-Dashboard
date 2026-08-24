@@ -1,4 +1,5 @@
 const Expense = require('../model/Expense');
+const FarmerAssignment = require('../model/FarmerAssignment');
 const { required, isObjectId, isNumber, minValue, validate, errorResponse } = require('../util/validate');
 
 const EXPENSE_CATEGORIES = [
@@ -12,11 +13,38 @@ const EXPENSE_CATEGORIES = [
   'Lainnya',
 ];
 
+async function getUserFarmIds(user) {
+  if (user.role === 'farmer') {
+    const assignments = await FarmerAssignment.find({ farmer: user.id, status: 'Active' }).lean();
+    return [...new Set(assignments.map(a => (a.farm?._id || a.farm).toString()))];
+  }
+  if (user.role === 'farmer_owner') {
+    const User = require('../model/User');
+    const u = await User.findById(user.id).select('assigned_farms').lean();
+    return (u?.assigned_farms || []).map(f => (f && typeof f === 'object' ? (f._id || f).toString() : String(f)));
+  }
+  return null; // superadmin/gov: no restriction
+}
+
+function buildFarmQuery(userFarmIds, explicitFarmId) {
+  if (!userFarmIds) return explicitFarmId ? { farm_id: explicitFarmId } : {};
+  if (explicitFarmId) {
+    return userFarmIds.includes(String(explicitFarmId)) ? { farm_id: explicitFarmId } : { farm_id: { $in: [] } };
+  }
+  return { farm_id: { $in: userFarmIds } };
+}
+
 // POST /api/expenses — Log an expense
 const createExpense = async (req, res) => {
   try {
     const { farm_id, crop_cycle_id, category, amount_idr, description, expense_date, um_responsible_id, receipt_ref } =
       req.body;
+
+    // Validate farm access
+    const userFarmIds = await getUserFarmIds(req.user);
+    if (userFarmIds && !userFarmIds.includes(farm_id)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak: farm tidak dalam penugasan Anda' });
+    }
 
     const errs = validate(
       { farm_id, category, amount_idr },
@@ -64,10 +92,17 @@ const createExpense = async (req, res) => {
 const listExpenses = async (req, res) => {
   try {
     const { farm_id, category, page = 1, limit = 20 } = req.query;
-    const query = {};
-
-    if (farm_id) query.farm_id = farm_id;
+    
+    const userFarmIds = await getUserFarmIds(req.user);
+    const farmQuery = buildFarmQuery(userFarmIds, farm_id);
+    
+    const query = { ...farmQuery };
     if (category) query.category = category;
+    
+    // If farmQuery results in empty match ($in: []), return empty
+    if (farmQuery.farm_id?.$in?.length === 0) {
+      return res.json({ success: true, data: [], total: 0, page: parseInt(page), breakdown: [] });
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [expenses, total] = await Promise.all([
@@ -91,13 +126,22 @@ const listExpenses = async (req, res) => {
 // PATCH /api/expenses/:id — Edit an expense entry
 const updateExpense = async (req, res) => {
   try {
-    const expense = await Expense.findOneAndUpdate(
+    const userFarmIds = await getUserFarmIds(req.user);
+    const expense = await Expense.findById(req.params.id);
+    if (!expense) return res.status(404).json({ success: false, message: 'Pengeluaran tidak ditemukan' });
+    if (userFarmIds && !userFarmIds.includes(expense.farm_id?.toString())) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+    // Prevent farm_id change to unauthorized farm
+    if (req.body.farm_id && userFarmIds && !userFarmIds.includes(req.body.farm_id)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak: farm tidak dalam penugasan Anda' });
+    }
+    const updated = await Expense.findOneAndUpdate(
       { _id: req.params.id },
       { $set: req.body },
       { new: true, runValidators: true }
     );
-    if (!expense) return res.status(404).json({ success: false, message: 'Pengeluaran tidak ditemukan' });
-    res.json({ success: true, data: expense });
+    res.json({ success: true, data: updated });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -106,8 +150,13 @@ const updateExpense = async (req, res) => {
 // DELETE /api/expenses/:id — Delete an expense
 const deleteExpense = async (req, res) => {
   try {
-    const expense = await Expense.findOneAndDelete({ _id: req.params.id });
+    const userFarmIds = await getUserFarmIds(req.user);
+    const expense = await Expense.findById(req.params.id);
     if (!expense) return res.status(404).json({ success: false, message: 'Expense not found' });
+    if (userFarmIds && !userFarmIds.includes(expense.farm_id?.toString())) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+    await Expense.findOneAndDelete({ _id: req.params.id });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

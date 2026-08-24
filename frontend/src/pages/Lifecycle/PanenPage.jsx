@@ -4,12 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '@/services/authService';
 import Card from '@/component/common/Card';
 import DataTable from '@/component/common/DataTable';
-
-const statusMap = { Open: 'Terbuka', Closed: 'Tertutup', Completed: 'Selesai', In_Progress: 'Sedang Berlangsung' };
-const Badge = ({ status }) => {
-  const colors = { Open: 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400', Closed: 'bg-gray-100 text-gray-600', Completed: 'bg-blue-100 text-blue-700' };
-  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{statusMap[status] || status?.replace(/_/g, ' ') || '-'}</span>;
-};
+import ViewDetailModal from '@/component/common/ViewDetailModal';
+import { Badge } from '@/utils/statusLabels';
+import { useToast } from '@/contexts/ToastContext';
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
     <div className="absolute inset-0 backdrop-blur-sm" />
@@ -49,8 +46,8 @@ const PanenPage = () => {
   const [editTarget, setEditTarget] = useState(null);
   const [yieldInput, setYieldInput] = useState('');
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const showToast = m => { setNotification(m); setTimeout(() => setNotification(null), 3000); };
+  const [viewModal, setViewModal] = useState(null);
+  const { showToast } = useToast();
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const columns = [
@@ -65,6 +62,7 @@ const PanenPage = () => {
 
   const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', opening_date: new Date().toISOString().split('T')[0], expected_end: '', expected_yield_kg: '', notes: '' }); setModal('form'); };
   const openEdit = r => {
+    if (isLocked(r)) { showToast(LOCK_MSG); return; }
     setEditTarget(r);
     setForm({
       crop_cycle_id: r.crop_cycle_id?._id || r.crop_cycle_id || '',
@@ -75,6 +73,9 @@ const PanenPage = () => {
     setModal('form');
   };
   const openClose = r => { setEditTarget(r); setYieldInput(r.actual_yield_kg ?? ''); setModal('close'); };
+  const openView = r => { setViewModal(r); };
+  const isLocked = r => r.status === 'Closed' || r.status === 'Completed';
+  const LOCK_MSG = 'Masa panen sudah ditutup — data Panen terkunci.';
 
   const handleSubmit = async e => {
     e.preventDefault(); if (saving) return; setSaving(true);
@@ -122,7 +123,6 @@ const PanenPage = () => {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-16">
-      {notification && <div className="fixed top-4 right-4 z-[100] bg-primary text-white px-6 py-3 rounded-xl shadow-lg text-sm font-bold animate-slide-up">{notification}</div>}
       <div className="bg-gradient-to-br from-surface/60 via-surface/30 to-transparent backdrop-blur-xl p-8 rounded-[2.5rem] border border-border/30 shadow-lg flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full" />
@@ -142,8 +142,11 @@ const PanenPage = () => {
             <DataTable
               columns={columns}
               data={records}
+              onView={openView}
               onEdit={openEdit}
-              onDelete={id => { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data panen dihapus.'); } }}
+              onDelete={id => { const rec = records.find(r => r._id === id); if (rec && isLocked(rec)) { showToast(LOCK_MSG); return; } if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) { deleteData(id); showToast('Data panen dihapus.'); } }}
+              editCondition={r => !isLocked(r)}
+              deleteCondition={r => !isLocked(r)}
               itemsPerPage={10}
             />
             {/* Tutup action for Open rows */}
@@ -201,6 +204,15 @@ const PanenPage = () => {
             </div>
           </form>
         </Modal>
+      )}
+      {viewModal && (
+        <ViewDetailModal
+          isOpen={!!viewModal}
+          onClose={() => setViewModal(null)}
+          record={viewModal}
+          columns={columns}
+          title="Detail Panen"
+        />
       )}
     </div>
   );

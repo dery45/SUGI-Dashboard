@@ -45,7 +45,7 @@ const isFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
 
 const checkRole = authorize;
 
-// Farmer-scoped access check for lifecycle/sales routes
+// Farmer-scoped access check for lifecycle/sales/expenses routes
 // Distinguishes "no active assignment" vs "assignment exists but stage/farm not covered"
 const isFarmerScoped = async (req, res, next) => {
   try {
@@ -62,6 +62,7 @@ const isFarmerScoped = async (req, res, next) => {
     let cropCycleId = req.body?.crop_cycle_id || req.query?.crop_cycle_id || req.params.crop_cycle_id;
     const urlForCheck = req.originalUrl || req.path;
     const isSalesRoute = urlForCheck.includes('/sales');
+    const isExpensesRoute = urlForCheck.includes('/expenses');
     const isLifecycleRoute = urlForCheck.includes('/lifecycle');
     // Map lifecycle sub-path to required stage (used for specific error)
     let requiredStage = null;
@@ -82,8 +83,8 @@ const isFarmerScoped = async (req, res, next) => {
       if (farmId && assignment.farm?.toString() === farmId) { hasAccess = true; break; }
       if (blockId && assignment.block?.toString() === blockId) { hasAccess = true; break; }
       if (cropCycleId && assignment.crop_cycle?.toString() === cropCycleId) { hasAccess = true; break; }
-      if (isSalesRoute && assignment.sales_access) { hasAccess = true; break; }
-      if (isSalesRoute && !assignment.sales_access) hasStageMismatch = true;
+      if ((isSalesRoute || isExpensesRoute) && assignment.sales_access) { hasAccess = true; break; }
+      if ((isSalesRoute || isExpensesRoute) && !assignment.sales_access) hasStageMismatch = true;
       if (isLifecycleRoute) {
         if (requiredStage) {
           if (assignment.access_stages?.includes(requiredStage)) { hasAccess = true; break; }
@@ -97,7 +98,7 @@ const isFarmerScoped = async (req, res, next) => {
       }
     }
     if (!hasAccess) {
-      if (isSalesRoute && hasStageMismatch) {
+      if ((isSalesRoute || isExpensesRoute) && hasStageMismatch) {
         return res.status(403).json({ success: false, message: 'Penugasan Anda tidak memiliki akses Penjualan & Distribusi' });
       }
       if (isLifecycleRoute && requiredStage && hasStageMismatch) {
