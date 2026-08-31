@@ -34,29 +34,27 @@ async function seedLifecycle() {
   console.log('Lifecycle collections cleared');
 
   // ── Get existing data ──────────────────────────────────────────────────────────
-  const padi = await CropType.findOne({ code: 'PADI' });
-  const jagung = await CropType.findOne({ code: 'JAGUNG' });
-  const kedelai = await CropType.findOne({ code: 'KEDELAI' });
+  const padi = await CropType.findOne({ name: 'Padi' });
+  const jagung = await CropType.findOne({ name: 'Jagung' });
+  const kedelai = await CropType.findOne({ name: 'Kedelai' });
 
-  const landClear = await ActivityType.findOne({ code: 'LAND_CLEAR' });
-  const soilPrep = await ActivityType.findOne({ code: 'SOIL_PREP' });
-  const planting = await ActivityType.findOne({ code: 'PLANTING' });
-  const fertilize = await ActivityType.findOne({ code: 'FERTILIZE' });
-  const weeding = await ActivityType.findOne({ code: 'WEEDING' });
-  const spray = await ActivityType.findOne({ code: 'SPRAY' });
-  const irrigate = await ActivityType.findOne({ code: 'IRRIGATE' });
-  const fertilizeTop = await ActivityType.findOne({ code: 'FERTILIZE_TOP' });
-  const prune = await ActivityType.findOne({ code: 'PRUNE' });
-  const harvest = await ActivityType.findOne({ code: 'HARVEST' });
-  const postHarvest = await ActivityType.findOne({ code: 'POST_HARVEST' });
+  const landClear = await ActivityType.findOne({ name: 'Pembersihan Lahan' });
+  const soilPrep = await ActivityType.findOne({ name: 'Pengolahan Tanah' });
+  const planting = await ActivityType.findOne({ name: 'Penanaman' });
+  const fertilize = await ActivityType.findOne({ name: 'Pemupukan Dasar' });
+  const weeding = await ActivityType.findOne({ name: 'Penyiangan' });
+  const spray = await ActivityType.findOne({ name: 'Penyemprotan Hama' });
+  const irrigate = await ActivityType.findOne({ name: 'Pengairan' });
+  const fertilizeTop = await ActivityType.findOne({ name: 'Pemupukan Susulan' });
+  const prune = await ActivityType.findOne({ name: 'Pemangkasan' });
+  const harvest = await ActivityType.findOne({ name: 'Panen' });
+  const postHarvest = await ActivityType.findOne({ name: 'Pasca Panen' });
 
   // ── Create Farms ──────────────────────────────────────────────────────────────
   console.log('\n=== Creating Farms ===');
   const farm1 = await FarmMaster.findOneAndUpdate(
-    { code: 'FARM001' },
+    { name: 'Kebun Sawit Sejahtera' },
     {
-      name: 'Kebun Sawit Sejahtera',
-      code: 'FARM001',
       province: 'Sumatera Utara',
       city: 'Deli Serdang',
       district: 'Sibolangit',
@@ -74,10 +72,8 @@ async function seedLifecycle() {
   console.log('Farm 1:', farm1.name);
 
   const farm2 = await FarmMaster.findOneAndUpdate(
-    { code: 'FARM002' },
+    { name: 'Kebun Jagung Makmur' },
     {
-      name: 'Kebun Jagung Makmur',
-      code: 'FARM002',
       province: 'Jawa Timur',
       city: 'Malang',
       district: 'Dampit',
@@ -99,12 +95,11 @@ async function seedLifecycle() {
   const blocks = [];
   for (const farm of [farm1, farm2]) {
     for (let i = 1; i <= 2; i++) {
-      const blockCode = `${farm.code}_B${i}`;
+      const blockName = `Blok ${i}`;
       const block = await Block.findOneAndUpdate(
-        { code: blockCode },
+        { name: blockName, farm: farm._id },
         {
           name: `Blok ${i}`,
-          code: blockCode,
           farm: farm._id,
           area_ha: farm._id.equals(farm1._id) ? 50 : 30,
           soil_type: 'Alluvial',
@@ -115,7 +110,7 @@ async function seedLifecycle() {
         { upsert: true, new: true }
       );
       blocks.push(block);
-      console.log(`Block: ${block.name} (${block.code})`);
+      console.log(`Block: ${block.name}`);
     }
   }
 
@@ -251,7 +246,7 @@ async function seedLifecycle() {
     // Farm 1 - B1 - Padi IR-64 (~2.5 months, Mar→May) - Completed
     {
       farm: farm1,
-      block: blocks.find(b => b.code === 'FARM001_B1'),
+      block: blocks.find(b => b.name === 'Blok 1' && String(b.farm) === String(farm1._id)),
       cropType: padi,
       variety: 'IR-64',
       cycleLabel: 'Padi IR-64 Musim 1 2026',
@@ -270,7 +265,7 @@ async function seedLifecycle() {
     // Farm 2 - B1 - Jagung Pioneer-32 (~4 months, Mar→Jul) - Completed
     {
       farm: farm2,
-      block: blocks.find(b => b.code === 'FARM002_B1'),
+      block: blocks.find(b => b.name === 'Blok 1' && String(b.farm) === String(farm2._id)),
       cropType: jagung,
       variety: 'Pioneer-32',
       cycleLabel: 'Jagung Pioneer-32 Musim 1 2026',
@@ -289,7 +284,7 @@ async function seedLifecycle() {
     // Farm 2 - B2 - Padi IR-64 (~2.5 months, Mar→Jun) - Completed
     {
       farm: farm2,
-      block: blocks.find(b => b.code === 'FARM002_B2'),
+      block: blocks.find(b => b.name === 'Blok 2' && String(b.farm) === String(farm2._id)),
       cropType: padi,
       variety: 'IR-64',
       cycleLabel: 'Padi IR-64 Musim 1 2026',
@@ -308,7 +303,7 @@ async function seedLifecycle() {
     // Farm 1 - B2 - Kedelai Grobogan quick cycle (~1.5 months, Apr→May) - Completed
     {
       farm: farm1,
-      block: blocks.find(b => b.code === 'FARM001_B2'),
+      block: blocks.find(b => b.name === 'Blok 2' && String(b.farm) === String(farm1._id)),
       cropType: kedelai,
       variety: 'Grobogan',
       cycleLabel: 'Kedelai Grobogan Musim 1 2026',
@@ -327,7 +322,7 @@ async function seedLifecycle() {
     // Farm 1 - B2 - Jagung Bisi-18 (~3 months, Jun→Sep) - Harvesting
     {
       farm: farm1,
-      block: blocks.find(b => b.code === 'FARM001_B2'),
+      block: blocks.find(b => b.name === 'Blok 2' && String(b.farm) === String(farm1._id)),
       cropType: jagung,
       variety: 'Bisi-18',
       cycleLabel: 'Jagung Bisi-18 Musim 2 2026',
@@ -346,7 +341,7 @@ async function seedLifecycle() {
     // Farm 1 - B1 - Kedelai Anjasmoro (~2.5 months, Jun→Sep) - Maintenance
     {
       farm: farm1,
-      block: blocks.find(b => b.code === 'FARM001_B1'),
+      block: blocks.find(b => b.name === 'Blok 1' && String(b.farm) === String(farm1._id)),
       cropType: kedelai,
       variety: 'Anjasmoro',
       cycleLabel: 'Kedelai Anjasmoro Musim 2 2026',
@@ -365,7 +360,7 @@ async function seedLifecycle() {
     // Farm 2 - B2 - Kedelai Dena-1 (~2 months, Jun→Aug) - Completed
     {
       farm: farm2,
-      block: blocks.find(b => b.code === 'FARM002_B2'),
+      block: blocks.find(b => b.name === 'Blok 2' && String(b.farm) === String(farm2._id)),
       cropType: kedelai,
       variety: 'Dena-1',
       cycleLabel: 'Kedelai Dena-1 Musim 2 2026',
@@ -384,7 +379,7 @@ async function seedLifecycle() {
     // Farm 2 - B1 - Padi Ciherang (~3+ months, Agu→Nov) - Maintenance
     {
       farm: farm2,
-      block: blocks.find(b => b.code === 'FARM002_B1'),
+      block: blocks.find(b => b.name === 'Blok 1' && String(b.farm) === String(farm2._id)),
       cropType: padi,
       variety: 'Ciherang',
       cycleLabel: 'Padi Ciherang Musim 2 2026',
@@ -403,7 +398,7 @@ async function seedLifecycle() {
     // Farm 2 - B2 - Jagung Bima-20 starting late Aug (~3 months) - Land_Preparation
     {
       farm: farm2,
-      block: blocks.find(b => b.code === 'FARM002_B2'),
+      block: blocks.find(b => b.name === 'Blok 2' && String(b.farm) === String(farm2._id)),
       cropType: jagung,
       variety: 'Bima-20',
       cycleLabel: 'Jagung Bima-20 Musim 3 2026',
@@ -422,7 +417,7 @@ async function seedLifecycle() {
     // Farm 1 - B1 - Padi Ciherang starting end of Aug (~3 months) - Planned
     {
       farm: farm1,
-      block: blocks.find(b => b.code === 'FARM001_B1'),
+      block: blocks.find(b => b.name === 'Blok 1' && String(b.farm) === String(farm1._id)),
       cropType: padi,
       variety: 'Ciherang',
       cycleLabel: 'Padi Ciherang Musim 3 2026',

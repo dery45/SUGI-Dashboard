@@ -149,7 +149,7 @@ const UMManagementPage = () => {
   const getBlockFarmName = (item) => {
     if (!item.block) return '-';
     if (typeof item.block === 'object') {
-      const bName = item.block.name || item.block.code || '-';
+      const bName = item.block.name || '-';
       const fName = item.farm?.name || '';
       return fName ? `${bName} (${fName})` : bName;
     }
@@ -157,7 +157,7 @@ const UMManagementPage = () => {
     if (!b) return '-';
     const farmId = typeof b.farm === 'object' ? b.farm?._id : b.farm;
     const f = farms.find(x => x._id === farmId);
-    return `${b.name || b.code}${f ? ` (${f.name})` : ''}`;
+    return `${b.name}${f ? ` (${f.name})` : ''}`;
   };
 
   const getFarmerName = (farmerRef) => {
@@ -221,7 +221,7 @@ const UMManagementPage = () => {
         <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Filter Farm:</label>
         <select value={filterFarm} onChange={e => setFilterFarm(e.target.value)} className="px-3 py-2 bg-surface border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
           <option value="">Semua Farm</option>
-          {farms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}
+          {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
         </select>
       </div>
 
@@ -251,7 +251,7 @@ const UMManagementPage = () => {
                           {farmBlocks.map(b => (
                             <label key={b._id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium cursor-pointer transition-all ${form.blocks.includes(b._id) ? 'bg-primary/10 border-primary text-primary' : 'border-border/40 hover:border-primary/30'}`}>
                               <input type="checkbox" checked={form.blocks.includes(b._id)} onChange={() => toggleBlock(b._id)} className="accent-primary" />
-                              {b.name || b.code} ({b.area_ha} Ha)
+                              {b.name} ({b.area_ha} Ha)
                             </label>
                           ))}
                         </div>

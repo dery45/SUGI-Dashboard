@@ -72,11 +72,10 @@ async function seed() {
   }
 
   // Create a farm for the farmer owner
-  let farm = await FarmMaster.findOne({ code: 'FARM001' });
+  let farm = await FarmMaster.findOne({ name: 'Kebun Test' });
   if (!farm) {
     farm = await FarmMaster.create({
       name: 'Kebun Test',
-      code: 'FARM001',
       province: 'Sumatera Utara',
       city: 'Deli Serdang',
       district: 'Sibolangit',
@@ -88,7 +87,7 @@ async function seed() {
       status: 'Active',
       description: 'Kebun uji coba',
     });
-    console.log('Farm FARM001 — created');
+    console.log('Farm Kebun Test — created');
   }
 
   // Assign farm to farmer owner
@@ -100,11 +99,10 @@ async function seed() {
   }
 
   // Create a block for the farm
-  let block = await Block.findOne({ code: 'BLOCK001' });
+  let block = await Block.findOne({ name: 'Blok A', farm: farm._id });
   if (!block) {
     block = await Block.create({
       name: 'Blok A',
-      code: 'BLOCK001',
       farm: farm._id,
       area_ha: 50,
       soil_type: 'Alluvial',
@@ -112,7 +110,7 @@ async function seed() {
       status: 'Active',
       notes: 'Blok uji coba',
     });
-    console.log('Block BLOCK001 — created');
+    console.log('Block Blok A — created');
   }
 
   // Assign block to lifecycle farmer

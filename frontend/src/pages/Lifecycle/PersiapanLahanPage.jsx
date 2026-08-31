@@ -188,8 +188,8 @@ const PersiapanLahanPage = () => {
         <Modal title="Buka Lahan Baru" onClose={() => setModal(null)}>
           <form onSubmit={handleAdd} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FF label="Farm"><select name="farm_id" value={form.farm_id} onChange={fc} required disabled={farmLocked} className={inputCls}><option value="">Pilih Farm</option>{availableFarms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}</select></FF>
-              {form.farm_id && <FF label="Blok"><select name="block" value={form.block} onChange={fc} className={inputCls}><option value="">Pilih Blok</option>{blocks.map(b => <option key={b._id} value={b._id}>{b.name} ({b.code})</option>)}</select></FF>}
+              <FF label="Farm"><select name="farm_id" value={form.farm_id} onChange={fc} required disabled={farmLocked} className={inputCls}><option value="">Pilih Farm</option>{availableFarms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}</select></FF>
+              {form.farm_id && <FF label="Blok"><select name="block" value={form.block} onChange={fc} className={inputCls}><option value="">Pilih Blok</option>{blocks.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}</select></FF>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Siklus Tanam"><input name="cycle" value={form.cycle} onChange={fc} required placeholder="Sawit 2026" className={inputCls} /></FF>
@@ -208,8 +208,8 @@ const PersiapanLahanPage = () => {
         <Modal title="Ubah Data Lahan" onClose={() => setModal(null)}>
           <form onSubmit={handleEdit} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FF label="Farm"><select name="farm_id" value={form.farm_id} onChange={fc} required disabled={farmLocked} className={inputCls}><option value="">Pilih Farm</option>{availableFarms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}</select></FF>
-              {form.farm_id && <FF label="Blok"><select name="block" value={form.block} onChange={fc} className={inputCls}><option value="">Pilih Blok</option>{blocks.map(b => <option key={b._id} value={b._id}>{b.name} ({b.code})</option>)}</select></FF>}
+              <FF label="Farm"><select name="farm_id" value={form.farm_id} onChange={fc} required disabled={farmLocked} className={inputCls}><option value="">Pilih Farm</option>{availableFarms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}</select></FF>
+              {form.farm_id && <FF label="Blok"><select name="block" value={form.block} onChange={fc} className={inputCls}><option value="">Pilih Blok</option>{blocks.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}</select></FF>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Siklus Tanam"><input name="cycle" value={form.cycle} onChange={fc} required className={inputCls} /></FF>

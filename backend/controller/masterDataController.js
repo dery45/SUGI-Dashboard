@@ -35,7 +35,6 @@ const getModel = (type) => {
 const farmValidation = (data) =>
   validate(data, {
     name: [[required, 'Nama Farm']],
-    code: [[required, 'Kode Farm']],
     total_area_ha: [
       [isNumber, 'Luas Area'],
       [minValue, 0, 'Luas Area'],
@@ -45,7 +44,6 @@ const farmValidation = (data) =>
 const blockValidation = (data) =>
   validate(data, {
     name: [[required, 'Nama Block']],
-    code: [[required, 'Kode Block']],
     farm: [
       [required, 'Farm'],
       [isObjectId, 'Farm'],
@@ -116,9 +114,7 @@ const list = (type) => async (req, res) => {
     if (status) query.status = status;
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      if (type === 'farms') query.$or = [{ name: searchRegex }, { code: searchRegex }];
-      else if (type === 'blocks') query.$or = [{ name: searchRegex }, { code: searchRegex }];
-      else query.name = searchRegex;
+      query.name = searchRegex;
     }
     if (farm && type === 'blocks') query.farm = farm;
 

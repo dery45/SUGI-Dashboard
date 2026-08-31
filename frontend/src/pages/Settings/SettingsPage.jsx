@@ -208,7 +208,7 @@ const SettingsPage = () => {
                 <div key={farm._id} className="flex items-center justify-between p-4 bg-background/30 border border-border/30 rounded-xl">
                   <div>
                     <p className="text-sm font-bold text-foreground">{farm.name}</p>
-                    <p className="text-[11px] text-muted">{farm.code} — {farm.province || '-'} — {farm.total_area_ha || 0} Ha</p>
+                    <p className="text-[11px] text-muted">{farm.province || '-'} — {farm.total_area_ha || 0} Ha</p>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${farm.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{farm.status === 'Active' ? 'Aktif' : 'Tidak Aktif'}</span>
                 </div>

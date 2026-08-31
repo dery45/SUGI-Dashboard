@@ -17,7 +17,6 @@ const ViewDetailModal = ({ isOpen, onClose, record, columns, title = 'Detail Dat
     if (typeof value === 'object') {
       // Handle common nested object patterns
       if (value.name) return value.name;
-      if (value.code) return value.code;
       if (value.label) return value.label;
       if (value.title) return value.title;
       if (value.value) return value.value;

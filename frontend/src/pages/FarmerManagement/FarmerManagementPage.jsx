@@ -216,7 +216,6 @@ const FarmerManagementPage = () => {
                             className="w-4 h-4 accent-primary"
                           />
                           <span className="font-medium text-foreground">{farm.name}</span>
-                          <span className="text-muted text-[10px] ml-auto">{farm.code}</span>
                         </label>
                       ))}
                     </div>
@@ -249,7 +248,6 @@ const FarmerManagementPage = () => {
                             className="w-4 h-4 accent-primary"
                           />
                           <span className="font-medium text-foreground">{farm.name}</span>
-                          <span className="text-muted text-[10px] ml-auto">{farm.code}</span>
                         </label>
                       ))}
                     </div>
@@ -262,7 +260,7 @@ const FarmerManagementPage = () => {
               {form.role === 'farmer' && isSingleFarmOwner && !editItem && (
                 <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl">
                   <p className="text-xs font-semibold text-foreground">Petani akan otomatis ditugaskan ke farm Anda:</p>
-                  <p className="text-xs text-primary font-bold mt-1">{farms[0]?.name} ({farms[0]?.code})</p>
+                  <p className="text-xs text-primary font-bold mt-1">{farms[0]?.name}</p>
                   <p className="text-[10px] text-muted mt-1">Akses penuh ke blok & tahap akan dibuat otomatis di Penugasan.</p>
                 </div>
               )}

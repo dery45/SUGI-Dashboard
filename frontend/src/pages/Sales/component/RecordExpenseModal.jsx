@@ -41,7 +41,7 @@ const RecordExpenseModal = ({ isOpen, onClose, onSave, farms = [] }) => {
     <Modal title="Catat Pengeluaran" onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
-          <FF label="Farm *"><select name="farm_id" value={formData.farm_id} onChange={handleChange} required className={inputCls}><option value="">Pilih Farm</option>{farms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}</select></FF>
+          <FF label="Farm *"><select name="farm_id" value={formData.farm_id} onChange={handleChange} required className={inputCls}><option value="">Pilih Farm</option>{farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}</select></FF>
           <FF label="Kategori *"><select name="category" value={formData.category} onChange={handleChange} required className={inputCls}>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></FF>
         </div>
         <FF label="Jumlah (Rp) *"><input type="number" name="amount_idr" value={formData.amount_idr} onChange={handleChange} required min="0" placeholder="0" className={inputCls} /></FF>
