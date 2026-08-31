@@ -32,6 +32,7 @@ const PerawatanPage = () => {
   const records = Array.isArray(data) ? data : [];
   const { cycles, loading: cyclesLoading } = useEligibleCycles(token, 'maintenance');
   const [activityTypes, setActivityTypes] = useState([]);
+  const [agriInputs, setAgriInputs] = useState([]);
   const [farms, setFarms] = useState([]);
   const [allBlocks, setAllBlocks] = useState([]);
   const [filterFarm, setFilterFarm] = useState('');
@@ -53,9 +54,11 @@ const PerawatanPage = () => {
   useEffect(() => {
     fetch(`${BASE_URL}/master-data/activity-types`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(j => { if (j.success) setActivityTypes(j.data); }).catch(() => {});
+    fetch(`${BASE_URL}/master-data/agricultural-inputs/all`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(j => { if (j.success) setAgriInputs(j.data); }).catch(() => {});
   }, [token]);
   const [filterType, setFilterType] = useState('');
-  const [form, setForm] = useState({ crop_cycle_id: '', activity_category: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending' });
+  const [form, setForm] = useState({ crop_cycle_id: '', activity_category: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending', agricultural_input: '', quantity: '', unit: '' });
   const assignments = usePelaksanaOptions(token);
   const selectedCycle = cycles.find(c => c._id === form.crop_cycle_id);
   const pelaksanaOptions = pelaksanaForCycle(assignments, selectedCycle);
@@ -71,6 +74,18 @@ const PerawatanPage = () => {
   const isHarvestStage = selectedCycle && ['Harvesting', 'Completed'].includes(selectedCycle.status);
   const availableCategories = isHarvestStage ? ['Lainnya', 'Pemupukan - Perawatan - Penyemprotan', 'Panen'] : ['Lainnya', 'Pemupukan - Perawatan - Penyemprotan'];
   const filteredActivityTypes = form.activity_category ? activityTypes.filter(a => a.category === form.activity_category) : activityTypes.filter(a => availableCategories.includes(a.category));
+  // Phase 2b: Agricultural Input auto-populated Unit
+  const selectedAgriInput = agriInputs.find(ai => ai._id === form.agricultural_input);
+  const selectedUnit = selectedAgriInput?.unit;
+  const unitDisplay = selectedUnit ? `${selectedUnit.name || ''} (${selectedUnit.symbol || ''})` : form.unit ? (agriInputs.find(ai=>ai.unit?._id===form.unit || ai.unit===form.unit)?.unit?.symbol || form.unit) : '-';
+  const showAgriFields = ['Pemupukan - Perawatan - Penyemprotan', 'Lainnya'].includes(form.activity_category);
+  const isFertCategory = form.activity_category === 'Pemupukan - Perawatan - Penyemprotan';
+  useEffect(() => {
+    if (selectedAgriInput && selectedAgriInput.unit) {
+      const unitId = selectedAgriInput.unit?._id || selectedAgriInput.unit;
+      if (unitId && form.unit !== unitId) setForm(p => ({ ...p, unit: unitId }));
+    }
+  }, [form.agricultural_input, agriInputs]);
 
   const filtered = filterType ? records.filter(r => (r.activity_type_ref?._id || r.activity_type) === filterType) : records;
   const totalCost = records.reduce((s, r) => s + Number(r.cost || 0), 0);
@@ -100,7 +115,7 @@ const PerawatanPage = () => {
   };
   const LOCK_MSG = 'Siklus ini sudah selesai (Panen ditutup) — data Perawatan terkunci.';
 
-  const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', activity_category: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending' }); setModal('form'); };
+  const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', activity_category: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending', agricultural_input: '', quantity: '', unit: '' }); setModal('form'); };
   const openEdit = r => {
     if (isLocked(r)) { showToast(LOCK_MSG); return; }
     setEditTarget(r);
@@ -113,6 +128,8 @@ const PerawatanPage = () => {
       date: r.date ? r.date.split('T')[0] : '',
       labor_hours: r.labor_hours ?? '', cost: r.cost ?? '',
       executor: r.executor || '', status: r.status || 'Pending',
+      agricultural_input: r.agricultural_input?._id || r.agricultural_input || '',
+      quantity: r.quantity ?? '', unit: r.unit?._id || r.unit || '',
     });
     setModal('form');
   };
@@ -126,6 +143,9 @@ const PerawatanPage = () => {
         description: form.description, date: form.date,
         labor_hours: +form.labor_hours || 0, cost: +form.cost || 0,
         executor: form.executor, status: form.status,
+        agricultural_input: form.agricultural_input || undefined,
+        quantity: form.quantity ? +form.quantity : undefined,
+        unit: form.unit || undefined,
       };
       if (editTarget) { await updateData(editTarget._id, entry); showToast('Data perawatan diperbarui!'); }
       else { await createData(entry); showToast('Aktivitas perawatan baru ditambahkan!'); }
@@ -214,6 +234,23 @@ const PerawatanPage = () => {
               </FF>
               <FF label="Tanggal"><input type="date" name="date" value={form.date} onChange={fc} required className={inputCls} /></FF>
             </div>
+            {showAgriFields && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-3 rounded-xl border border-border/30 bg-background/30">
+                <FF label={`Input Pertanian ${isFertCategory ? '*' : '(Opsional)'}`}>
+                  <select name="agricultural_input" value={form.agricultural_input} onChange={e => {
+                    const val = e.target.value;
+                    const inp = agriInputs.find(ai => ai._id === val);
+                    const unitId = inp?.unit?._id || inp?.unit || '';
+                    setForm(p => ({ ...p, agricultural_input: val, unit: unitId }));
+                  }} required={isFertCategory} className={inputCls}>
+                    <option value="">-- Pilih Input --</option>
+                    {agriInputs.map(ai => <option key={ai._id} value={ai._id}>{ai.name} [{ai.type==='Fertilizer'?'Pupuk':ai.type==='Nutrient'?'Nutrisi':'Obat'}] — {ai.unit?.symbol || ''}</option>)}
+                  </select>
+                </FF>
+                <FF label="Kuantitas"><input type="number" name="quantity" value={form.quantity} onChange={fc} min="0" step="0.1" placeholder="0" className={inputCls} /></FF>
+                <FF label="Satuan (otomatis)"><input value={unitDisplay} disabled className={`${inputCls} bg-background/30 cursor-not-allowed`} placeholder="-" /></FF>
+              </div>
+            )}
             <FF label="Deskripsi"><input name="description" value={form.description} onChange={fc} placeholder="Detail kegiatan..." className={inputCls} /></FF>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Jam Kerja"><input type="number" name="labor_hours" value={form.labor_hours} onChange={fc} min="0" step="0.5" placeholder="0" className={inputCls} /></FF>
