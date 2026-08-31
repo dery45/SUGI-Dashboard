@@ -3,6 +3,10 @@ const FarmMaster = require('../model/FarmMaster');
 const Block = require('../model/Block');
 const CropType = require('../model/CropType');
 const ActivityType = require('../model/ActivityType');
+const Unit = require('../model/Unit');
+const Fertilizer = require('../model/Fertilizer');
+const Nutrient = require('../model/Nutrient');
+const Medicine = require('../model/Medicine');
 const { required, isNumber, minValue, isObjectId, validate, errorResponse } = require('../util/validate');
 
 const getModel = (type) => {
@@ -15,6 +19,14 @@ const getModel = (type) => {
       return CropType;
     case 'activity-types':
       return ActivityType;
+    case 'units':
+      return Unit;
+    case 'fertilizers':
+      return Fertilizer;
+    case 'nutrients':
+      return Nutrient;
+    case 'medicines':
+      return Medicine;
     default:
       return null;
   }
@@ -48,13 +60,26 @@ const blockValidation = (data) =>
 const cropTypeValidation = (data) =>
   validate(data, {
     name: [[required, 'Nama Tanaman']],
-    code: [[required, 'Kode Tanaman']],
   });
 
 const activityTypeValidation = (data) =>
   validate(data, {
     name: [[required, 'Nama Aktivitas']],
-    code: [[required, 'Kode Aktivitas']],
+  });
+
+const unitValidation = (data) =>
+  validate(data, {
+    name: [[required, 'Nama Satuan']],
+    symbol: [[required, 'Simbol']],
+  });
+
+const inputValidation = (data, label) =>
+  validate(data, {
+    name: [[required, label]],
+    unit: [
+      [required, 'Satuan'],
+      [isObjectId, 'Satuan'],
+    ],
   });
 
 const getValidation = (type) => {
@@ -67,6 +92,14 @@ const getValidation = (type) => {
       return cropTypeValidation;
     case 'activity-types':
       return activityTypeValidation;
+    case 'units':
+      return unitValidation;
+    case 'fertilizers':
+      return (d) => inputValidation(d, 'Nama Pupuk');
+    case 'nutrients':
+      return (d) => inputValidation(d, 'Nama Nutrisi');
+    case 'medicines':
+      return (d) => inputValidation(d, 'Nama Obat');
     default:
       return null;
   }
@@ -100,9 +133,15 @@ const list = (type) => async (req, res) => {
       }
     }
 
+    const populateMap = {
+      blocks: 'farm',
+      fertilizers: 'unit',
+      nutrients: 'unit',
+      medicines: 'unit',
+    };
     const total = await Model.countDocuments(query);
     const data = await Model.find(query)
-      .populate(type === 'blocks' ? 'farm' : '')
+      .populate(populateMap[type] || '')
       .sort({ createdAt: -1 })
       .skip((page - 1) * parseInt(limit))
       .limit(parseInt(limit))
@@ -127,8 +166,9 @@ const getById = (type) => async (req, res) => {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
     }
 
+    const populateMap2 = { blocks: 'farm', fertilizers: 'unit', nutrients: 'unit', medicines: 'unit' };
     const data = await Model.findById(req.params.id)
-      .populate(type === 'blocks' ? 'farm' : '')
+      .populate(populateMap2[type] || '')
       .lean();
     if (!data) return res.status(404).json({ success: false, message: 'Data tidak ditemukan' });
 
@@ -168,7 +208,7 @@ const create = (type) => async (req, res) => {
     res.status(201).json({ success: true, data });
   } catch (error) {
     if (error.code === 11000)
-      return res.status(400).json({ success: false, message: 'Data dengan kode tersebut sudah ada' });
+      return res.status(400).json({ success: false, message: 'Data dengan nama tersebut sudah ada' });
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -199,7 +239,7 @@ const update = (type) => async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     if (error.code === 11000)
-      return res.status(400).json({ success: false, message: 'Data dengan kode tersebut sudah ada' });
+      return res.status(400).json({ success: false, message: 'Data dengan nama tersebut sudah ada' });
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -243,8 +283,9 @@ const getAll = (type) => async (req, res) => {
       }
     }
 
+    const populateMap3 = { blocks: 'farm', fertilizers: 'unit', nutrients: 'unit', medicines: 'unit' };
     const data = await Model.find(query)
-      .populate(type === 'blocks' ? 'farm' : '')
+      .populate(populateMap3[type] || '')
       .sort({ name: 1 })
       .lean();
     res.json({ success: true, data });
@@ -281,4 +322,32 @@ module.exports = {
   updateActivityType: update('activity-types'),
   deleteActivityType: remove('activity-types'),
   getAllActivityTypes: getAll('activity-types'),
+
+  listUnits: list('units'),
+  getUnit: getById('units'),
+  createUnit: create('units'),
+  updateUnit: update('units'),
+  deleteUnit: remove('units'),
+  getAllUnits: getAll('units'),
+
+  listFertilizers: list('fertilizers'),
+  getFertilizer: getById('fertilizers'),
+  createFertilizer: create('fertilizers'),
+  updateFertilizer: update('fertilizers'),
+  deleteFertilizer: remove('fertilizers'),
+  getAllFertilizers: getAll('fertilizers'),
+
+  listNutrients: list('nutrients'),
+  getNutrient: getById('nutrients'),
+  createNutrient: create('nutrients'),
+  updateNutrient: update('nutrients'),
+  deleteNutrient: remove('nutrients'),
+  getAllNutrients: getAll('nutrients'),
+
+  listMedicines: list('medicines'),
+  getMedicine: getById('medicines'),
+  createMedicine: create('medicines'),
+  updateMedicine: update('medicines'),
+  deleteMedicine: remove('medicines'),
+  getAllMedicines: getAll('medicines'),
 };
