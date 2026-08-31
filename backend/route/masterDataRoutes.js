@@ -7,14 +7,15 @@ const varietyCtrl = require('../controller/cropVarietyController');
 router.use(authenticate);
 
 const isManagementOrFarmer = authorize('superadmin', 'farmer_owner', 'farmer');
+const isSuperAdminOnly = authorize('superadmin');
 
-// Farms - management only
-router.get('/farms/all', isManagement, ctrl.getAllFarms);
-router.get('/farms', isManagement, ctrl.listFarms);
-router.get('/farms/:id', isManagement, ctrl.getFarm);
-router.post('/farms', isManagement, ctrl.createFarm);
-router.put('/farms/:id', isManagement, ctrl.updateFarm);
-router.delete('/farms/:id', isManagement, ctrl.deleteFarm);
+// Farms - superadmin-only (Owner must not access; sidebar also hides for Owner)
+router.get('/farms/all', isSuperAdminOnly, ctrl.getAllFarms);
+router.get('/farms', isSuperAdminOnly, ctrl.listFarms);
+router.get('/farms/:id', isSuperAdminOnly, ctrl.getFarm);
+router.post('/farms', isSuperAdminOnly, ctrl.createFarm);
+router.put('/farms/:id', isSuperAdminOnly, ctrl.updateFarm);
+router.delete('/farms/:id', isSuperAdminOnly, ctrl.deleteFarm);
 
 // Blocks - management only
 router.get('/blocks/all', isManagement, ctrl.getAllBlocks);
