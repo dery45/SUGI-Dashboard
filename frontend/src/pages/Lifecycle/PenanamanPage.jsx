@@ -133,7 +133,7 @@ const PenanamanPage = () => {
               <FF label="Jenis Tanaman">
                 <select name="crop_type" value={form.crop_type} onChange={fc} required className={inputCls}>
                   <option value="">-- Pilih --</option>
-                  {cropTypes.map(c => <option key={c._id} value={c._id}>{c.name} ({c.code})</option>)}
+                  {cropTypes.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                 </select>
               </FF>
               <FF label="Tanggal Tanam"><input type="date" name="planting_date" value={form.planting_date} onChange={fc} required className={inputCls} /></FF>

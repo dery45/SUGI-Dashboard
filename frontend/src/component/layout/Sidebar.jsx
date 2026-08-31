@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   Tractor, Building2, Database, ChevronDown, BarChart3, Leaf, Users, UserCheck,
   DollarSign, Layers, Grid3X3, Sprout, Activity, Settings, MessageSquare,
-  Wheat, Flower2, Wrench, ShoppingBasket, ShieldCheck,
+  Wheat, Flower2, Wrench, ShoppingBasket, ShieldCheck, Ruler, Package, Beaker, Pill,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL as BASE_URL } from '../../services/authService';
@@ -33,6 +33,11 @@ const MASTER_DATA_ITEMS = [
   { name: 'Block', path: '/master/blocks', icon: <Grid3X3 className="w-4 h-4" /> },
   { name: 'Jenis Tanaman', path: '/master/crop-types', icon: <Sprout className="w-4 h-4" /> },
   { name: 'Jenis Aktivitas', path: '/master/activity-types', icon: <Activity className="w-4 h-4" /> },
+  { name: 'Satuan', path: '/master/units', icon: <Ruler className="w-4 h-4" /> },
+  { name: 'Varietas', path: '/master/crop-varieties', icon: <Package className="w-4 h-4" /> },
+  { name: 'Pupuk', path: '/master/fertilizers', icon: <Beaker className="w-4 h-4" /> },
+  { name: 'Nutrisi', path: '/master/nutrients', icon: <Beaker className="w-4 h-4" /> },
+  { name: 'Obat', path: '/master/medicines', icon: <Pill className="w-4 h-4" /> },
 ];
 
 // Item 7 — Lifecycle stages

@@ -38,7 +38,7 @@ const PerawatanPage = () => {
       .then(r => r.json()).then(j => { if (j.success) setActivityTypes(j.data); }).catch(() => {});
   }, [token]);
   const [filterType, setFilterType] = useState('');
-  const [form, setForm] = useState({ crop_cycle_id: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending' });
+  const [form, setForm] = useState({ crop_cycle_id: '', activity_category: '', activity_type: '', description: '', date: '', labor_hours: '', cost: '', executor: '', status: 'Pending' });
   const assignments = usePelaksanaOptions(token);
   const selectedCycle = cycles.find(c => c._id === form.crop_cycle_id);
   const pelaksanaOptions = pelaksanaForCycle(assignments, selectedCycle);
@@ -48,6 +48,12 @@ const PerawatanPage = () => {
   const [viewModal, setViewModal] = useState(null);
   const { showToast } = useToast();
   const fc = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  // Task 7: category-filtered + Harvest gating (read-only cycle status, no other lifecycle changes)
+  const HARVEST_CATEGORY = 'Panen';
+  const isHarvestStage = selectedCycle && ['Harvesting', 'Completed'].includes(selectedCycle.status);
+  const availableCategories = isHarvestStage ? ['Lainnya', 'Pemupukan - Perawatan - Penyemprotan', 'Panen'] : ['Lainnya', 'Pemupukan - Perawatan - Penyemprotan'];
+  const filteredActivityTypes = form.activity_category ? activityTypes.filter(a => a.category === form.activity_category) : activityTypes.filter(a => availableCategories.includes(a.category));
 
   const filtered = filterType ? records.filter(r => (r.activity_type_ref?._id || r.activity_type) === filterType) : records;
   const totalCost = records.reduce((s, r) => s + Number(r.cost || 0), 0);
@@ -77,12 +83,14 @@ const PerawatanPage = () => {
   };
   const LOCK_MSG = 'Siklus ini sudah selesai (Panen ditutup) — data Perawatan terkunci.';
 
-  const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending' }); setModal('form'); };
+  const openAdd = () => { setEditTarget(null); setForm({ crop_cycle_id: '', activity_category: '', activity_type: '', description: '', date: new Date().toISOString().split('T')[0], labor_hours: '', cost: '', executor: '', status: 'Pending' }); setModal('form'); };
   const openEdit = r => {
     if (isLocked(r)) { showToast(LOCK_MSG); return; }
     setEditTarget(r);
+    const refCat = r.activity_type_ref?.category || activityTypes.find(a => a._id === (r.activity_type_ref?._id || r.activity_type))?.category || '';
     setForm({
       crop_cycle_id: r.crop_cycle_id?._id || r.crop_cycle_id || '',
+      activity_category: refCat,
       activity_type: r.activity_type_ref?._id || r.activity_type || '',
       description: r.description || '',
       date: r.date ? r.date.split('T')[0] : '',
@@ -168,11 +176,18 @@ const PerawatanPage = () => {
                 {cycles.map(c => <option key={c._id} value={c._id}>{cycleLabel(c)}</option>)}
               </select>
             </FF>
+            <FF label="Kategori Aktivitas">
+              <select name="activity_category" value={form.activity_category} onChange={e => setForm(p => ({ ...p, activity_category: e.target.value, activity_type: '' }))} required className={inputCls}>
+                <option value="">-- Pilih Kategori --</option>
+                {availableCategories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {!isHarvestStage && <p className="text-[10px] text-muted italic mt-1">Kategori Panen hanya tersedia saat siklus sudah memasuki tahap panen.</p>}
+            </FF>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Jenis Aktivitas">
-                <select name="activity_type" value={form.activity_type} onChange={fc} required className={inputCls}>
-                  <option value="">-- Pilih --</option>
-                  {activityTypes.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                <select name="activity_type" value={form.activity_type} onChange={fc} required className={inputCls} disabled={!form.activity_category}>
+                  <option value="">{!form.activity_category ? '-- Pilih Kategori dahulu --' : '-- Pilih --'}</option>
+                  {filteredActivityTypes.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
                 </select>
               </FF>
               <FF label="Tanggal"><input type="date" name="date" value={form.date} onChange={fc} required className={inputCls} /></FF>

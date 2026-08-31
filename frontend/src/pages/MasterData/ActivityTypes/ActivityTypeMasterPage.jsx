@@ -15,7 +15,8 @@ const ActivityTypeMasterPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
+  const ACT_CATEGORIES = ['Lainnya', 'Pemupukan - Perawatan - Penyemprotan', 'Panen'];
+  const [form, setForm] = useState({ name: '', category: 'Lainnya', status: 'Active' });
   const [errors, setErrors] = useState({});
   const [viewModal, setViewModal] = useState(null);
 
@@ -37,7 +38,6 @@ const ActivityTypeMasterPage = () => {
   const validate = () => {
     const { errors: e, hasErrors } = validateForm(form, {
       name: [[required, 'Nama Aktivitas']],
-      code: [[required, 'Kode Aktivitas']]
     });
     setErrors(e);
     return !hasErrors;
@@ -56,7 +56,7 @@ const ActivityTypeMasterPage = () => {
         return;
       }
       setShowModal(false); setEditItem(null);
-      setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' });
+      setForm({ name: '', category: 'Lainnya', status: 'Active' });
       setErrors({});
       fetchData();
       showToast('Data jenis aktivitas berhasil disimpan!', 'success');
@@ -80,12 +80,9 @@ const ActivityTypeMasterPage = () => {
   const openView = (item) => { setViewModal(item); };
 
   const columns = [
-    { header: 'Kode', accessor: 'code' },
     { header: 'Nama', accessor: 'name' },
     { header: 'Kategori', accessor: 'category' },
-    { header: 'Satuan', accessor: 'unit' },
-    { header: 'Durasi (jam)', accessor: 'duration_hours' },
-    { header: 'Warna', accessor: (r) => <span className="inline-block w-6 h-6 rounded-full border border-border/30" style={{ backgroundColor: r.color || '#10b981' }} /> }
+    { header: 'Status', accessor: 'status' },
   ];
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -103,7 +100,7 @@ const ActivityTypeMasterPage = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={fetchData} className="p-2.5 rounded-xl border border-border/40 hover:border-primary hover:text-primary transition-all"><RefreshCw className="w-4 h-4" /></button>
-            <button onClick={() => { setEditItem(null); setForm({ code: '', name: '', category: 'Pengolahan Lahan', unit: 'HOK', duration_hours: '', color: '#10b981', description: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Aktivitas</button>
+            <button onClick={() => { setEditItem(null); setForm({ name: '', category: 'Lainnya', status: 'Active' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Aktivitas</button>
           </div>
         </div>
       </div>
@@ -118,20 +115,13 @@ const ActivityTypeMasterPage = () => {
           <div className="relative w-full max-w-2xl bg-surface border border-border/40 rounded-[2rem] shadow-2xl p-8 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-black text-foreground mb-6">{editItem ? 'Edit Aktivitas' : 'Tambah Aktivitas Baru'}</h2>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Kode Aktivitas" name="code" required value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} error={errors.code} />
               <Input label="Nama Aktivitas" name="name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} error={errors.name} />
-              <Input label="Durasi (jam)" name="duration_hours" type="number" value={form.duration_hours} optional onChange={e => setForm({ ...form, duration_hours: e.target.value })} />
-              <Input label="Warna" name="color" type="color" value={form.color} optional onChange={e => setForm({ ...form, color: e.target.value })} />
               <Select label="Kategori" name="category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                {['Pengolahan Lahan', 'Penanaman', 'Pemeliharaan', 'Pemupukan', 'Pengairan', 'Pengendalian Hama', 'Panen', 'Pasca Panen', 'Lainnya'].map(c => <option key={c} value={c}>{c}</option>)}
+                {ACT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </Select>
-              <Select label="Satuan" name="unit" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}>
-                {['HOK', 'HKO', 'Jam', 'Hari', 'Unit', ''].map(u => <option key={u} value={u}>{u || '-'}</option>)}
+              <Select label="Status" name="status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                {['Active', 'Inactive'].map(s => <option key={s} value={s}>{s === 'Active' ? 'Aktif' : 'Tidak Aktif'}</option>)}
               </Select>
-              <div className="flex flex-col gap-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Deskripsi <span className="text-muted/50 font-normal normal-case">(Optional)</span></label>
-                <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full px-3 py-2 bg-background/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none" rows={3} />
-              </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl border border-border/40 text-sm font-bold hover:bg-surface/50 transition-all">Batal</button>
