@@ -77,6 +77,30 @@ router.post('/nutrients', isManagement, ctrl.createNutrient);
 router.put('/nutrients/:id', isManagement, ctrl.updateNutrient);
 router.delete('/nutrients/:id', isManagement, ctrl.deleteNutrient);
 
+// Agricultural Inputs (unified Fertilizer/Nutrient/Medicine)
+router.get('/agricultural-inputs/all', isManagementOrFarmer, ctrl.getAllAgriculturalInputs);
+router.get('/agricultural-inputs', isManagementOrFarmer, ctrl.listAgriculturalInputs);
+router.get('/agricultural-inputs/:id', isManagementOrFarmer, ctrl.getAgriculturalInput);
+router.post('/agricultural-inputs', isManagement, ctrl.createAgriculturalInput);
+router.put('/agricultural-inputs/:id', isManagement, ctrl.updateAgriculturalInput);
+router.delete('/agricultural-inputs/:id', isManagement, ctrl.deleteAgriculturalInput);
+
+// Legacy: Fertilizers/Nutrients/Medicines (kept for migration, deprecated)
+router.get('/fertilizers/all', isManagementOrFarmer, ctrl.getAllFertilizers);
+router.get('/fertilizers', isManagementOrFarmer, ctrl.listFertilizers);
+router.get('/fertilizers/:id', isManagementOrFarmer, ctrl.getFertilizer);
+router.post('/fertilizers', isManagement, ctrl.createFertilizer);
+router.put('/fertilizers/:id', isManagement, ctrl.updateFertilizer);
+router.delete('/fertilizers/:id', isManagement, ctrl.deleteFertilizer);
+
+// Nutrients
+router.get('/nutrients/all', isManagementOrFarmer, ctrl.getAllNutrients);
+router.get('/nutrients', isManagementOrFarmer, ctrl.listNutrients);
+router.get('/nutrients/:id', isManagementOrFarmer, ctrl.getNutrient);
+router.post('/nutrients', isManagement, ctrl.createNutrient);
+router.put('/nutrients/:id', isManagement, ctrl.updateNutrient);
+router.delete('/nutrients/:id', isManagement, ctrl.deleteNutrient);
+
 // Medicines
 router.get('/medicines/all', isManagementOrFarmer, ctrl.getAllMedicines);
 router.get('/medicines', isManagementOrFarmer, ctrl.listMedicines);

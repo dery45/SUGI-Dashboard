@@ -35,9 +35,7 @@ const MASTER_DATA_ITEMS = [
   { name: 'Jenis Aktivitas', path: '/master/activity-types', icon: <Activity className="w-4 h-4" /> },
   { name: 'Satuan', path: '/master/units', icon: <Ruler className="w-4 h-4" /> },
   { name: 'Varietas', path: '/master/crop-varieties', icon: <Package className="w-4 h-4" /> },
-  { name: 'Pupuk', path: '/master/fertilizers', icon: <Beaker className="w-4 h-4" /> },
-  { name: 'Nutrisi', path: '/master/nutrients', icon: <Beaker className="w-4 h-4" /> },
-  { name: 'Obat', path: '/master/medicines', icon: <Pill className="w-4 h-4" /> },
+  { name: 'Input Pertanian', path: '/master/agricultural-inputs', icon: <Beaker className="w-4 h-4" /> },
 ];
 
 // Item 7 — Lifecycle stages

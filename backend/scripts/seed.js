@@ -7,9 +7,7 @@ const FarmMaster = require('../model/FarmMaster');
 const Block = require('../model/Block');
 const Unit = require('../model/Unit');
 const CropVariety = require('../model/CropVariety');
-const Fertilizer = require('../model/Fertilizer');
-const Nutrient = require('../model/Nutrient');
-const Medicine = require('../model/Medicine');
+const AgriculturalInput = require('../model/AgriculturalInput');
 
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/sugi-dashboard-demo');
@@ -246,34 +244,20 @@ async function seed() {
     }
   }
 
-  // ── Fertilizer / Nutrient / Medicine ────────────────────────────────────────
-  const fertilizers = [
-    { name: 'Urea', unit: kgUnit?._id, description: 'Pupuk nitrogen' },
-    { name: 'NPK Mutiara', unit: kgUnit?._id, description: 'Pupuk NPK' },
-    { name: 'KCl', unit: kgUnit?._id, description: 'Pupuk kalium' },
+  // ── Agricultural Inputs (unified) ───────────────────────────────────────────
+  const agriInputs = [
+    { name: 'Urea', type: 'Fertilizer', unit: kgUnit?._id, description: 'Pupuk nitrogen' },
+    { name: 'NPK Mutiara', type: 'Fertilizer', unit: kgUnit?._id, description: 'Pupuk NPK' },
+    { name: 'KCl', type: 'Fertilizer', unit: kgUnit?._id, description: 'Pupuk kalium' },
+    { name: 'Kalsium Boron', type: 'Nutrient', unit: literUnit?._id, description: 'Nutrisi kalsium boron' },
+    { name: 'ZPT Atonik', type: 'Nutrient', unit: literUnit?._id, description: 'Zat pengatur tumbuh' },
+    { name: 'Insektisida Curacron', type: 'Medicine', unit: literUnit?._id, description: 'Insektisida' },
+    { name: 'Fungisida Antracol', type: 'Medicine', unit: kgUnit?._id, description: 'Fungisida' },
   ];
-  for (const f of fertilizers) {
-    if (!f.unit) continue;
-    const ex = await Fertilizer.findOne({ name: f.name });
-    if (!ex) { await Fertilizer.create(f); console.log(`Fertilizer ${f.name} — created`); }
-  }
-  const nutrients = [
-    { name: 'Kalsium Boron', unit: literUnit?._id, description: 'Nutrisi kalsium boron' },
-    { name: 'ZPT Atonik', unit: literUnit?._id, description: 'Zat pengatur tumbuh' },
-  ];
-  for (const n of nutrients) {
-    if (!n.unit) continue;
-    const ex = await Nutrient.findOne({ name: n.name });
-    if (!ex) { await Nutrient.create(n); console.log(`Nutrient ${n.name} — created`); }
-  }
-  const medicines = [
-    { name: 'Insektisida Curacron', unit: literUnit?._id, description: 'Insektisida' },
-    { name: 'Fungisida Antracol', unit: kgUnit?._id, description: 'Fungisida' },
-  ];
-  for (const m of medicines) {
-    if (!m.unit) continue;
-    const ex = await Medicine.findOne({ name: m.name });
-    if (!ex) { await Medicine.create(m); console.log(`Medicine ${m.name} — created`); }
+  for (const inp of agriInputs) {
+    if (!inp.unit) continue;
+    const ex = await AgriculturalInput.findOne({ name: inp.name, type: inp.type });
+    if (!ex) { await AgriculturalInput.create(inp); console.log(`AgriculturalInput ${inp.name} [${inp.type}] — created`); }
   }
 
   console.log('Seed completed successfully');

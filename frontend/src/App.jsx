@@ -30,9 +30,7 @@ const CropTypeMasterPage = lazy(() => import('./pages/MasterData/CropTypes/CropT
 const ActivityTypeMasterPage = lazy(() => import('./pages/MasterData/ActivityTypes/ActivityTypeMasterPage'));
 const UnitMasterPage = lazy(() => import('./pages/MasterData/Units/UnitMasterPage'));
 const CropVarietyMasterPage = lazy(() => import('./pages/MasterData/CropVarieties/CropVarietyMasterPage'));
-const FertilizerMasterPage = lazy(() => import('./pages/MasterData/Fertilizers/FertilizerMasterPage'));
-const NutrientMasterPage = lazy(() => import('./pages/MasterData/Nutrients/NutrientMasterPage'));
-const MedicineMasterPage = lazy(() => import('./pages/MasterData/Medicines/MedicineMasterPage'));
+const AgriculturalInputMasterPage = lazy(() => import('./pages/MasterData/AgriculturalInputs/AgriculturalInputMasterPage'));
 
 // GovernmentData catalogs - lazy loaded
 const KetidakcukupanNasionalPage = lazy(() => import('./pages/GovernmentData/KetidakcukupanNasional/KetidakcukupanNasionalPage'));
@@ -208,24 +206,10 @@ function AppContent() {
             </Suspense>
           </ProtectedRoute>
         } />
-        <Route path="master/fertilizers" element={
+        <Route path="master/agricultural-inputs" element={
           <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
             <Suspense fallback={<MasterDataSkeleton />}>
-              <FertilizerMasterPage />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="master/nutrients" element={
-          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
-            <Suspense fallback={<MasterDataSkeleton />}>
-              <NutrientMasterPage />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="master/medicines" element={
-          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
-            <Suspense fallback={<MasterDataSkeleton />}>
-              <MedicineMasterPage />
+              <AgriculturalInputMasterPage />
             </Suspense>
           </ProtectedRoute>
         } />

@@ -7,6 +7,7 @@ const Unit = require('../model/Unit');
 const Fertilizer = require('../model/Fertilizer');
 const Nutrient = require('../model/Nutrient');
 const Medicine = require('../model/Medicine');
+const AgriculturalInput = require('../model/AgriculturalInput');
 const { required, isNumber, minValue, isObjectId, validate, errorResponse } = require('../util/validate');
 
 const getModel = (type) => {
@@ -27,6 +28,8 @@ const getModel = (type) => {
       return Nutrient;
     case 'medicines':
       return Medicine;
+    case 'agricultural-inputs':
+      return AgriculturalInput;
     default:
       return null;
   }
@@ -80,6 +83,16 @@ const inputValidation = (data, label) =>
     ],
   });
 
+const agriculturalInputValidation = (data) =>
+  validate(data, {
+    name: [[required, 'Nama Input']],
+    type: [[required, 'Tipe Input']],
+    unit: [
+      [required, 'Satuan'],
+      [isObjectId, 'Satuan'],
+    ],
+  });
+
 const getValidation = (type) => {
   switch (type) {
     case 'farms':
@@ -98,6 +111,8 @@ const getValidation = (type) => {
       return (d) => inputValidation(d, 'Nama Nutrisi');
     case 'medicines':
       return (d) => inputValidation(d, 'Nama Obat');
+    case 'agricultural-inputs':
+      return agriculturalInputValidation;
     default:
       return null;
   }
@@ -108,7 +123,7 @@ const list = (type) => async (req, res) => {
     const Model = getModel(type);
     if (!Model) return res.status(400).json({ success: false, message: 'Invalid type' });
 
-    const { page = 1, limit = 20, search, status, farm } = req.query;
+    const { page = 1, limit = 20, search, status, farm, type: filterType } = req.query;
     const query = {};
 
     if (status) query.status = status;
@@ -117,6 +132,7 @@ const list = (type) => async (req, res) => {
       query.name = searchRegex;
     }
     if (farm && type === 'blocks') query.farm = farm;
+    if (filterType && type === 'agricultural-inputs') query.type = filterType;
 
     // Farmer owner scoping for farms
     if (type === 'farms' && req.user && req.user.role === 'farmer_owner') {
@@ -134,6 +150,7 @@ const list = (type) => async (req, res) => {
       fertilizers: 'unit',
       nutrients: 'unit',
       medicines: 'unit',
+      'agricultural-inputs': 'unit',
     };
     const total = await Model.countDocuments(query);
     const data = await Model.find(query)
@@ -162,7 +179,7 @@ const getById = (type) => async (req, res) => {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
     }
 
-    const populateMap2 = { blocks: 'farm', fertilizers: 'unit', nutrients: 'unit', medicines: 'unit' };
+    const populateMap2 = { blocks: 'farm', fertilizers: 'unit', nutrients: 'unit', medicines: 'unit', 'agricultural-inputs': 'unit' };
     const data = await Model.findById(req.params.id)
       .populate(populateMap2[type] || '')
       .lean();
@@ -267,6 +284,7 @@ const getAll = (type) => async (req, res) => {
     const query = {};
     if (req.query.status) query.status = req.query.status;
     if (req.query.farm && type === 'blocks') query.farm = req.query.farm;
+    if (req.query.type && type === 'agricultural-inputs') query.type = req.query.type;
 
     // Farmer owner scoping for farms
     if (type === 'farms' && req.user && req.user.role === 'farmer_owner') {
@@ -279,7 +297,7 @@ const getAll = (type) => async (req, res) => {
       }
     }
 
-    const populateMap3 = { blocks: 'farm', fertilizers: 'unit', nutrients: 'unit', medicines: 'unit' };
+    const populateMap3 = { blocks: 'farm', fertilizers: 'unit', nutrients: 'unit', medicines: 'unit', 'agricultural-inputs': 'unit' };
     const data = await Model.find(query)
       .populate(populateMap3[type] || '')
       .sort({ name: 1 })
@@ -346,4 +364,11 @@ module.exports = {
   updateMedicine: update('medicines'),
   deleteMedicine: remove('medicines'),
   getAllMedicines: getAll('medicines'),
+
+  listAgriculturalInputs: list('agricultural-inputs'),
+  getAgriculturalInput: getById('agricultural-inputs'),
+  createAgriculturalInput: create('agricultural-inputs'),
+  updateAgriculturalInput: update('agricultural-inputs'),
+  deleteAgriculturalInput: remove('agricultural-inputs'),
+  getAllAgriculturalInputs: getAll('agricultural-inputs'),
 };
