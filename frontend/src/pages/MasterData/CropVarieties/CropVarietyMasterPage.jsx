@@ -136,7 +136,7 @@ const CropVarietyMasterPage = () => {
           </div>
         </div>
       )}
-      {viewModal && <ViewDetailModal isOpen={!!viewModal} onClose={() => setViewModal(null)} record={{ ...viewModal, crop_type: viewModal.crop_type?.name, unit: viewModal.unit ? `${viewModal.unit.name} (${viewModal.unit.symbol})` : '-', grades: (viewModal.grades || []).map(g => `${g.grade_name}: Rp ${Number(g.estimated_price_per_unit).toLocaleString('id-ID')}`).join(', ') || '-' }} columns={[...columns, { header: 'Deskripsi', accessor: 'description' }, { header: 'Detail Grade', accessor: 'grades' }]} title="Detail Varietas" />}
+      {viewModal && <ViewDetailModal isOpen={!!viewModal} onClose={() => setViewModal(null)} record={{ name: viewModal.name, jenis_tanaman: viewModal.crop_type?.name || '-', satuan: viewModal.unit ? `${viewModal.unit.name} (${viewModal.unit.symbol})` : '-', grade_count: (viewModal.grades || []).length, status: viewModal.status, description: viewModal.description || '-', grades: (viewModal.grades || []).map(g => `${g.grade_name}: Rp ${Number(g.estimated_price_per_unit).toLocaleString('id-ID')}`).join(', ') || '-' }} columns={[{ header: 'Nama Varietas', accessor: 'name' }, { header: 'Jenis Tanaman', accessor: 'jenis_tanaman' }, { header: 'Satuan', accessor: 'satuan' }, { header: 'Grade', accessor: 'grade_count' }, { header: 'Status', accessor: 'status' }, { header: 'Deskripsi', accessor: 'description' }, { header: 'Detail Grade', accessor: 'grades' }]} title="Detail Varietas" />}
     </div>
   );
 };

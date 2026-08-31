@@ -57,7 +57,7 @@ function InputMasterPage({ title, subtitle, endpoint, label }) {
           </div>
         </div>
       )}
-      {viewModal && <ViewDetailModal isOpen={!!viewModal} onClose={() => setViewModal(null)} record={{ ...viewModal, unit: viewModal.unit ? `${viewModal.unit.name} (${viewModal.unit.symbol})` : '-' }} columns={columns} title={`Detail ${label}`} />}
+      {viewModal && <ViewDetailModal isOpen={!!viewModal} onClose={() => setViewModal(null)} record={{ name: viewModal.name, satuan: viewModal.unit ? `${viewModal.unit.name} (${viewModal.unit.symbol})` : '-', description: viewModal.description || '-', status: viewModal.status }} columns={[{ header: 'Nama', accessor: 'name' }, { header: 'Satuan', accessor: 'satuan' }, { header: 'Deskripsi', accessor: 'description' }, { header: 'Status', accessor: 'status' }]} title={`Detail ${label}`} />}
     </div>
   );
 }
