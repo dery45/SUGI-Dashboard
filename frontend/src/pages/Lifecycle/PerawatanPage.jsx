@@ -32,6 +32,23 @@ const PerawatanPage = () => {
   const records = Array.isArray(data) ? data : [];
   const { cycles, loading: cyclesLoading } = useEligibleCycles(token, 'maintenance');
   const [activityTypes, setActivityTypes] = useState([]);
+  const [farms, setFarms] = useState([]);
+  const [allBlocks, setAllBlocks] = useState([]);
+  const [filterFarm, setFilterFarm] = useState('');
+  const [filterBlock, setFilterBlock] = useState('');
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BASE_URL}/master-data/farms/all`, { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).then(j=>{ if(j.success) setFarms(j.data); }).catch(()=>{});
+    fetch(`${BASE_URL}/master-data/blocks/all`, { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).then(j=>{ if(j.success) setAllBlocks(j.data); }).catch(()=>{});
+  }, [token]);
+  const filteredCycles = cycles.filter(c => {
+    const fId = (c.farm_master?._id || c.farm_id?._id || c.farm_master || c.farm_id)?.toString?.();
+    const bId = (c.block?._id || c.block)?.toString?.();
+    if (filterFarm && fId !== filterFarm) return false;
+    if (filterBlock && bId !== filterBlock) return false;
+    return true;
+  });
+  const blocksForFarm = filterFarm ? allBlocks.filter(b => (b.farm?._id || b.farm)?.toString() === filterFarm) : allBlocks;
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {
     fetch(`${BASE_URL}/master-data/activity-types`, { headers: { Authorization: `Bearer ${token}` } })
@@ -170,11 +187,16 @@ const PerawatanPage = () => {
       {modal === 'form' && (
         <Modal title={editTarget ? 'Ubah Aktivitas Perawatan' : 'Tambah Aktivitas Perawatan'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FF label="Filter Farm"><select value={filterFarm} onChange={e=>{setFilterFarm(e.target.value); setFilterBlock('');}} className={inputCls}><option value="">Semua Farm</option>{farms.map(f=> <option key={f._id} value={f._id}>{f.name}</option>)}</select></FF>
+              <FF label="Filter Blok"><select value={filterBlock} onChange={e=>setFilterBlock(e.target.value)} className={inputCls}><option value="">Semua Blok</option>{blocksForFarm.map(b=> <option key={b._id} value={b._id}>{b.name}</option>)}</select></FF>
+            </div>
             <FF label="Siklus Tanam">
               <select name="crop_cycle_id" value={form.crop_cycle_id} onChange={fc} required disabled={!!editTarget} className={inputCls}>
                 <option value="">{cyclesLoading ? 'Memuat siklus...' : '-- Pilih Siklus Tanam --'}</option>
-                {cycles.map(c => <option key={c._id} value={c._id}>{cycleLabel(c)}</option>)}
+                {filteredCycles.map(c => <option key={c._id} value={c._id}>{cycleLabel(c)}</option>)}
               </select>
+              {filterFarm || filterBlock ? <p className="text-[10px] text-muted italic">Menampilkan {filteredCycles.length} dari {cycles.length} siklus (Completed dikecualikan, isolasi per Blok)</p> : <p className="text-[10px] text-muted italic">Pilih Farm/Blok untuk memfilter — siklus Completed dikecualikan</p>}
             </FF>
             <FF label="Kategori Aktivitas">
               <select name="activity_category" value={form.activity_category} onChange={e => setForm(p => ({ ...p, activity_category: e.target.value, activity_type: '' }))} required className={inputCls}>
