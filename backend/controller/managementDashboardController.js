@@ -620,7 +620,7 @@ const getBlocksByFarm = async (req, res) => {
     // cycles progress, but the cascading filter must always list every block.
     const query = {};
     applyFarmScope(query, scope, 'farm');
-    const blocks = await Block.find(query).select('name code area_ha').sort({ name: 1 }).lean();
+    const blocks = await Block.find(query).select('name area_ha').sort({ name: 1 }).lean();
     res.json({ success: true, data: blocks });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -637,8 +637,8 @@ const getCyclesByFarmBlock = async (req, res) => {
     if (block) query.block = new mongoose.Types.ObjectId(block);
     const cycles = await CropCycle.find(query)
       .select('cycle crop_type variety area_ha planting_date status farm_master block harvest_opening_date harvest_closing_date expected_yield_kg actual_yield_kg')
-      .populate('block', 'name code')
-      .populate('farm_master', 'name code')
+      .populate('block', 'name')
+      .populate('farm_master', 'name')
       .sort({ createdAt: -1 })
       .lean();
     res.json({ success: true, data: cycles });

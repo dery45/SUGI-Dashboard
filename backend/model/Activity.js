@@ -19,6 +19,10 @@ const activitySchema = new mongoose.Schema(
     status: { type: String, enum: ['Pending', 'In_Progress', 'Completed', 'Cancelled'], default: 'Pending' },
     labor_hours: { type: Number, default: 0 },
     cost: { type: Number, default: 0 },
+    // Phase 2b: Agricultural Input for Fertilization/Treatment/Spraying
+    agricultural_input: { type: mongoose.Schema.Types.ObjectId, ref: 'AgriculturalInput' },
+    quantity: { type: Number, min: 0 },
+    unit: { type: mongoose.Schema.Types.ObjectId, ref: 'Unit' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const farmMasterSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    code: { type: String, required: true, unique: true },
     province: { type: String },
     city: { type: String },
     district: { type: String },

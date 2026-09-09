@@ -15,7 +15,7 @@ const FarmMasterPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name: '', code: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' });
+  const [form, setForm] = useState({ name: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' });
   const [errors, setErrors] = useState({});
   const [viewModal, setViewModal] = useState(null);
 
@@ -38,7 +38,6 @@ const FarmMasterPage = () => {
   const validate = () => {
     const { errors: e, hasErrors } = validateForm(form, {
       name: [[required, 'Nama Farm']],
-      code: [[required, 'Kode Farm']],
       total_area_ha: [[isNumber, 'Luas Area'], [minValue, 0, 'Luas Area']]
     });
     setErrors(e);
@@ -59,7 +58,7 @@ const FarmMasterPage = () => {
       }
       setShowModal(false);
       setEditItem(null);
-      setForm({ name: '', code: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' });
+      setForm({ name: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' });
       setErrors({});
       fetchData();
       showToast('Data farm berhasil disimpan!', 'success');
@@ -83,7 +82,6 @@ const FarmMasterPage = () => {
   const openView = (item) => { setViewModal(item); };
 
   const columns = [
-    { header: 'Kode', accessor: 'code' },
     { header: 'Nama', accessor: 'name' },
     { header: 'Provinsi', accessor: 'province' },
     { header: 'Luas (Ha)', accessor: 'total_area_ha' },
@@ -108,7 +106,7 @@ const FarmMasterPage = () => {
           <div className="flex gap-3">
             <button onClick={fetchData} className="p-2.5 rounded-xl border border-border/40 hover:border-primary hover:text-primary transition-all"><RefreshCw className="w-4 h-4" /></button>
             {!isFarmerOwner && (
-              <button onClick={() => { setEditItem(null); setForm({ name: '', code: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Farm</button>
+              <button onClick={() => { setEditItem(null); setForm({ name: '', province: '', city: '', district: '', village: '', total_area_ha: '', status: 'Active', land_owner: '', responsible_person: '', contact: '', description: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Farm</button>
             )}
           </div>
         </div>
@@ -127,7 +125,6 @@ const FarmMasterPage = () => {
           <div className="relative w-full max-w-2xl bg-surface border border-border/40 rounded-[2rem] shadow-2xl p-8 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-black text-foreground mb-6">{editItem ? 'Edit Farm' : 'Tambah Farm Baru'}</h2>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Kode Farm" name="code" required value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} error={errors.code} />
               <Input label="Nama Farm" name="name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} error={errors.name} />
               <Input label="Provinsi" name="province" value={form.province} optional onChange={e => setForm({ ...form, province: e.target.value })} />
               <Input label="Kota/Kab" name="city" value={form.city} optional onChange={e => setForm({ ...form, city: e.target.value })} />

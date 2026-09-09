@@ -31,8 +31,8 @@ const listFarmerAssignments = async (req, res) => {
     const total = await FarmerAssignment.countDocuments(query);
     const data = await FarmerAssignment.find(query)
       .populate('farmer', 'name email')
-      .populate('block', 'name code')
-      .populate('farm', 'name code')
+      .populate('block', 'name')
+      .populate('farm', 'name')
       .sort({ createdAt: -1 })
       .skip((page - 1) * parseInt(limit))
       .limit(parseInt(limit))
@@ -115,8 +115,8 @@ const createFarmerAssignment = async (req, res) => {
     }
 
     const data = await FarmerAssignment.find({ farmer })
-      .populate('block', 'name code')
-      .populate('farm', 'name code')
+      .populate('block', 'name')
+      .populate('farm', 'name')
       .lean();
     res.status(201).json({ success: true, data });
   } catch (error) {
@@ -149,8 +149,8 @@ const updateFarmerAssignment = async (req, res) => {
 
     const data = await FarmerAssignment.findByIdAndUpdate(req.params.id, update, { new: true })
       .populate('farmer', 'name email')
-      .populate('block', 'name code')
-      .populate('farm', 'name code')
+      .populate('block', 'name')
+      .populate('farm', 'name')
       .lean();
 
     if (!data) return res.status(404).json({ success: false, message: 'Assignment tidak ditemukan' });
@@ -199,7 +199,7 @@ const listTaskAssignments = async (req, res) => {
     const data = await TaskAssignment.find(query)
       .populate('farmer', 'name email')
       .populate('crop_cycle', 'cycle crop_type')
-      .populate('farm', 'name code')
+      .populate('farm', 'name')
       .sort({ createdAt: -1 })
       .lean();
 

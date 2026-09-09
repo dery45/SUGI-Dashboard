@@ -254,7 +254,7 @@ const listActivities = async (req, res) => {
   try {
     const filter = await buildFarmFilterSimple(req.user);
     const data = await Activity.find(filter)
-      .populate('farm_id farm_master block crop_cycle_id activity_type_ref')
+      .populate('farm_id farm_master block crop_cycle_id activity_type_ref agricultural_input unit')
       .sort({ date: -1 });
     res.json({ success: true, data });
   } catch (error) {

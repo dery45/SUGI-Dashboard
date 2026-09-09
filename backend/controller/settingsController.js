@@ -6,7 +6,7 @@ const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
       .select('-password')
-      .populate('assigned_farms', 'name code province city')
+      .populate('assigned_farms', 'name province city')
       .lean();
     if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
     res.json({ success: true, data: user });
@@ -31,7 +31,7 @@ const updateProfile = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(req.user.id, updateData, { new: true, runValidators: true })
       .select('-password')
-      .populate('assigned_farms', 'name code')
+      .populate('assigned_farms', 'name')
       .lean();
 
     if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
@@ -103,7 +103,7 @@ const updateAssignedFarm = async (req, res) => {
       await user.save();
     }
 
-    const updated = await User.findById(targetId).select('-password').populate('assigned_farms', 'name code').lean();
+    const updated = await User.findById(targetId).select('-password').populate('assigned_farms', 'name').lean();
     res.json({ success: true, data: updated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

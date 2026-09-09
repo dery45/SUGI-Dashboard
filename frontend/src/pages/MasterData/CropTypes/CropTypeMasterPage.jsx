@@ -15,7 +15,7 @@ const CropTypeMasterPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ code: '', name: '', category: 'Padi', scientific_name: '', duration_days: '', yield_per_ha: '', unit: 'Kg', description: '' });
+  const [form, setForm] = useState({ name: '', category: 'Padi', status: 'Active' });
   const [errors, setErrors] = useState({});
   const [viewModal, setViewModal] = useState(null);
 
@@ -37,7 +37,6 @@ const CropTypeMasterPage = () => {
   const validate = () => {
     const { errors: e, hasErrors } = validateForm(form, {
       name: [[required, 'Nama Tanaman']],
-      code: [[required, 'Kode Tanaman']]
     });
     setErrors(e);
     return !hasErrors;
@@ -56,7 +55,7 @@ const CropTypeMasterPage = () => {
         return;
       }
       setShowModal(false); setEditItem(null);
-      setForm({ code: '', name: '', category: 'Padi', scientific_name: '', duration_days: '', yield_per_ha: '', unit: 'Kg', description: '' });
+      setForm({ name: '', category: 'Padi', status: 'Active' });
       setErrors({});
       fetchData();
       showToast('Data jenis tanaman berhasil disimpan!', 'success');
@@ -80,12 +79,9 @@ const CropTypeMasterPage = () => {
   const openView = (item) => { setViewModal(item); };
 
   const columns = [
-    { header: 'Kode', accessor: 'code' },
     { header: 'Nama', accessor: 'name' },
     { header: 'Kategori', accessor: 'category' },
-    { header: 'Nama Ilmiah', accessor: 'scientific_name' },
-    { header: 'Durasi (hari)', accessor: 'duration_days' },
-    { header: 'Hasil/Ha', accessor: (r) => `${r.yield_per_ha || '-'} ${r.unit || ''}` }
+    { header: 'Status', accessor: 'status' },
   ];
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -103,7 +99,7 @@ const CropTypeMasterPage = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={fetchData} className="p-2.5 rounded-xl border border-border/40 hover:border-primary hover:text-primary transition-all"><RefreshCw className="w-4 h-4" /></button>
-            <button onClick={() => { setEditItem(null); setForm({ code: '', name: '', category: 'Padi', scientific_name: '', duration_days: '', yield_per_ha: '', unit: 'Kg', description: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Jenis Tanaman</button>
+            <button onClick={() => { setEditItem(null); setForm({ name: '', category: 'Padi', status: 'Active' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Jenis Tanaman</button>
           </div>
         </div>
       </div>
@@ -118,21 +114,13 @@ const CropTypeMasterPage = () => {
           <div className="relative w-full max-w-2xl bg-surface border border-border/40 rounded-[2rem] shadow-2xl p-8 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-black text-foreground mb-6">{editItem ? 'Edit Jenis Tanaman' : 'Tambah Jenis Tanaman Baru'}</h2>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Kode Tanaman" name="code" required value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} error={errors.code} />
               <Input label="Nama Tanaman" name="name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} error={errors.name} />
-              <Input label="Nama Ilmiah" name="scientific_name" value={form.scientific_name} optional onChange={e => setForm({ ...form, scientific_name: e.target.value })} />
-              <Input label="Durasi (hari)" name="duration_days" type="number" value={form.duration_days} optional onChange={e => setForm({ ...form, duration_days: e.target.value })} />
-              <Input label="Hasil per Ha" name="yield_per_ha" type="number" value={form.yield_per_ha} optional onChange={e => setForm({ ...form, yield_per_ha: e.target.value })} />
               <Select label="Kategori" name="category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                 {['Padi', 'Palawija', 'Hortikultura', 'Perkebunan', 'Lainnya'].map(c => <option key={c} value={c}>{c}</option>)}
               </Select>
-              <Select label="Satuan Hasil" name="unit" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}>
-                {['Kg', 'Ton', 'Kwintal', 'Sak', 'Karung'].map(u => <option key={u} value={u}>{u}</option>)}
+              <Select label="Status" name="status" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                {['Active', 'Inactive'].map(s => <option key={s} value={s}>{s === 'Active' ? 'Aktif' : 'Tidak Aktif'}</option>)}
               </Select>
-              <div className="flex flex-col gap-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Deskripsi <span className="text-muted/50 font-normal normal-case">(Optional)</span></label>
-                <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full px-3 py-2 bg-background/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none" rows={3} />
-              </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl border border-border/40 text-sm font-bold hover:bg-surface/50 transition-all">Batal</button>

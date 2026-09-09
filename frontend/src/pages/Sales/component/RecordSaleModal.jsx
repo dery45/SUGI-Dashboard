@@ -69,7 +69,7 @@ const RecordSaleModal = ({ isOpen, onClose, onSave, farms = [] }) => {
     <Modal title="Catat Penjualan" onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
-          <FF label="Farm *"><select name="farm_id" value={formData.farm_id} onChange={handleChange} required className={inputCls}><option value="">Pilih Farm</option>{farms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}</select>{errors.farm_id && <p className="text-destructive text-xs font-semibold">{errors.farm_id}</p>}</FF>
+          <FF label="Farm *"><select name="farm_id" value={formData.farm_id} onChange={handleChange} required className={inputCls}><option value="">Pilih Farm</option>{farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}</select>{errors.farm_id && <p className="text-destructive text-xs font-semibold">{errors.farm_id}</p>}</FF>
           <FF label="Tipe Pembeli *"><select name="buyer_type" value={formData.buyer_type} onChange={handleChange} className={inputCls}>{Object.entries(BUYER_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></FF>
         </div>
         <FF label="Nama Pembeli *"><input name="buyer_name" value={formData.buyer_name} onChange={handleChange} required placeholder="PT Maju Jaya" className={inputCls} />{errors.buyer_name && <p className="text-destructive text-xs font-semibold">{errors.buyer_name}</p>}</FF>

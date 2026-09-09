@@ -28,6 +28,9 @@ const FarmMasterPage = lazy(() => import('./pages/MasterData/Farms/FarmMasterPag
 const BlockMasterPage = lazy(() => import('./pages/MasterData/Blocks/BlockMasterPage'));
 const CropTypeMasterPage = lazy(() => import('./pages/MasterData/CropTypes/CropTypeMasterPage'));
 const ActivityTypeMasterPage = lazy(() => import('./pages/MasterData/ActivityTypes/ActivityTypeMasterPage'));
+const UnitMasterPage = lazy(() => import('./pages/MasterData/Units/UnitMasterPage'));
+const CropVarietyMasterPage = lazy(() => import('./pages/MasterData/CropVarieties/CropVarietyMasterPage'));
+const AgriculturalInputMasterPage = lazy(() => import('./pages/MasterData/AgriculturalInputs/AgriculturalInputMasterPage'));
 
 // GovernmentData catalogs - lazy loaded
 const KetidakcukupanNasionalPage = lazy(() => import('./pages/GovernmentData/KetidakcukupanNasional/KetidakcukupanNasionalPage'));
@@ -186,6 +189,27 @@ function AppContent() {
           <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
             <Suspense fallback={<MasterDataSkeleton />}>
               <ActivityTypeMasterPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="master/units" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
+            <Suspense fallback={<MasterDataSkeleton />}>
+              <UnitMasterPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="master/crop-varieties" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
+            <Suspense fallback={<MasterDataSkeleton />}>
+              <CropVarietyMasterPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="master/agricultural-inputs" element={
+          <ProtectedRoute roles={['superadmin', 'farmer_owner']}>
+            <Suspense fallback={<MasterDataSkeleton />}>
+              <AgriculturalInputMasterPage />
             </Suspense>
           </ProtectedRoute>
         } />

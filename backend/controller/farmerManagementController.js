@@ -67,7 +67,7 @@ const listUsers = async (req, res) => {
     const total = await User.countDocuments(query);
     const data = await User.find(query)
       .select('-password')
-      .populate('assigned_farms', 'name code')
+      .populate('assigned_farms', 'name')
       .sort({ createdAt: -1 })
       .skip((page - 1) * parseInt(limit))
       .limit(parseInt(limit))
@@ -102,7 +102,7 @@ const getUserById = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
     }
-    const user = await User.findById(req.params.id).select('-password').populate('assigned_farms', 'name code');
+    const user = await User.findById(req.params.id).select('-password').populate('assigned_farms', 'name');
     if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
 
     console.log('[DEBUG getUserById] Target user role:', user.role, 'Request user role:', req.user?.role);

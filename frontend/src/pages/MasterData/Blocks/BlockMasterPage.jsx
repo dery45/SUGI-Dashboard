@@ -16,7 +16,7 @@ const BlockMasterPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ code: '', name: '', farm: '', area_ha: '', soil_type: 'Alluvial', water_source: 'Irigasi', status: 'Active', notes: '' });
+  const [form, setForm] = useState({ name: '', farm: '', area_ha: '', soil_type: 'Alluvial', water_source: 'Irigasi', status: 'Active', notes: '' });
   const [errors, setErrors] = useState({});
   const [viewModal, setViewModal] = useState(null);
 
@@ -43,7 +43,6 @@ const BlockMasterPage = () => {
   const validate = () => {
     const { errors: e, hasErrors } = validateForm(form, {
       name: [[required, 'Nama Block']],
-      code: [[required, 'Kode Block']],
       farm: [[required, 'Farm']],
       area_ha: [[required, 'Luas Area'], [isNumber, 'Luas Area'], [minValue, 0, 'Luas Area']]
     });
@@ -64,7 +63,7 @@ const BlockMasterPage = () => {
         return;
       }
       setShowModal(false); setEditItem(null);
-      setForm({ code: '', name: '', farm: '', area_ha: '', soil_type: 'Alluvial', water_source: 'Irigasi', status: 'Active', notes: '' });
+      setForm({ name: '', farm: '', area_ha: '', soil_type: 'Alluvial', water_source: 'Irigasi', status: 'Active', notes: '' });
       setErrors({});
       fetchData();
       showToast('Data block berhasil disimpan!', 'success');
@@ -95,7 +94,6 @@ const BlockMasterPage = () => {
   };
 
   const columns = [
-    { header: 'Kode', accessor: 'code' },
     { header: 'Nama', accessor: 'name' },
     { header: 'Farm', accessor: (r) => getFarmName(r.farm) },
     { header: 'Luas (Ha)', accessor: 'area_ha' },
@@ -119,7 +117,7 @@ const BlockMasterPage = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={fetchData} className="p-2.5 rounded-xl border border-border/40 hover:border-primary hover:text-primary transition-all"><RefreshCw className="w-4 h-4" /></button>
-            <button onClick={() => { setEditItem(null); setForm({ code: '', name: '', farm: '', area_ha: '', soil_type: 'Alluvial', water_source: 'Irigasi', status: 'Active', notes: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Block</button>
+            <button onClick={() => { setEditItem(null); setForm({ name: '', farm: '', area_ha: '', soil_type: 'Alluvial', water_source: 'Irigasi', status: 'Active', notes: '' }); setErrors({}); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs uppercase tracking-wider"><Plus className="w-4 h-4" /> Tambah Block</button>
           </div>
         </div>
       </div>
@@ -134,11 +132,10 @@ const BlockMasterPage = () => {
           <div className="relative w-full max-w-2xl bg-surface border border-border/40 rounded-[2rem] shadow-2xl p-8 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-black text-foreground mb-6">{editItem ? 'Edit Block' : 'Tambah Block Baru'}</h2>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Kode Block" name="code" required value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} error={errors.code} />
               <Input label="Nama Block" name="name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} error={errors.name} />
               <Select label="Farm" name="farm" required value={form.farm} onChange={e => setForm({ ...form, farm: e.target.value })} error={errors.farm}>
                 <option value="">Pilih Farm</option>
-                {farms.map(f => <option key={f._id} value={f._id}>{f.name} ({f.code})</option>)}
+                {farms.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
               </Select>
               <Input label="Luas (Ha)" name="area_ha" type="number" required value={form.area_ha} onChange={e => setForm({ ...form, area_ha: e.target.value })} error={errors.area_ha} />
               <Select label="Jenis Tanah" name="soil_type" value={form.soil_type} optional onChange={e => setForm({ ...form, soil_type: e.target.value })}>

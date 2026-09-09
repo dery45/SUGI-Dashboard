@@ -40,6 +40,23 @@ const PanenPage = () => {
   const { data, loading, error, fetchData, createData, updateData, deleteData } = useGenericResource('lifecycle/harvests', token);
   const records = Array.isArray(data) ? data : [];
   const { cycles, loading: cyclesLoading } = useEligibleCycles(token);
+  const [farms, setFarms] = useState([]);
+  const [allBlocks, setAllBlocks] = useState([]);
+  const [filterFarm, setFilterFarm] = useState('');
+  const [filterBlock, setFilterBlock] = useState('');
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BASE_URL}/master-data/farms/all`, { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).then(j=>{ if(j.success) setFarms(j.data); }).catch(()=>{});
+    fetch(`${BASE_URL}/master-data/blocks/all`, { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).then(j=>{ if(j.success) setAllBlocks(j.data); }).catch(()=>{});
+  }, [token]);
+  const filteredCycles = cycles.filter(c => {
+    const fId = (c.farm_master?._id || c.farm_id?._id || c.farm_master || c.farm_id)?.toString?.();
+    const bId = (c.block?._id || c.block)?.toString?.();
+    if (filterFarm && fId !== filterFarm) return false;
+    if (filterBlock && bId !== filterBlock) return false;
+    return true;
+  });
+  const blocksForFarm = filterFarm ? allBlocks.filter(b => (b.farm?._id || b.farm)?.toString() === filterFarm) : allBlocks;
   useEffect(() => { fetchData(); }, [fetchData]);
   const [form, setForm] = useState({ crop_cycle_id: '', opening_date: '', expected_end: '', expected_yield_kg: '', notes: '' });
   const [modal, setModal] = useState(null);
@@ -164,11 +181,16 @@ const PanenPage = () => {
       {modal === 'form' && (
         <Modal title={editTarget ? 'Ubah Data Panen' : 'Buka Masa Panen Baru'} onClose={() => setModal(null)}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FF label="Filter Farm"><select value={filterFarm} onChange={e=>{setFilterFarm(e.target.value); setFilterBlock('');}} className={inputCls}><option value="">Semua Farm</option>{farms.map(f=> <option key={f._id} value={f._id}>{f.name}</option>)}</select></FF>
+              <FF label="Filter Blok"><select value={filterBlock} onChange={e=>setFilterBlock(e.target.value)} className={inputCls}><option value="">Semua Blok</option>{blocksForFarm.map(b=> <option key={b._id} value={b._id}>{b.name}</option>)}</select></FF>
+            </div>
             <FF label="Siklus Tanam">
               <select name="crop_cycle_id" value={form.crop_cycle_id} onChange={fc} required disabled={!!editTarget} className={inputCls}>
                 <option value="">{cyclesLoading ? 'Memuat siklus...' : '-- Pilih Siklus Tanam --'}</option>
-                {cycles.map(c => <option key={c._id} value={c._id}>{cycleLabel(c)}</option>)}
+                {filteredCycles.map(c => <option key={c._id} value={c._id}>{cycleLabel(c)}</option>)}
               </select>
+              <p className="text-[10px] text-muted italic">Menampilkan {filteredCycles.length} dari {cycles.length} siklus (isolasi per Blok)</p>
             </FF>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FF label="Tgl Mulai Panen"><input type="date" name="opening_date" value={form.opening_date} onChange={fc} required className={inputCls} /></FF>

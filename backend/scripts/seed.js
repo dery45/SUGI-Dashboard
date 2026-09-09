@@ -5,6 +5,9 @@ const CropType = require('../model/CropType');
 const ActivityType = require('../model/ActivityType');
 const FarmMaster = require('../model/FarmMaster');
 const Block = require('../model/Block');
+const Unit = require('../model/Unit');
+const CropVariety = require('../model/CropVariety');
+const AgriculturalInput = require('../model/AgriculturalInput');
 
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/sugi-dashboard-demo');
@@ -67,11 +70,10 @@ async function seed() {
   }
 
   // Create a farm for the farmer owner
-  let farm = await FarmMaster.findOne({ code: 'FARM001' });
+  let farm = await FarmMaster.findOne({ name: 'Kebun Test' });
   if (!farm) {
     farm = await FarmMaster.create({
       name: 'Kebun Test',
-      code: 'FARM001',
       province: 'Sumatera Utara',
       city: 'Deli Serdang',
       district: 'Sibolangit',
@@ -83,7 +85,7 @@ async function seed() {
       status: 'Active',
       description: 'Kebun uji coba',
     });
-    console.log('Farm FARM001 — created');
+    console.log('Farm Kebun Test — created');
   }
 
   // Assign farm to farmer owner
@@ -95,11 +97,10 @@ async function seed() {
   }
 
   // Create a block for the farm
-  let block = await Block.findOne({ code: 'BLOCK001' });
+  let block = await Block.findOne({ name: 'Blok A', farm: farm._id });
   if (!block) {
     block = await Block.create({
       name: 'Blok A',
-      code: 'BLOCK001',
       farm: farm._id,
       area_ha: 50,
       soil_type: 'Alluvial',
@@ -107,7 +108,7 @@ async function seed() {
       status: 'Active',
       notes: 'Blok uji coba',
     });
-    console.log('Block BLOCK001 — created');
+    console.log('Block Blok A — created');
   }
 
   // Assign block to lifecycle farmer
@@ -162,216 +163,101 @@ async function seed() {
     console.log('Assigned farm to lifecycle_farmer');
   }
 
-  // ── Crop Types ───────────────────────────────────────────────────────────────
+  // ── Units ────────────────────────────────────────────────────────────────────
+  const units = [
+    { name: 'Kilogram', symbol: 'kg', status: 'Active' },
+    { name: 'Ton', symbol: 'ton', status: 'Active' },
+    { name: 'Kwintal', symbol: 'kw', status: 'Active' },
+    { name: 'Karung', symbol: 'karung', status: 'Active' },
+    { name: 'Liter', symbol: 'L', status: 'Active' },
+    { name: 'Sak', symbol: 'sak', status: 'Active' },
+  ];
+  for (const u of units) {
+    const ex = await Unit.findOne({ name: u.name });
+    if (!ex) { await Unit.create(u); console.log(`Unit ${u.name} — created`); }
+  }
+  const kgUnit = await Unit.findOne({ symbol: 'kg' });
+  const literUnit = await Unit.findOne({ symbol: 'L' });
+
+  // ── Crop Types (simplified: name+category+status) ───────────────────────────
   const cropTypes = [
-    {
-      code: 'PADI',
-      name: 'Padi',
-      category: 'Padi',
-      scientific_name: 'Oryza sativa',
-      duration_days: 120,
-      yield_per_ha: 5000,
-      unit: 'Kg',
-      description: 'Tanaman pangan utama Indonesia',
-    },
-    {
-      code: 'JAGUNG',
-      name: 'Jagung',
-      category: 'Palawija',
-      scientific_name: 'Zea mays',
-      duration_days: 100,
-      yield_per_ha: 7000,
-      unit: 'Kg',
-      description: 'Tanaman palawija utama',
-    },
-    {
-      code: 'KOPI',
-      name: 'Kopi',
-      category: 'Perkebunan',
-      scientific_name: 'Coffea arabica',
-      duration_days: 365,
-      yield_per_ha: 1200,
-      unit: 'Kg',
-      description: 'Tanaman perkebunan kopi arabika',
-    },
-    {
-      code: 'KELAPASAWIT',
-      name: 'Kelapa Sawit',
-      category: 'Perkebunan',
-      scientific_name: 'Elaeis guineensis',
-      duration_days: 1095,
-      yield_per_ha: 18000,
-      unit: 'Kg',
-      description: 'Tanaman perkebunan kelapa sawit',
-    },
-    {
-      code: 'CABAI',
-      name: 'Cabai',
-      category: 'Hortikultura',
-      scientific_name: 'Capsicum annuum',
-      duration_days: 90,
-      yield_per_ha: 8000,
-      unit: 'Kg',
-      description: 'Tanaman hortikultura cabai merah',
-    },
-    {
-      code: 'KEDELAI',
-      name: 'Kedelai',
-      category: 'Palawija',
-      scientific_name: 'Glycine max',
-      duration_days: 85,
-      yield_per_ha: 2500,
-      unit: 'Kg',
-      description: 'Tanaman palawija kedelai',
-    },
-    {
-      code: 'TEBU',
-      name: 'Tebu',
-      category: 'Perkebunan',
-      scientific_name: 'Saccharum officinarum',
-      duration_days: 365,
-      yield_per_ha: 70000,
-      unit: 'Kg',
-      description: 'Tanaman perkebunan tebu gula',
-    },
-    {
-      code: 'UBIKAYU',
-      name: 'Ubi Kayu',
-      category: 'Palawija',
-      scientific_name: 'Manihot esculenta',
-      duration_days: 270,
-      yield_per_ha: 25000,
-      unit: 'Kg',
-      description: 'Tanaman palawija ubi kayu',
-    },
+    { name: 'Padi', category: 'Padi' },
+    { name: 'Jagung', category: 'Palawija' },
+    { name: 'Kopi', category: 'Perkebunan' },
+    { name: 'Kelapa Sawit', category: 'Perkebunan' },
+    { name: 'Cabai', category: 'Hortikultura' },
+    { name: 'Kedelai', category: 'Palawija' },
+    { name: 'Tebu', category: 'Perkebunan' },
+    { name: 'Ubi Kayu', category: 'Palawija' },
   ];
 
   for (const ct of cropTypes) {
-    const existing = await CropType.findOne({ code: ct.code });
+    const existing = await CropType.findOne({ name: ct.name });
     if (!existing) {
       await CropType.create(ct);
-      console.log(`CropType ${ct.code} — created`);
+      console.log(`CropType ${ct.name} — created`);
     }
   }
 
-  // ── Activity Types ────────────────────────────────────────────────────────────
+  // ── Crop Varieties with Grades ──────────────────────────────────────────────
+  const padiType = await CropType.findOne({ name: 'Padi' });
+  const jagungType = await CropType.findOne({ name: 'Jagung' });
+  const kopiType = await CropType.findOne({ name: 'Kopi' });
+  const varieties = [
+    { name: 'IR-64', crop_type: padiType?._id, unit: kgUnit?._id, description: 'Padi unggul IR-64', grades: [{ grade_name: 'Premium', estimated_price_per_unit: 12000 }, { grade_name: 'Medium', estimated_price_per_unit: 10000 }] },
+    { name: 'Ciherang', crop_type: padiType?._id, unit: kgUnit?._id, description: 'Padi Ciherang', grades: [{ grade_name: 'A', estimated_price_per_unit: 13000 }, { grade_name: 'B', estimated_price_per_unit: 11000 }] },
+    { name: 'Pioneer-32', crop_type: jagungType?._id, unit: kgUnit?._id, description: 'Jagung Pioneer', grades: [{ grade_name: 'Grade A', estimated_price_per_unit: 8000 }] },
+    { name: 'Bisi-18', crop_type: jagungType?._id, unit: kgUnit?._id, description: 'Jagung Bisi', grades: [{ grade_name: 'A', estimated_price_per_unit: 7500 }, { grade_name: 'B', estimated_price_per_unit: 6500 }, { grade_name: 'C', estimated_price_per_unit: 5500 }] },
+    { name: 'Arabika Gayo', crop_type: kopiType?._id, unit: kgUnit?._id, description: 'Kopi Gayo', grades: [{ grade_name: 'Specialty', estimated_price_per_unit: 85000 }] },
+  ];
+  for (const v of varieties) {
+    if (!v.crop_type || !v.unit) continue;
+    const ex = await CropVariety.findOne({ name: v.name, crop_type: v.crop_type });
+    if (!ex) { await CropVariety.create(v); console.log(`CropVariety ${v.name} — created`); }
+  }
+
+  // ── Activity Types (3 fixed categories) ─────────────────────────────────────
   const activityTypes = [
-    {
-      code: 'LAND_CLEAR',
-      name: 'Pembersihan Lahan',
-      category: 'Pengolahan Lahan',
-      description: 'Pembersihan lahan sebelum pengolahan tanah',
-      duration_hours: 16,
-      color: '#f59e0b',
-      unit: 'HOK',
-    },
-    {
-      code: 'SOIL_PREP',
-      name: 'Pengolahan Tanah',
-      category: 'Pengolahan Lahan',
-      description: 'Pengolahan tanah (membajak, menggaru, dll)',
-      duration_hours: 24,
-      color: '#b45309',
-      unit: 'HOK',
-    },
-    {
-      code: 'PLANTING',
-      name: 'Penanaman',
-      category: 'Penanaman',
-      description: 'Proses penanaman bibit/benih',
-      duration_hours: 8,
-      color: '#10b981',
-      unit: 'HOK',
-    },
-    {
-      code: 'FERTILIZE',
-      name: 'Pemupukan Dasar',
-      category: 'Pemupukan',
-      description: 'Pemupukan dasar sebelum tanam',
-      duration_hours: 6,
-      color: '#3b82f6',
-      unit: 'HOK',
-    },
-    {
-      code: 'WEEDING',
-      name: 'Penyiangan',
-      category: 'Pemeliharaan',
-      description: 'Pengendalian gulma/manual weeding',
-      duration_hours: 8,
-      color: '#8b5cf6',
-      unit: 'HOK',
-    },
-    {
-      code: 'SPRAY',
-      name: 'Penyemprotan Hama',
-      category: 'Pengendalian Hama',
-      description: 'Penyemprotan pestisida/herbisida',
-      duration_hours: 4,
-      color: '#ef4444',
-      unit: 'HOK',
-    },
-    {
-      code: 'IRRIGATE',
-      name: 'Pengairan',
-      category: 'Pengairan',
-      description: 'Pengairan/irigasi tanaman',
-      duration_hours: 2,
-      color: '#06b6d4',
-      unit: 'HOK',
-    },
-    {
-      code: 'FERTILIZE_TOP',
-      name: 'Pemupukan Susulan',
-      category: 'Pemupukan',
-      description: 'Pemupukan susulan saat vegetatif',
-      duration_hours: 6,
-      color: '#6366f1',
-      unit: 'HOK',
-    },
-    {
-      code: 'PRUNE',
-      name: 'Pemangkasan',
-      category: 'Pemeliharaan',
-      description: 'Pemangkasan tanaman/percabangan',
-      duration_hours: 8,
-      color: '#ec4899',
-      unit: 'HOK',
-    },
-    {
-      code: 'HARVEST',
-      name: 'Panen',
-      category: 'Panen',
-      description: 'Panen hasil tanaman',
-      duration_hours: 24,
-      color: '#f97316',
-      unit: 'HOK',
-    },
-    {
-      code: 'POST_HARVEST',
-      name: 'Pasca Panen',
-      category: 'Pasca Panen',
-      description: 'Pengolahan pasca panen (pengeringan, penyortiran)',
-      duration_hours: 12,
-      color: '#14b8a6',
-      unit: 'HOK',
-    },
-    {
-      code: 'INSPECT',
-      name: 'Inspeksi',
-      category: 'Lainnya',
-      description: 'Inspeksi rutin kondisi tanaman/lahan',
-      duration_hours: 2,
-      color: '#6b7280',
-      unit: 'HOK',
-    },
+    { name: 'Pembersihan Lahan', category: 'Lainnya' },
+    { name: 'Pengolahan Tanah', category: 'Lainnya' },
+    { name: 'Penanaman', category: 'Lainnya' },
+    { name: 'Pemupukan Dasar', category: 'Pemupukan - Perawatan - Penyemprotan' },
+    { name: 'Penyiangan', category: 'Pemupukan - Perawatan - Penyemprotan' },
+    { name: 'Penyemprotan Hama', category: 'Pemupukan - Perawatan - Penyemprotan' },
+    { name: 'Pengairan', category: 'Pemupukan - Perawatan - Penyemprotan' },
+    { name: 'Pemupukan Susulan', category: 'Pemupukan - Perawatan - Penyemprotan' },
+    { name: 'Pemangkasan', category: 'Pemupukan - Perawatan - Penyemprotan' },
+    { name: 'Panen', category: 'Panen' },
+    { name: 'Pasca Panen', category: 'Panen' },
+    { name: 'Inspeksi', category: 'Lainnya' },
   ];
 
   for (const at of activityTypes) {
-    const existing = await ActivityType.findOne({ code: at.code });
+    const existing = await ActivityType.findOne({ name: at.name });
     if (!existing) {
       await ActivityType.create(at);
-      console.log(`ActivityType ${at.code} — created`);
+      console.log(`ActivityType ${at.name} — created`);
+    } else if (existing.category !== at.category) {
+      existing.category = at.category;
+      await existing.save();
+      console.log(`ActivityType ${at.name} — category updated`);
     }
+  }
+
+  // ── Agricultural Inputs (unified) ───────────────────────────────────────────
+  const agriInputs = [
+    { name: 'Urea', type: 'Fertilizer', unit: kgUnit?._id, description: 'Pupuk nitrogen' },
+    { name: 'NPK Mutiara', type: 'Fertilizer', unit: kgUnit?._id, description: 'Pupuk NPK' },
+    { name: 'KCl', type: 'Fertilizer', unit: kgUnit?._id, description: 'Pupuk kalium' },
+    { name: 'Kalsium Boron', type: 'Nutrient', unit: literUnit?._id, description: 'Nutrisi kalsium boron' },
+    { name: 'ZPT Atonik', type: 'Nutrient', unit: literUnit?._id, description: 'Zat pengatur tumbuh' },
+    { name: 'Insektisida Curacron', type: 'Medicine', unit: literUnit?._id, description: 'Insektisida' },
+    { name: 'Fungisida Antracol', type: 'Medicine', unit: kgUnit?._id, description: 'Fungisida' },
+  ];
+  for (const inp of agriInputs) {
+    if (!inp.unit) continue;
+    const ex = await AgriculturalInput.findOne({ name: inp.name, type: inp.type });
+    if (!ex) { await AgriculturalInput.create(inp); console.log(`AgriculturalInput ${inp.name} [${inp.type}] — created`); }
   }
 
   console.log('Seed completed successfully');
