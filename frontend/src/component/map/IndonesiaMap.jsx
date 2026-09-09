@@ -1,6 +1,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useTheme } from '@/contexts/ThemeContext';
+
+// Esri World Canvas — neutral gray basemap designed for choropleth overlays.
+// Free, no API key. Light ↔ Dark follows app theme (ThemeContext, default dark).
+const BASEMAPS = {
+  light: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+  dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+};
+const BASEMAP_ATTRIBUTION = 'Esri, HERE, Garmin, OpenStreetMap contributors';
+
+const LOCAL_GEOJSON_URL = '/geojson/indonesia-province-simple.json';
+const REMOTE_GEOJSON_URL = 'https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json';
 
 const FILL_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6'];
 
@@ -13,12 +25,22 @@ function getColorForValue(val, min, max) {
 
 const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', unit = '', mapKey }) => {
   const [geoData, setGeoData] = useState(null);
+  const [geoError, setGeoError] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme !== 'light';
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json')
-      .then(res => res.json())
-      .then(data => setGeoData(data))
-      .catch(err => console.error("Failed to load geojson", err));
+    let cancelled = false;
+    // 1) Local copy (works offline/demo) → 2) remote fallback (fresh upstream)
+    fetch(LOCAL_GEOJSON_URL)
+      .then(res => { if (!res.ok) throw new Error(`local geojson ${res.status}`); return res.json(); })
+      .catch(() => fetch(REMOTE_GEOJSON_URL).then(res => {
+        if (!res.ok) throw new Error(`remote geojson ${res.status}`);
+        return res.json();
+      }))
+      .then(data => { if (!cancelled) setGeoData(data); })
+      .catch(err => { if (!cancelled) { console.error("Failed to load geojson", err); setGeoError(true); } });
+    return () => { cancelled = true; };
   }, []);
 
   const getProvinceValue = (name) => {
@@ -57,7 +79,7 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
       fillColor: val != null ? getColorForValue(val, minVal, maxVal) : '#94a3b8',
       weight: 1,
       opacity: 1,
-      color: 'white',
+      color: isDark ? '#0f172a' : 'white',
       fillOpacity: val != null ? 0.7 : 0.2
     };
   };
@@ -120,12 +142,16 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
       <MapContainer
         center={[-2.5489, 118.0149]}
         zoom={5}
-        style={{ height: '100%', width: '100%', minHeight: '500px' }}
+        style={{ height: '100%', width: '100%', minHeight: '500px', background: isDark ? '#090e1a' : '#fdfdfd' }}
         scrollWheelZoom={false}
         attributionControl={false}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          key={isDark ? 'esri-dark-gray' : 'esri-light-gray'}
+          url={isDark ? BASEMAPS.dark : BASEMAPS.light}
+          attribution={BASEMAP_ATTRIBUTION}
+          maxZoom={16}
+          minZoom={4}
         />
         {geoData && (
           <GeoJSON
@@ -136,6 +162,11 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
           />
         )}
       </MapContainer>
+      {geoError && !geoData && (
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted bg-background/60">
+          Gagal memuat peta provinsi. Periksa koneksi lalu muat ulang.
+        </div>
+      )}
       <div className="absolute bottom-4 right-4 bg-surface/90 backdrop-blur-sm p-3 rounded-xl border border-border text-[11px] text-muted z-[1000] shadow-sm">
         <div className="flex items-center gap-2 mb-1.5">
           <div className="w-3 h-3 rounded" style={{ background: 'linear-gradient(to right, #ef4444, #f97316, #f59e0b, #84cc16, #22c55e)' }}></div>
@@ -145,6 +176,7 @@ const IndonesiaMap = ({ provinceData = [], onProvinceClick, valueKey = 'value', 
           <div className="w-3 h-3 rounded-full bg-[#94a3b8] opacity-20 border border-[#94a3b8]"></div>
           <span>Tidak Ada Data</span>
         </div>
+        <div className="mt-1.5 pt-1.5 border-t border-border/50 text-[10px] opacity-70">Basemap: Esri Gray Canvas</div>
       </div>
     </div>
   );
