@@ -1,6 +1,7 @@
 import React from 'react';
 import LiveDataPage from '@/component/common/LiveDataPage';
 import { columns6 } from '@/data/dataColumns';
+import { importTemplates } from '@/utils/importTemplates';
 
 const GerakanPanganMurahPage = () => {
   return (
@@ -8,6 +9,7 @@ const GerakanPanganMurahPage = () => {
       title="Jumlah Pelaksanaan Gerakan Pangan Murah"
       columns={columns6}
       endpointContext="gerakan-pangan-murah"
+      importTemplate={importTemplates.GerakanPanganMurah}
     />
   );
 };

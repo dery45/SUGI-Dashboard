@@ -1,6 +1,7 @@
 import React from 'react';
 import LiveDataPage from '@/component/common/LiveDataPage';
 import { columns10 } from '@/data/dataColumns';
+import { importTemplates } from '@/utils/importTemplates';
 
 const HargaProdusenProvinsiPage = () => {
   return (
@@ -8,6 +9,7 @@ const HargaProdusenProvinsiPage = () => {
       title="Rata-rata Harga Pangan Bulanan Tingkat Produsen Provinsi"
       columns={columns10}
       endpointContext="harga-produsen-provinsi"
+      importTemplate={importTemplates.HargaProdusenProvinsi}
     />
   );
 };
